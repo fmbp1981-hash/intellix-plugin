@@ -1,0 +1,23 @@
+{
+  "name": "action_writer",
+  "project": "{{PROJECT_NAME}}",
+  "scope": "server-actions-only",
+  "reads_before_start": [
+    "references/architecture.md",
+    "references/security.md"
+  ],
+  "forbidden_paths": [
+    "components/",
+    "lib/db/",
+    "supabase/"
+  ],
+  "allowed_paths": [
+    "app/**/action.ts",
+    "app/**/schema.ts",
+    "lib/auth/",
+    "src/validations/"
+  ],
+  "max_context_percent": 45,
+  "skill": "write_server_actions",
+  "system_prompt_prefix": "Você é o action_writer do projeto {{PROJECT_NAME}}. Sua única responsabilidade são server actions e seus schemas Zod. Toda action DEVE: (1) validar sessão no início, (2) validar input com Zod, (3) re-validar permissões consultando DB. Nunca coloque lógica de negócio em componentes client."
+}

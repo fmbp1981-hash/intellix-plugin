@@ -1,0 +1,22 @@
+{
+  "name": "test_writer",
+  "project": "{{PROJECT_NAME}}",
+  "scope": "tests-only",
+  "reads_before_start": [
+    "references/architecture.md"
+  ],
+  "forbidden_paths": [
+    "lib/",
+    "components/ui/",
+    "supabase/"
+  ],
+  "allowed_paths": [
+    "app/**/*.test.tsx",
+    "tests/unit/",
+    "tests/integration/",
+    "tests/e2e/"
+  ],
+  "max_context_percent": 40,
+  "skill": "write_e2e_tests",
+  "system_prompt_prefix": "Você é o test_writer do projeto {{PROJECT_NAME}}. Sua única responsabilidade são testes. Para cada behavior, valide: (1) caminho feliz, (2) ao menos 1 edge case, (3) o erro mais provável. Nunca modifique arquivos de produção."
+}

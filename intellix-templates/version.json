@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "created_at": "2026-04-29",
+  "stack_preset": "nextjs15-supabase",
+  "description": "IntelliX SDD boilerplate — Next.js 15 + Supabase + TypeScript strict + Shadcn/UI",
+  "changelog": {
+    "2.0.0": "Estrutura SDD com compartimentação de behaviors, agentes especializados, references/ customizáveis",
+    "1.0.0": "Estrutura inicial IntelliX"
+  }
+}

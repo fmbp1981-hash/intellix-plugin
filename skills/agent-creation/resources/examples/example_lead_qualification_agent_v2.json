@@ -1,0 +1,739 @@
+{
+  "schema_version": "2.0",
+
+  "agent_metadata": {
+    "agent_name": "LeadQualificationAgent",
+    "agent_type": "lead_qualification",
+    "business_domain": "crm",
+    "version": "2.0",
+    "description": "Agente embedded que qualifica leads automaticamente dentro do CRM. Analisa dados do lead, aplica scoring baseado em critérios configuráveis, move leads no pipeline e notifica o time comercial.",
+    "tags": ["crm", "lead_scoring", "qualification", "pipeline", "embedded"],
+    "author": "IntelliX.AI",
+    "created_at": "2026-03-06T00:00:00Z",
+    "updated_at": "2026-03-06T00:00:00Z"
+  },
+
+  "objective": {
+    "primary_goal": "Qualificar leads automaticamente com scoring multidimensional e mover no pipeline do CRM conforme pontuação",
+    "secondary_goals": [
+      "Reduzir tempo de resposta ao lead para menos de 5 minutos",
+      "Enriquecer dados do lead com informações coletadas automaticamente",
+      "Priorizar leads quentes para o time comercial"
+    ],
+    "success_criteria": [
+      { "metric": "lead_qualification_time_minutes", "target": "<5", "measurement_method": "Tempo entre criação do lead e primeira qualificação" },
+      { "metric": "qualification_accuracy", "target": ">80%", "measurement_method": "Leads qualificados como hot que converteram vs total de hot leads" },
+      { "metric": "pipeline_velocity_days", "target": "<7", "measurement_method": "Tempo médio de lead na fase de qualificação" }
+    ],
+    "constraints": [
+      "NUNCA alterar dados do lead sem registro em audit log",
+      "NUNCA enviar mensagem ao lead sem aprovação do workflow",
+      "Respeitar campos obrigatórios definidos na configuração da vertical",
+      "Scoring deve ser transparente e auditável"
+    ]
+  },
+
+  "operation_mode": {
+    "mode": "embedded",
+    "runtime_environment": "supabase_edge_function",
+    "concurrency": {
+      "max_concurrent_sessions": 100,
+      "session_isolation": "full"
+    }
+  },
+
+  "interfaces": {
+    "system_ui": {
+      "enabled": true,
+      "component_type": "inline_assistant"
+    },
+    "api": {
+      "enabled": true,
+      "protocol": "rest",
+      "base_path": "/api/agents/lead-qualification"
+    },
+    "whatsapp": { "enabled": false, "provider": "", "webhook_path": "", "connection_config_ref": "" },
+    "telegram": { "enabled": false, "bot_token_ref": "", "webhook_path": "" },
+    "instagram": { "enabled": false, "api_version": "", "webhook_path": "" },
+    "email": { "enabled": false, "provider": "", "inbound_address": "" },
+    "voice": { "enabled": false, "provider": "", "voice_id": "" }
+  },
+
+  "business_context": {
+    "industry": "generic_sales",
+    "company_size": "small",
+    "pain_points": [
+      "Leads ficam dias sem qualificação porque o time comercial está ocupado",
+      "Sem critério padronizado de qualificação — cada vendedor avalia de forma diferente",
+      "Leads frios consomem o mesmo tempo que leads quentes",
+      "Falta de visibilidade sobre gargalos no pipeline"
+    ],
+    "success_metrics": [
+      "Tempo médio de qualificação abaixo de 5 minutos",
+      "Taxa de conversão de leads qualificados acima de 25%",
+      "Zero leads sem qualificação após 24h"
+    ],
+    "compliance_requirements": ["LGPD"],
+    "business_hours": {
+      "timezone": "America/Sao_Paulo",
+      "schedule": {
+        "mon": { "start": "00:00", "end": "23:59" },
+        "tue": { "start": "00:00", "end": "23:59" },
+        "wed": { "start": "00:00", "end": "23:59" },
+        "thu": { "start": "00:00", "end": "23:59" },
+        "fri": { "start": "00:00", "end": "23:59" },
+        "sat": { "start": "00:00", "end": "23:59" },
+        "sun": { "start": "00:00", "end": "23:59" }
+      },
+      "outside_hours_behavior": "queue_message",
+      "outside_hours_message": ""
+    },
+    "brand_voice": {
+      "tone": "professional",
+      "language": "pt-BR",
+      "formality": "formal",
+      "vocabulary_guidelines": []
+    }
+  },
+
+  "context_sources": [
+    {
+      "source_id": "src_lead_data",
+      "source_type": "database",
+      "source_name": "Dados do Lead",
+      "description": "Dados completos do lead incluindo campos customizados da vertical",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT c.*, d.*, json_agg(cf.*) as custom_fields FROM contacts c LEFT JOIN deals d ON d.contact_id = c.id LEFT JOIN custom_field_values cf ON cf.entity_id = c.id WHERE c.id = '{{lead_id}}' AND c.organization_id = '{{org_id}}' GROUP BY c.id, d.id",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 30
+    },
+    {
+      "source_id": "src_scoring_config",
+      "source_type": "database",
+      "source_name": "Configuração de Scoring",
+      "description": "Critérios e pesos de scoring configurados pela organização",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT * FROM scoring_configs WHERE organization_id = '{{org_id}}' AND active = true",
+        "headers": {}
+      },
+      "refresh_strategy": "cached",
+      "cache_ttl_seconds": 3600
+    },
+    {
+      "source_id": "src_pipeline_config",
+      "source_type": "database",
+      "source_name": "Pipeline e Stages",
+      "description": "Configuração do pipeline com stages e critérios de transição",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT p.*, json_agg(s.* ORDER BY s.position) as stages FROM pipelines p JOIN pipeline_stages s ON s.pipeline_id = p.id WHERE p.organization_id = '{{org_id}}' GROUP BY p.id",
+        "headers": {}
+      },
+      "refresh_strategy": "cached",
+      "cache_ttl_seconds": 1800
+    },
+    {
+      "source_id": "src_conversation_history",
+      "source_type": "database",
+      "source_name": "Histórico de Conversas",
+      "description": "Mensagens trocadas com o lead via WhatsApp ou chat",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT * FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE contact_id = '{{lead_id}}') ORDER BY created_at DESC LIMIT 50",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 60
+    }
+  ],
+
+  "tools": [
+    {
+      "tool_id": "tool_score_lead",
+      "tool_name": "calcular_score",
+      "tool_type": "function",
+      "description": "Calcula o score do lead baseado nos critérios configurados. Retorna score total (0-100) e breakdown por dimensão.",
+      "endpoint": { "url": "", "method": "POST", "headers": {} },
+      "auth": { "method": "none", "config_ref": "" },
+      "parameters": {
+        "type": "object",
+        "required": ["lead_data", "scoring_config"],
+        "properties": {
+          "lead_data": { "type": "object", "description": "Dados completos do lead" },
+          "scoring_config": { "type": "object", "description": "Configuração de scoring ativa" }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "total_score": { "type": "integer" },
+            "tier": { "type": "string", "enum": ["hot", "warm", "cold", "disqualified"] },
+            "breakdown": { "type": "array", "items": { "type": "object", "properties": { "dimension": { "type": "string" }, "score": { "type": "integer" }, "max_score": { "type": "integer" }, "reason": { "type": "string" } } } },
+            "missing_data": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "error_handling": { "retry_count": 1, "retry_delay_ms": 500, "timeout_ms": 5000, "on_failure": "abort", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 60, "max_calls_per_session": 3 }
+    },
+    {
+      "tool_id": "tool_move_pipeline_stage",
+      "tool_name": "mover_stage_pipeline",
+      "tool_type": "database_query",
+      "description": "Move o deal do lead para um novo stage no pipeline. Registra a movimentação no histórico.",
+      "endpoint": { "url": "supabase://deals", "method": "PATCH", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["deal_id", "new_stage_id"],
+        "properties": {
+          "deal_id": { "type": "string" },
+          "new_stage_id": { "type": "string" },
+          "reason": { "type": "string", "description": "Motivo da movimentação para audit" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 2, "retry_delay_ms": 1000, "timeout_ms": 5000, "on_failure": "abort", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 5 }
+    },
+    {
+      "tool_id": "tool_update_contact",
+      "tool_name": "atualizar_contato",
+      "tool_type": "database_query",
+      "description": "Atualiza os dados do contato/lead no CRM com informações coletadas ou enriquecidas.",
+      "endpoint": { "url": "supabase://contacts", "method": "PATCH", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["contact_id", "updates"],
+        "properties": {
+          "contact_id": { "type": "string" },
+          "updates": { "type": "object", "description": "Campos a atualizar" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 2, "retry_delay_ms": 500, "timeout_ms": 5000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 10 }
+    },
+    {
+      "tool_id": "tool_create_activity",
+      "tool_name": "criar_atividade",
+      "tool_type": "database_query",
+      "description": "Cria uma atividade/tarefa no CRM vinculada ao deal ou contato.",
+      "endpoint": { "url": "supabase://activities", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["type", "title", "deal_id"],
+        "properties": {
+          "type": { "type": "string", "enum": ["call", "email", "meeting", "task", "follow_up"] },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "deal_id": { "type": "string" },
+          "assigned_to": { "type": "string" },
+          "due_date": { "type": "string" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 1, "retry_delay_ms": 500, "timeout_ms": 5000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 20, "max_calls_per_session": 10 }
+    },
+    {
+      "tool_id": "tool_notify_team",
+      "tool_name": "notificar_time",
+      "tool_type": "webhook",
+      "description": "Envia notificação ao time comercial sobre leads qualificados como hot.",
+      "endpoint": { "url": "{{notification_webhook_url}}", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_notification_webhook" },
+      "parameters": {
+        "type": "object",
+        "required": ["lead_name", "score", "tier"],
+        "properties": {
+          "lead_name": { "type": "string" },
+          "score": { "type": "integer" },
+          "tier": { "type": "string" },
+          "summary": { "type": "string" },
+          "assigned_to": { "type": "string" }
+        }
+      },
+      "response_format": { "type": "void", "schema": {} },
+      "error_handling": { "retry_count": 3, "retry_delay_ms": 2000, "timeout_ms": 10000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 20, "max_calls_per_session": 5 }
+    }
+  ],
+
+  "memory": {
+    "short_term": {
+      "enabled": true,
+      "max_messages": 10,
+      "summarization": { "enabled": false, "trigger_message_count": 15, "strategy": "rolling_summary" }
+    },
+    "long_term": {
+      "enabled": true,
+      "storage_backend": "supabase_table",
+      "table_name": "lead_qualification_logs",
+      "schema": {
+        "columns": [
+          { "name": "id", "type": "uuid", "nullable": false, "default": "gen_random_uuid()", "description": "PK" },
+          { "name": "organization_id", "type": "uuid", "nullable": false, "default": "", "description": "" },
+          { "name": "contact_id", "type": "uuid", "nullable": false, "default": "", "description": "" },
+          { "name": "deal_id", "type": "uuid", "nullable": true, "default": "", "description": "" },
+          { "name": "score_total", "type": "integer", "nullable": false, "default": "0", "description": "" },
+          { "name": "score_tier", "type": "text", "nullable": false, "default": "'cold'", "description": "hot, warm, cold, disqualified" },
+          { "name": "score_breakdown", "type": "jsonb", "nullable": false, "default": "'[]'", "description": "" },
+          { "name": "missing_data", "type": "jsonb", "nullable": true, "default": "'[]'", "description": "Campos pendentes de coleta" },
+          { "name": "actions_taken", "type": "jsonb", "nullable": true, "default": "'[]'", "description": "Ações executadas pelo agente" },
+          { "name": "previous_stage", "type": "text", "nullable": true, "default": "", "description": "" },
+          { "name": "new_stage", "type": "text", "nullable": true, "default": "", "description": "" },
+          { "name": "created_at", "type": "timestamptz", "nullable": false, "default": "now()", "description": "" }
+        ],
+        "indexes": [
+          { "columns": ["organization_id", "contact_id"], "type": "btree" },
+          { "columns": ["score_tier"], "type": "btree" },
+          { "columns": ["created_at"], "type": "btree" }
+        ]
+      },
+      "ttl_days": 730,
+      "max_entries_per_session": 50
+    },
+    "episodic": { "enabled": false, "embedding_model": "", "vector_store": "", "similarity_threshold": 0.75, "max_results": 5, "chunk_strategy": { "method": "semantic", "chunk_size_tokens": 512, "overlap_tokens": 50 } }
+  },
+
+  "reasoning": {
+    "strategy": "react",
+    "fallback_strategy": "deterministic",
+    "max_reasoning_steps": 6,
+    "confidence_threshold": 0.75,
+    "model_config": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-20250514",
+      "temperature": 0.2,
+      "max_tokens": 2048,
+      "config_ref": "cfg_llm_api_key"
+    }
+  },
+
+  "cognitive_loop": {
+    "enabled": false,
+    "observe": { "data_sources": [], "event_listeners": [], "polling_interval_seconds": 0 },
+    "think": { "analysis_strategy": "intent_classification", "context_window_strategy": "hybrid", "max_context_tokens": 4096 },
+    "plan": { "planning_method": "sequential", "max_plan_steps": 5, "resource_constraints": [], "replanning_enabled": false },
+    "act": { "execution_mode": "sync", "timeout_seconds": 30, "rollback_enabled": false, "confirmation_required": false },
+    "reflect": { "evaluation_criteria": [], "success_threshold": 0.8, "logging": { "level": "actions_only", "destination": "" } },
+    "learn": { "learning_type": "none", "update_frequency": "manual", "knowledge_base_ref": "", "human_review_required": true }
+  },
+
+  "workflow": [
+    {
+      "step_id": "step_001",
+      "step_name": "Receber evento de lead",
+      "step_type": "receive_input",
+      "description": "Recebe evento de criação ou atualização de lead/deal no CRM",
+      "inputs": [
+        { "name": "lead_id", "source": "trigger.payload.contact_id", "required": true },
+        { "name": "deal_id", "source": "trigger.payload.deal_id", "required": false },
+        { "name": "event_type", "source": "trigger.payload.event_type", "required": true }
+      ],
+      "outputs": [{ "name": "event_data", "type": "object", "description": "" }],
+      "tool_ref": "",
+      "on_error": { "strategy": "abort", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_002"
+    },
+    {
+      "step_id": "step_002",
+      "step_name": "Carregar dados do lead",
+      "step_type": "tool_call",
+      "description": "Busca dados completos do lead incluindo campos customizados, deal e histórico",
+      "inputs": [{ "name": "lead_id", "source": "step_001.event_data.lead_id", "required": true }],
+      "outputs": [
+        { "name": "lead_data", "type": "object", "description": "Dados completos do lead" },
+        { "name": "deal_data", "type": "object", "description": "Deal vinculado" },
+        { "name": "custom_fields", "type": "array", "description": "Campos customizados" }
+      ],
+      "tool_ref": "tool_update_contact",
+      "on_error": { "strategy": "abort", "retry_count": 2, "fallback_step": "", "error_message": "Falha ao carregar dados do lead" },
+      "timeout_seconds": 5,
+      "next_step": "step_003"
+    },
+    {
+      "step_id": "step_003",
+      "step_name": "Carregar configuração de scoring",
+      "step_type": "tool_call",
+      "description": "Carrega critérios de scoring ativos para a organização",
+      "inputs": [{ "name": "org_id", "source": "context.organization_id", "required": true }],
+      "outputs": [{ "name": "scoring_config", "type": "object", "description": "" }],
+      "tool_ref": "",
+      "on_error": { "strategy": "abort", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_004"
+    },
+    {
+      "step_id": "step_004",
+      "step_name": "Calcular score",
+      "step_type": "tool_call",
+      "description": "Aplica scoring multidimensional ao lead baseado nos critérios configurados",
+      "inputs": [
+        { "name": "lead_data", "source": "step_002.lead_data", "required": true },
+        { "name": "scoring_config", "source": "step_003.scoring_config", "required": true }
+      ],
+      "outputs": [
+        { "name": "score_result", "type": "object", "description": "Score total, tier, breakdown e missing data" }
+      ],
+      "tool_ref": "tool_score_lead",
+      "on_error": { "strategy": "abort", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 10,
+      "next_step": "step_005"
+    },
+    {
+      "step_id": "step_005",
+      "step_name": "Decidir ações baseado no score",
+      "step_type": "llm_reasoning",
+      "description": "Analisa o score, breakdown e dados do lead para decidir: mover pipeline stage, criar atividades, notificar time, solicitar dados faltantes",
+      "inputs": [
+        { "name": "score_result", "source": "step_004.score_result", "required": true },
+        { "name": "lead_data", "source": "step_002.lead_data", "required": true },
+        { "name": "deal_data", "source": "step_002.deal_data", "required": false },
+        { "name": "pipeline_config", "source": "src_pipeline_config", "required": true }
+      ],
+      "outputs": [
+        { "name": "target_stage_id", "type": "string", "description": "Stage para onde mover o deal" },
+        { "name": "activities_to_create", "type": "array", "description": "Atividades a criar" },
+        { "name": "should_notify_team", "type": "boolean", "description": "" },
+        { "name": "qualification_summary", "type": "string", "description": "Resumo da qualificação para o time" }
+      ],
+      "tool_ref": "",
+      "on_error": { "strategy": "fallback", "retry_count": 1, "fallback_step": "step_008", "error_message": "" },
+      "timeout_seconds": 15,
+      "next_step": "step_006"
+    },
+    {
+      "step_id": "step_006",
+      "step_name": "Mover pipeline stage",
+      "step_type": "tool_call",
+      "description": "Move o deal para o stage determinado pelo scoring",
+      "inputs": [
+        { "name": "deal_id", "source": "step_002.deal_data.id", "required": true },
+        { "name": "new_stage_id", "source": "step_005.target_stage_id", "required": true }
+      ],
+      "outputs": [],
+      "tool_ref": "tool_move_pipeline_stage",
+      "on_error": { "strategy": "retry", "retry_count": 2, "fallback_step": "step_008", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_006b"
+    },
+    {
+      "step_id": "step_006b",
+      "step_name": "Criar atividades de follow-up",
+      "step_type": "loop",
+      "description": "Cria as atividades decididas pelo raciocínio (ligação, email, reunião, etc.)",
+      "inputs": [{ "name": "activities", "source": "step_005.activities_to_create", "required": true }],
+      "outputs": [],
+      "tool_ref": "",
+      "loop_config": {
+        "over": "step_005.activities_to_create",
+        "body_steps": ["tool_create_activity"],
+        "max_iterations": 5
+      },
+      "on_error": { "strategy": "skip", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 15,
+      "next_step": "step_007"
+    },
+    {
+      "step_id": "step_007",
+      "step_name": "Notificar time comercial",
+      "step_type": "condition",
+      "description": "Se o lead é hot ou warm, notifica o time comercial",
+      "inputs": [{ "name": "should_notify", "source": "step_005.should_notify_team", "required": true }],
+      "outputs": [],
+      "tool_ref": "",
+      "condition": {
+        "expression": "should_notify_team == true",
+        "if_true": "step_007b",
+        "if_false": "step_008"
+      },
+      "on_error": { "strategy": "skip", "retry_count": 0, "fallback_step": "step_008", "error_message": "" },
+      "timeout_seconds": 2,
+      "next_step": ""
+    },
+    {
+      "step_id": "step_007b",
+      "step_name": "Enviar notificação",
+      "step_type": "tool_call",
+      "description": "Envia webhook de notificação com resumo da qualificação",
+      "inputs": [
+        { "name": "lead_name", "source": "step_002.lead_data.name", "required": true },
+        { "name": "score", "source": "step_004.score_result.total_score", "required": true },
+        { "name": "tier", "source": "step_004.score_result.tier", "required": true },
+        { "name": "summary", "source": "step_005.qualification_summary", "required": true }
+      ],
+      "outputs": [],
+      "tool_ref": "tool_notify_team",
+      "on_error": { "strategy": "skip", "retry_count": 2, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 10,
+      "next_step": "step_008"
+    },
+    {
+      "step_id": "step_008",
+      "step_name": "Registrar qualificação",
+      "step_type": "state_update",
+      "description": "Salva o log completo da qualificação no banco para auditoria e analytics",
+      "inputs": [
+        { "name": "score_result", "source": "step_004.score_result", "required": true },
+        { "name": "actions_taken", "source": "context.actions_log", "required": false }
+      ],
+      "outputs": [],
+      "tool_ref": "",
+      "on_error": { "strategy": "skip", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_009"
+    },
+    {
+      "step_id": "step_009",
+      "step_name": "Finalizar",
+      "step_type": "terminate",
+      "description": "Encerra o ciclo de qualificação",
+      "inputs": [],
+      "outputs": [],
+      "tool_ref": "",
+      "on_error": { "strategy": "skip", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 1,
+      "next_step": ""
+    }
+  ],
+
+  "actions": [
+    {
+      "action_id": "action_score_and_move",
+      "action_name": "Qualificar e mover no pipeline",
+      "action_type": "tool_call",
+      "description": "Calcula score do lead e move o deal para o stage correspondente",
+      "tool_ref": "tool_score_lead",
+      "parameters": {},
+      "conditions": [
+        { "field": "deal.id", "operator": "exists", "value": true }
+      ],
+      "side_effects": ["updates_deal_stage", "creates_qualification_log"],
+      "requires_confirmation": false
+    },
+    {
+      "action_id": "action_create_followup",
+      "action_name": "Criar tarefa de follow-up",
+      "action_type": "schedule_task",
+      "description": "Cria uma atividade de follow-up atribuída ao vendedor responsável",
+      "tool_ref": "tool_create_activity",
+      "parameters": {},
+      "conditions": [
+        { "field": "score_result.tier", "operator": "in", "value": ["hot", "warm"] }
+      ],
+      "side_effects": ["creates_activity", "notifies_assigned_user"],
+      "requires_confirmation": false
+    },
+    {
+      "action_id": "action_notify_hot_lead",
+      "action_name": "Notificar lead quente",
+      "action_type": "send_notification",
+      "description": "Notifica o time comercial sobre lead classificado como hot",
+      "tool_ref": "tool_notify_team",
+      "parameters": {},
+      "conditions": [
+        { "field": "score_result.tier", "operator": "equals", "value": "hot" }
+      ],
+      "side_effects": ["sends_webhook_notification"],
+      "requires_confirmation": false
+    }
+  ],
+
+  "triggers": [
+    {
+      "trigger_id": "trigger_contact_created",
+      "trigger_type": "event",
+      "source": "crm_database",
+      "event_name": "contact.created",
+      "cron_expression": "",
+      "conditions": [],
+      "payload_schema": {
+        "type": "object",
+        "properties": {
+          "contact_id": { "type": "string" },
+          "organization_id": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      },
+      "activates_workflow_step": "step_001",
+      "debounce_seconds": 5,
+      "enabled": true
+    },
+    {
+      "trigger_id": "trigger_deal_stage_changed",
+      "trigger_type": "event",
+      "source": "crm_database",
+      "event_name": "deal.stage_changed",
+      "cron_expression": "",
+      "conditions": [
+        { "field": "new_stage.requires_requalification", "operator": "equals", "value": true }
+      ],
+      "payload_schema": {
+        "type": "object",
+        "properties": {
+          "deal_id": { "type": "string" },
+          "contact_id": { "type": "string" },
+          "previous_stage_id": { "type": "string" },
+          "new_stage_id": { "type": "string" }
+        }
+      },
+      "activates_workflow_step": "step_001",
+      "debounce_seconds": 10,
+      "enabled": true
+    },
+    {
+      "trigger_id": "trigger_requalification_cron",
+      "trigger_type": "schedule",
+      "source": "cron",
+      "event_name": "lead.periodic_requalification",
+      "cron_expression": "0 6 * * 1",
+      "conditions": [],
+      "payload_schema": {},
+      "activates_workflow_step": "step_001",
+      "debounce_seconds": 0,
+      "enabled": true
+    }
+  ],
+
+  "integration": {
+    "primary_protocol": "rest",
+    "base_url": "",
+    "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+    "retry_policy": { "max_retries": 3, "backoff_strategy": "exponential", "initial_delay_ms": 500, "max_delay_ms": 15000 },
+    "rate_limit": { "max_requests_per_minute": 120, "max_requests_per_day": 50000, "queue_strategy": "throttle" },
+    "health_check": { "enabled": false, "endpoint": "", "interval_seconds": 300 }
+  },
+
+  "prompt_template": {
+    "system_prompt": "Você é o agente de qualificação de leads do CRM. Sua função é analisar dados de leads, aplicar scoring e decidir ações de pipeline.\n\n## REGRAS\n1. SEMPRE base suas decisões nos dados disponíveis — nunca assuma\n2. Score deve ser justificável e transparente\n3. Se faltam dados críticos, sinalize como missing_data\n4. Leads com dados insuficientes ficam como cold até coleta\n5. Hot leads SEMPRE geram notificação ao time\n6. Warm leads SEMPRE geram atividade de follow-up\n\n## CRITÉRIOS DE SCORING\nUse a configuração carregada em scoring_config. Dimensões típicas:\n- Perfil (cargo, empresa, setor)\n- Engajamento (mensagens trocadas, tempo de resposta)\n- Necessidade (urgência, budget, timeline)\n- Fit (match com ICP da empresa)\n\n## DECISÕES DE PIPELINE\n- Score >= 70: HOT → Stage 'Qualificado' + notificar time\n- Score 40-69: WARM → Stage 'Em Qualificação' + atividade de follow-up\n- Score 20-39: COLD → Stage 'Nurturing'\n- Score < 20: DISQUALIFIED → Stage 'Descartado'",
+    "system_prompt_sections": [],
+    "user_prompt_template": "Evento: {{event_type}}\n\nDados do Lead:\n{{lead_data_json}}\n\nDeal:\n{{deal_data_json}}\n\nCampos customizados:\n{{custom_fields_json}}\n\nHistórico de conversas (últimas 10):\n{{conversation_summary}}\n\nConfiguração de scoring:\n{{scoring_config_json}}\n\nPipeline stages:\n{{pipeline_stages_json}}\n\nDecida: qual o score, tier, stage target e ações a executar.",
+    "few_shot_examples": [],
+    "output_format": {
+      "type": "json",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "target_stage_id": { "type": "string" },
+          "activities_to_create": { "type": "array" },
+          "should_notify_team": { "type": "boolean" },
+          "qualification_summary": { "type": "string" }
+        }
+      },
+      "instructions": "Responda SEMPRE em JSON válido. Inclua qualification_summary em português."
+    },
+    "guardrails": [
+      { "rule": "Nunca alterar dados sem registrar em audit log", "severity": "hard_block", "action_on_violation": "block_response" },
+      { "rule": "Nunca classificar lead como hot sem pelo menos 3 dimensões avaliadas", "severity": "soft_warn", "action_on_violation": "log" }
+    ]
+  },
+
+  "pending_configuration": [
+    {
+      "config_id": "cfg_supabase",
+      "field_path": "context_sources.*.connection_config",
+      "description": "Credenciais Supabase: Project URL e Service Role Key",
+      "type": "json",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "Deve conter: project_url, service_role_key",
+      "sensitive": true,
+      "example_value": "{\"project_url\": \"https://xxx.supabase.co\", \"service_role_key\": \"eyJ...\"}"
+    },
+    {
+      "config_id": "cfg_llm_api_key",
+      "field_path": "reasoning.model_config",
+      "description": "API key do provedor LLM",
+      "type": "api_key",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "",
+      "sensitive": true,
+      "example_value": "sk-ant-..."
+    },
+    {
+      "config_id": "cfg_notification_webhook",
+      "field_path": "tools.tool_notify_team.endpoint",
+      "description": "URL do webhook para notificações ao time comercial (Slack, n8n, etc.)",
+      "type": "url",
+      "required": false,
+      "default_value": null,
+      "validation_rule": "URL válida com HTTPS",
+      "sensitive": false,
+      "example_value": "https://n8n.example.com/webhook/lead-notification"
+    }
+  ],
+
+  "governance": {
+    "permissions": {
+      "allowed_actions": ["action_score_and_move", "action_create_followup", "action_notify_hot_lead"],
+      "denied_actions": [],
+      "approval_required": []
+    },
+    "audit": {
+      "log_level": "actions_and_reasoning",
+      "log_destination": "supabase://lead_qualification_logs",
+      "retention_days": 730
+    },
+    "rate_limits": {
+      "max_messages_per_minute": 60,
+      "max_tokens_per_request": 2048,
+      "max_cost_per_day_usd": 10.0,
+      "max_sessions_per_hour": 200
+    },
+    "safety": {
+      "content_filters": ["pii_detection"],
+      "pii_handling": "redact",
+      "escalation_triggers": [],
+      "max_consecutive_failures": 5
+    },
+    "compliance": {
+      "frameworks": ["LGPD"],
+      "data_residency": "Brazil",
+      "consent_required": false,
+      "consent_message": ""
+    }
+  },
+
+  "learning": {
+    "feedback_loop": {
+      "enabled": true,
+      "collection_method": "automated_metrics",
+      "storage": "supabase://lead_qualification_logs",
+      "review_cadence": "weekly"
+    },
+    "performance_tracking": {
+      "metrics": [
+        { "metric_name": "qualification_accuracy", "calculation": "converted_hot_leads / total_hot_leads", "alert_threshold": "<60%" },
+        { "metric_name": "avg_qualification_time_ms", "calculation": "avg(completed_at - started_at)", "alert_threshold": ">300000" },
+        { "metric_name": "missing_data_rate", "calculation": "leads_with_missing_data / total_leads", "alert_threshold": ">40%" }
+      ]
+    },
+    "knowledge_update": {
+      "update_trigger": "threshold_based",
+      "validation_required": true,
+      "rollback_enabled": true
+    }
+  },
+
+  "multi_agent": null
+}

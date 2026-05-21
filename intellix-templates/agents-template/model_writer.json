@@ -1,0 +1,24 @@
+{
+  "name": "model_writer",
+  "project": "{{PROJECT_NAME}}",
+  "scope": "database-only",
+  "reads_before_start": [
+    "references/architecture.md",
+    "references/stack.md"
+  ],
+  "forbidden_paths": [
+    "app/",
+    "components/",
+    "lib/auth/",
+    "lib/ai/"
+  ],
+  "allowed_paths": [
+    "lib/db/",
+    "supabase/migrations/",
+    "supabase/seed.sql",
+    "src/types/index.ts"
+  ],
+  "max_context_percent": 45,
+  "skill": "write_db_models",
+  "system_prompt_prefix": "Você é o model_writer do projeto {{PROJECT_NAME}}. Sua única responsabilidade é schema de banco de dados e RLS policies. Antes de qualquer ação, leia references/architecture.md. Nunca toque em arquivos fora de lib/db/ ou supabase/. Toda tabela precisa de RLS ativo."
+}

@@ -1,0 +1,1059 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IntelliX Agent Blueprint Schema v2",
+  "description": "Complete schema for AI agent and multi-agent system blueprints. Designed for machine-parseable consumption by coding tools (Path B) with preparation for runtime interpretation (Path C).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "agent_metadata",
+    "objective",
+    "operation_mode",
+    "interfaces",
+    "business_context",
+    "tools",
+    "workflow",
+    "actions",
+    "triggers",
+    "prompt_template"
+  ],
+  "properties": {
+
+    "schema_version": {
+      "type": "string",
+      "const": "2.0",
+      "description": "Schema version for migration and validation"
+    },
+
+    "agent_metadata": {
+      "type": "object",
+      "description": "Agent identity and classification",
+      "required": ["agent_name", "agent_type", "business_domain", "version"],
+      "properties": {
+        "agent_name": {
+          "type": "string",
+          "description": "PascalCase identifier (e.g. ReceptionAgent, LeadQualificationAgent)",
+          "pattern": "^[A-Z][a-zA-Z0-9]+$"
+        },
+        "agent_type": {
+          "type": "string",
+          "description": "Functional classification of the agent",
+          "enum": [
+            "lead_qualification",
+            "customer_service",
+            "appointment_scheduling",
+            "follow_up_nurturing",
+            "sales_assistant",
+            "onboarding",
+            "support_triage",
+            "data_collection",
+            "notification",
+            "billing",
+            "content_generation",
+            "orchestrator",
+            "custom"
+          ]
+        },
+        "business_domain": {
+          "type": "string",
+          "description": "Business vertical or domain",
+          "enum": [
+            "crm",
+            "healthcare",
+            "real_estate",
+            "education",
+            "ecommerce",
+            "financial_services",
+            "legal",
+            "travel",
+            "hospitality",
+            "saas",
+            "consulting",
+            "custom"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version of this blueprint",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable summary of what this agent does"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Searchable tags for categorization"
+        },
+        "author": {
+          "type": "string",
+          "description": "Creator or organization"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+
+    "objective": {
+      "type": "object",
+      "description": "What the agent aims to achieve",
+      "required": ["primary_goal"],
+      "properties": {
+        "primary_goal": {
+          "type": "string",
+          "description": "Main objective in one sentence"
+        },
+        "secondary_goals": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Supporting objectives"
+        },
+        "success_criteria": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["metric", "target"],
+            "properties": {
+              "metric": { "type": "string", "description": "What to measure (e.g. lead_conversion_rate, response_time_seconds)" },
+              "target": { "type": "string", "description": "Target value (e.g. >30%, <60s)" },
+              "measurement_method": { "type": "string", "description": "How to measure this metric" }
+            }
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Hard constraints the agent must respect (e.g. never share pricing, always transfer after 3 failed attempts)"
+        }
+      }
+    },
+
+    "operation_mode": {
+      "type": "object",
+      "description": "How and where the agent operates",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["embedded", "external", "hybrid"],
+          "description": "embedded = inside a system UI, external = via channels (WhatsApp/API), hybrid = both"
+        },
+        "runtime_environment": {
+          "type": "string",
+          "description": "Where the agent executes (e.g. supabase_edge_function, vercel_serverless, n8n_workflow, standalone_server)"
+        },
+        "concurrency": {
+          "type": "object",
+          "properties": {
+            "max_concurrent_sessions": { "type": "integer", "minimum": 1 },
+            "session_isolation": { "type": "string", "enum": ["full", "shared_memory", "shared_tools"] }
+          }
+        }
+      }
+    },
+
+    "interfaces": {
+      "type": "object",
+      "description": "Communication channels the agent uses",
+      "properties": {
+        "system_ui": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "component_type": { "type": "string", "enum": ["chat_widget", "dashboard_panel", "inline_assistant", "modal"] }
+          }
+        },
+        "api": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "protocol": { "type": "string", "enum": ["rest", "graphql", "mcp", "websocket"] },
+            "base_path": { "type": "string", "description": "API route prefix (e.g. /api/agents/reception)" }
+          }
+        },
+        "whatsapp": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "provider": { "type": "string", "description": "WhatsApp provider (e.g. evolution_api, cloud_api, z_api, wppconnect)" },
+            "webhook_path": { "type": "string" },
+            "connection_config_ref": { "type": "string", "description": "Reference to pending_configuration for provider credentials" }
+          }
+        },
+        "telegram": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "bot_token_ref": { "type": "string" },
+            "webhook_path": { "type": "string" }
+          }
+        },
+        "instagram": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "api_version": { "type": "string" },
+            "webhook_path": { "type": "string" }
+          }
+        },
+        "email": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "provider": { "type": "string" },
+            "inbound_address": { "type": "string" }
+          }
+        },
+        "voice": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "provider": { "type": "string", "description": "e.g. twilio, vapi, bland_ai" },
+            "voice_id": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "business_context": {
+      "type": "object",
+      "description": "Business domain context that shapes agent behavior",
+      "required": ["industry", "pain_points"],
+      "properties": {
+        "industry": {
+          "type": "string",
+          "description": "Industry vertical (e.g. dental_clinic, real_estate_agency, law_firm)"
+        },
+        "company_size": {
+          "type": "string",
+          "enum": ["solo", "small", "medium", "large", "enterprise"]
+        },
+        "pain_points": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Business problems this agent solves"
+        },
+        "success_metrics": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "KPIs the business cares about"
+        },
+        "compliance_requirements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Regulatory requirements (e.g. LGPD, HIPAA, GDPR)"
+        },
+        "business_hours": {
+          "type": "object",
+          "properties": {
+            "timezone": { "type": "string", "description": "IANA timezone (e.g. America/Sao_Paulo)" },
+            "schedule": {
+              "type": "object",
+              "description": "Day-of-week schedule. Keys: mon,tue,wed,thu,fri,sat,sun. Values: {start, end} in HH:MM or null for closed",
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "start": { "type": "string", "pattern": "^\\d{2}:\\d{2}$" },
+                      "end": { "type": "string", "pattern": "^\\d{2}:\\d{2}$" }
+                    },
+                    "required": ["start", "end"]
+                  },
+                  { "type": "null" }
+                ]
+              }
+            },
+            "outside_hours_behavior": {
+              "type": "string",
+              "enum": ["queue_message", "auto_reply", "ignore", "forward_to_human"],
+              "description": "What to do when a message arrives outside business hours"
+            },
+            "outside_hours_message": { "type": "string" }
+          }
+        },
+        "brand_voice": {
+          "type": "object",
+          "properties": {
+            "tone": { "type": "string", "description": "e.g. professional, friendly, empathetic, consultative" },
+            "language": { "type": "string", "description": "Primary language (e.g. pt-BR, en-US, es-ES)" },
+            "formality": { "type": "string", "enum": ["formal", "semi_formal", "casual"] },
+            "vocabulary_guidelines": { "type": "array", "items": { "type": "string" }, "description": "Specific words to use or avoid" }
+          }
+        }
+      }
+    },
+
+    "context_sources": {
+      "type": "array",
+      "description": "External data sources the agent reads for context",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "source_type", "source_name"],
+        "properties": {
+          "source_id": { "type": "string", "description": "Unique identifier for this source (referenced by workflow steps)" },
+          "source_type": {
+            "type": "string",
+            "enum": ["database", "api", "file", "user_input", "rag_knowledge_base", "webhook_payload", "environment_variable", "shared_memory"]
+          },
+          "source_name": { "type": "string", "description": "Human-readable name" },
+          "description": { "type": "string" },
+          "connection_config": {
+            "type": "object",
+            "description": "Connection details. Use pending_configuration refs for secrets.",
+            "properties": {
+              "endpoint": { "type": "string" },
+              "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE", "QUERY"] },
+              "auth_ref": { "type": "string", "description": "Reference to pending_configuration for credentials" },
+              "query_template": { "type": "string", "description": "SQL, GraphQL, or API query template with {{placeholders}}" },
+              "headers": { "type": "object", "additionalProperties": { "type": "string" } }
+            }
+          },
+          "refresh_strategy": {
+            "type": "string",
+            "enum": ["on_demand", "cached", "real_time", "periodic"],
+            "default": "on_demand"
+          },
+          "cache_ttl_seconds": { "type": "integer" }
+        }
+      }
+    },
+
+    "tools": {
+      "type": "array",
+      "description": "Tools the agent can invoke to perform actions",
+      "items": {
+        "type": "object",
+        "required": ["tool_id", "tool_name", "tool_type", "description"],
+        "properties": {
+          "tool_id": { "type": "string", "description": "Unique identifier (referenced by workflow steps and actions)" },
+          "tool_name": { "type": "string", "description": "Display name" },
+          "tool_type": {
+            "type": "string",
+            "enum": ["api_call", "mcp_tool", "function", "webhook", "database_query", "file_operation", "llm_call"]
+          },
+          "description": { "type": "string", "description": "What this tool does — used by LLM for tool selection" },
+          "endpoint": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string", "description": "Full URL or path. Use {{placeholders}} for dynamic segments." },
+              "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+              "headers": { "type": "object", "additionalProperties": { "type": "string" } }
+            }
+          },
+          "auth": {
+            "type": "object",
+            "properties": {
+              "method": { "type": "string", "enum": ["none", "api_key", "bearer_token", "oauth2", "basic", "custom"] },
+              "config_ref": { "type": "string", "description": "Reference to pending_configuration for secrets" }
+            }
+          },
+          "parameters": {
+            "type": "object",
+            "description": "JSON Schema defining the tool's input parameters",
+            "properties": {
+              "type": { "type": "string", "const": "object" },
+              "required": { "type": "array", "items": { "type": "string" } },
+              "properties": { "type": "object", "description": "Parameter definitions as JSON Schema" }
+            }
+          },
+          "response_format": {
+            "type": "object",
+            "description": "Expected response structure",
+            "properties": {
+              "type": { "type": "string", "enum": ["json", "text", "binary", "void"] },
+              "schema": { "type": "object", "description": "JSON Schema of expected response" }
+            }
+          },
+          "error_handling": {
+            "type": "object",
+            "properties": {
+              "retry_count": { "type": "integer", "default": 0 },
+              "retry_delay_ms": { "type": "integer", "default": 1000 },
+              "timeout_ms": { "type": "integer", "default": 30000 },
+              "on_failure": { "type": "string", "enum": ["skip", "abort", "fallback", "escalate"], "default": "abort" },
+              "fallback_tool_ref": { "type": "string", "description": "tool_id to invoke if this tool fails" }
+            }
+          },
+          "rate_limit": {
+            "type": "object",
+            "properties": {
+              "max_calls_per_minute": { "type": "integer" },
+              "max_calls_per_session": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+
+    "memory": {
+      "type": "object",
+      "description": "Agent memory configuration",
+      "properties": {
+        "short_term": {
+          "type": "object",
+          "description": "Within-session context (conversation history)",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "max_messages": { "type": "integer", "description": "Max messages to keep in context window" },
+            "summarization": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean", "default": false },
+                "trigger_message_count": { "type": "integer", "description": "Summarize after N messages" },
+                "strategy": { "type": "string", "enum": ["rolling_summary", "key_points", "full_replace"] }
+              }
+            }
+          }
+        },
+        "long_term": {
+          "type": "object",
+          "description": "Persistent memory across sessions (database-backed)",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "storage_backend": { "type": "string", "description": "e.g. supabase_table, redis, custom_api" },
+            "table_name": { "type": "string" },
+            "schema": {
+              "type": "object",
+              "description": "Database schema for long-term memory",
+              "properties": {
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "type"],
+                    "properties": {
+                      "name": { "type": "string" },
+                      "type": { "type": "string", "description": "SQL type (e.g. uuid, text, jsonb, timestamptz)" },
+                      "nullable": { "type": "boolean", "default": true },
+                      "default": { "type": "string" },
+                      "description": { "type": "string" }
+                    }
+                  }
+                },
+                "indexes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "columns": { "type": "array", "items": { "type": "string" } },
+                      "type": { "type": "string", "enum": ["btree", "gin", "gist", "ivfflat", "hnsw"] }
+                    }
+                  }
+                }
+              }
+            },
+            "ttl_days": { "type": ["integer", "null"], "description": "Auto-delete records after N days. Null = never." },
+            "max_entries_per_session": { "type": "integer" }
+          }
+        },
+        "episodic": {
+          "type": "object",
+          "description": "RAG-based knowledge retrieval from past interactions or documents",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "embedding_model": { "type": "string", "description": "e.g. text-embedding-3-small, voyage-3" },
+            "vector_store": { "type": "string", "description": "e.g. supabase_pgvector, pinecone, qdrant" },
+            "similarity_threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+            "max_results": { "type": "integer" },
+            "chunk_strategy": {
+              "type": "object",
+              "properties": {
+                "method": { "type": "string", "enum": ["fixed_size", "semantic", "paragraph", "sentence"] },
+                "chunk_size_tokens": { "type": "integer" },
+                "overlap_tokens": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "reasoning": {
+      "type": "object",
+      "description": "How the agent thinks and makes decisions",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["deterministic", "chain_of_thought", "react", "tree_of_thought", "plan_and_execute"],
+          "description": "deterministic = fixed workflow, no LLM reasoning. react = reason-act loop. cot = step-by-step reasoning. tot = explore multiple paths. plan_and_execute = plan all steps then execute."
+        },
+        "fallback_strategy": {
+          "type": "string",
+          "enum": ["deterministic", "escalate_to_human", "retry_with_simpler_prompt", "abort"],
+          "description": "What to do if primary strategy fails"
+        },
+        "max_reasoning_steps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Maximum iterations in the reasoning loop before forcing a decision"
+        },
+        "confidence_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum confidence to act autonomously. Below this, escalate or ask for clarification."
+        },
+        "model_config": {
+          "type": "object",
+          "description": "LLM configuration for reasoning",
+          "properties": {
+            "provider": { "type": "string", "description": "e.g. anthropic, openai, google, custom" },
+            "model": { "type": "string", "description": "e.g. claude-sonnet-4-20250514, gpt-4o, gemini-2.0-flash" },
+            "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+            "max_tokens": { "type": "integer" },
+            "config_ref": { "type": "string", "description": "Reference to pending_configuration for API key" }
+          }
+        }
+      }
+    },
+
+    "cognitive_loop": {
+      "type": "object",
+      "description": "Configuration for the Observe→Think→Plan→Act→Reflect→Learn cycle. Optional — omit for deterministic agents.",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "observe": {
+          "type": "object",
+          "properties": {
+            "data_sources": { "type": "array", "items": { "type": "string" }, "description": "References to context_sources[].source_id" },
+            "event_listeners": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event_type": { "type": "string" },
+                  "source": { "type": "string" },
+                  "filter": { "type": "object" }
+                }
+              }
+            },
+            "polling_interval_seconds": { "type": "integer" }
+          }
+        },
+        "think": {
+          "type": "object",
+          "properties": {
+            "analysis_strategy": { "type": "string", "enum": ["context_ranking", "intent_classification", "entity_extraction", "sentiment_analysis", "composite"] },
+            "context_window_strategy": { "type": "string", "enum": ["recent_first", "relevance_ranked", "hybrid"] },
+            "max_context_tokens": { "type": "integer" }
+          }
+        },
+        "plan": {
+          "type": "object",
+          "properties": {
+            "planning_method": { "type": "string", "enum": ["sequential", "parallel", "conditional", "dynamic"] },
+            "max_plan_steps": { "type": "integer" },
+            "resource_constraints": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "e.g. max_api_calls:5, max_time_seconds:30"
+            },
+            "replanning_enabled": { "type": "boolean", "default": false }
+          }
+        },
+        "act": {
+          "type": "object",
+          "properties": {
+            "execution_mode": { "type": "string", "enum": ["sync", "async", "streaming"] },
+            "timeout_seconds": { "type": "integer" },
+            "rollback_enabled": { "type": "boolean", "default": false },
+            "confirmation_required": { "type": "boolean", "default": false, "description": "Ask human before executing destructive actions" }
+          }
+        },
+        "reflect": {
+          "type": "object",
+          "properties": {
+            "evaluation_criteria": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "criterion": { "type": "string" },
+                  "weight": { "type": "number" }
+                }
+              }
+            },
+            "success_threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+            "logging": {
+              "type": "object",
+              "properties": {
+                "level": { "type": "string", "enum": ["none", "actions_only", "summary", "detailed", "debug"] },
+                "destination": { "type": "string" }
+              }
+            }
+          }
+        },
+        "learn": {
+          "type": "object",
+          "properties": {
+            "learning_type": { "type": "string", "enum": ["none", "parametric", "episodic", "feedback_driven"] },
+            "update_frequency": { "type": "string", "enum": ["per_interaction", "daily", "weekly", "manual"] },
+            "knowledge_base_ref": { "type": "string", "description": "Reference to episodic memory or external KB" },
+            "human_review_required": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+
+    "workflow": {
+      "type": "array",
+      "description": "Ordered sequence of steps the agent executes. Machine-parseable for Path C runtime.",
+      "items": {
+        "type": "object",
+        "required": ["step_id", "step_name", "step_type"],
+        "properties": {
+          "step_id": { "type": "string", "description": "Unique identifier (e.g. step_001)" },
+          "step_name": { "type": "string", "description": "Human-readable name" },
+          "step_type": {
+            "type": "string",
+            "enum": ["receive_input", "process", "tool_call", "llm_reasoning", "condition", "loop", "parallel", "wait", "human_handoff", "respond", "state_update", "terminate"]
+          },
+          "description": { "type": "string" },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "source": { "type": "string", "description": "Where this input comes from: previous_step.output_name, context_source.source_id, trigger.payload, user_input" },
+                "required": { "type": "boolean", "default": true }
+              }
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string", "description": "Data type (string, object, array, boolean, number)" },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "tool_ref": { "type": "string", "description": "Reference to tools[].tool_id (for step_type: tool_call)" },
+          "condition": {
+            "type": "object",
+            "description": "For step_type: condition. Defines branching logic.",
+            "properties": {
+              "expression": { "type": "string", "description": "Condition expression (e.g. lead_score > 70, intent == 'schedule')" },
+              "if_true": { "type": "string", "description": "step_id to jump to if true" },
+              "if_false": { "type": "string", "description": "step_id to jump to if false" }
+            }
+          },
+          "loop_config": {
+            "type": "object",
+            "description": "For step_type: loop",
+            "properties": {
+              "over": { "type": "string", "description": "Collection to iterate (e.g. previous_step.output_name)" },
+              "body_steps": { "type": "array", "items": { "type": "string" }, "description": "step_ids to execute per iteration" },
+              "max_iterations": { "type": "integer" }
+            }
+          },
+          "parallel_steps": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "For step_type: parallel. step_ids to execute concurrently."
+          },
+          "on_error": {
+            "type": "object",
+            "properties": {
+              "strategy": { "type": "string", "enum": ["retry", "skip", "fallback", "abort", "escalate"] },
+              "retry_count": { "type": "integer" },
+              "fallback_step": { "type": "string", "description": "step_id to execute as fallback" },
+              "error_message": { "type": "string" }
+            }
+          },
+          "timeout_seconds": { "type": "integer" },
+          "next_step": { "type": "string", "description": "Default next step_id. Overridden by condition branching." }
+        }
+      }
+    },
+
+    "actions": {
+      "type": "array",
+      "description": "Discrete actions the agent can perform, independent of workflow sequence",
+      "items": {
+        "type": "object",
+        "required": ["action_id", "action_name", "action_type"],
+        "properties": {
+          "action_id": { "type": "string" },
+          "action_name": { "type": "string" },
+          "action_type": {
+            "type": "string",
+            "enum": ["tool_call", "send_response", "state_update", "escalate_to_human", "create_record", "update_record", "delete_record", "send_notification", "schedule_task", "log_event"]
+          },
+          "description": { "type": "string" },
+          "tool_ref": { "type": "string", "description": "Reference to tools[].tool_id" },
+          "parameters": { "type": "object", "description": "Static or template parameters for this action" },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string" },
+                "operator": { "type": "string", "enum": ["equals", "not_equals", "greater_than", "less_than", "contains", "not_contains", "exists", "not_exists", "in", "not_in"] },
+                "value": {}
+              }
+            },
+            "description": "Conditions that must be true for this action to be available"
+          },
+          "side_effects": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "What changes when this action executes (e.g. creates_contact, moves_deal_stage, sends_whatsapp_message)"
+          },
+          "requires_confirmation": { "type": "boolean", "default": false }
+        }
+      }
+    },
+
+    "triggers": {
+      "type": "array",
+      "description": "Events or conditions that activate the agent or specific workflows",
+      "items": {
+        "type": "object",
+        "required": ["trigger_id", "trigger_type", "source"],
+        "properties": {
+          "trigger_id": { "type": "string" },
+          "trigger_type": {
+            "type": "string",
+            "enum": ["event", "schedule", "condition", "manual", "webhook"]
+          },
+          "source": { "type": "string", "description": "Where the trigger originates (e.g. whatsapp_incoming, crm_deal_updated, cron)" },
+          "event_name": { "type": "string", "description": "Specific event (e.g. message.received, deal.stage_changed, contact.created)" },
+          "cron_expression": { "type": "string", "description": "For schedule triggers (e.g. 0 9 * * 1-5)" },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string" },
+                "operator": { "type": "string", "enum": ["equals", "not_equals", "greater_than", "less_than", "contains", "not_contains", "exists", "not_exists", "in", "not_in"] },
+                "value": {}
+              }
+            },
+            "description": "Additional conditions to filter trigger activation"
+          },
+          "payload_schema": {
+            "type": "object",
+            "description": "JSON Schema of expected trigger payload"
+          },
+          "activates_workflow_step": { "type": "string", "description": "step_id to start execution from" },
+          "debounce_seconds": { "type": "integer", "description": "Ignore repeated triggers within this window" },
+          "enabled": { "type": "boolean", "default": true }
+        }
+      }
+    },
+
+    "integration": {
+      "type": "object",
+      "description": "External system integration configuration",
+      "properties": {
+        "primary_protocol": {
+          "type": "string",
+          "enum": ["rest", "graphql", "mcp", "webhook", "messaging", "grpc", "websocket"]
+        },
+        "base_url": { "type": "string" },
+        "auth": {
+          "type": "object",
+          "properties": {
+            "method": { "type": "string", "enum": ["none", "api_key", "bearer_token", "oauth2", "basic", "service_account"] },
+            "config_ref": { "type": "string" }
+          }
+        },
+        "retry_policy": {
+          "type": "object",
+          "properties": {
+            "max_retries": { "type": "integer", "default": 3 },
+            "backoff_strategy": { "type": "string", "enum": ["fixed", "exponential", "linear"], "default": "exponential" },
+            "initial_delay_ms": { "type": "integer", "default": 1000 },
+            "max_delay_ms": { "type": "integer", "default": 30000 }
+          }
+        },
+        "rate_limit": {
+          "type": "object",
+          "properties": {
+            "max_requests_per_minute": { "type": "integer" },
+            "max_requests_per_day": { "type": "integer" },
+            "queue_strategy": { "type": "string", "enum": ["drop", "queue", "throttle"] }
+          }
+        },
+        "health_check": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "endpoint": { "type": "string" },
+            "interval_seconds": { "type": "integer" }
+          }
+        }
+      }
+    },
+
+    "prompt_template": {
+      "type": "object",
+      "description": "LLM prompt configuration for the agent",
+      "required": ["system_prompt"],
+      "properties": {
+        "system_prompt": { "type": "string", "description": "Complete system prompt defining agent identity, rules, and behavior" },
+        "system_prompt_sections": {
+          "type": "array",
+          "description": "Modular system prompt sections that get composed. Alternative to monolithic system_prompt.",
+          "items": {
+            "type": "object",
+            "required": ["section_id", "content"],
+            "properties": {
+              "section_id": { "type": "string", "description": "e.g. identity, rules, tools_instructions, vertical_context, qualification_script" },
+              "content": { "type": "string" },
+              "condition": { "type": "string", "description": "Include this section only when condition is met" },
+              "priority": { "type": "integer", "description": "Order in final prompt (lower = earlier)" }
+            }
+          }
+        },
+        "user_prompt_template": { "type": "string", "description": "Template for user message wrapping. Use {{placeholders}} for dynamic content." },
+        "few_shot_examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["user", "assistant"],
+            "properties": {
+              "user": { "type": "string" },
+              "assistant": { "type": "string" },
+              "context": { "type": "string", "description": "Optional context shown before this example" }
+            }
+          }
+        },
+        "output_format": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["free_text", "json", "structured_text", "tool_calls_only"] },
+            "schema": { "type": "object", "description": "JSON Schema if output type is json" },
+            "instructions": { "type": "string", "description": "Natural language formatting instructions" }
+          }
+        },
+        "guardrails": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule"],
+            "properties": {
+              "rule": { "type": "string", "description": "e.g. NEVER share pricing without approval, ALWAYS verify identity before sharing records" },
+              "severity": { "type": "string", "enum": ["hard_block", "soft_warn", "log_only"] },
+              "action_on_violation": { "type": "string", "enum": ["block_response", "rephrase", "escalate", "log"] }
+            }
+          }
+        }
+      }
+    },
+
+    "pending_configuration": {
+      "type": "array",
+      "description": "Fields that require user input during agent setup. The skill generates these; the implementing tool/human fills them.",
+      "items": {
+        "type": "object",
+        "required": ["config_id", "field_path", "description"],
+        "properties": {
+          "config_id": { "type": "string", "description": "Unique reference ID used by other sections (e.g. auth_ref, config_ref)" },
+          "field_path": { "type": "string", "description": "Dot-notation path to the field (e.g. tools.0.auth.api_key, interfaces.whatsapp.webhook_url)" },
+          "description": { "type": "string", "description": "Human-readable explanation of what this config is and where to find it" },
+          "type": { "type": "string", "enum": ["string", "number", "boolean", "url", "api_key", "json", "cron_expression", "enum"] },
+          "required": { "type": "boolean", "default": true },
+          "default_value": {},
+          "validation_rule": { "type": "string", "description": "Regex or description of valid values" },
+          "sensitive": { "type": "boolean", "default": false, "description": "If true, should be stored as environment variable, never in plaintext" },
+          "example_value": { "type": "string", "description": "Example of a valid value" }
+        }
+      }
+    },
+
+    "governance": {
+      "type": "object",
+      "description": "Safety, compliance, and operational guardrails",
+      "properties": {
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "allowed_actions": { "type": "array", "items": { "type": "string" }, "description": "action_ids the agent is allowed to perform" },
+            "denied_actions": { "type": "array", "items": { "type": "string" } },
+            "approval_required": { "type": "array", "items": { "type": "string" }, "description": "action_ids requiring human approval" }
+          }
+        },
+        "audit": {
+          "type": "object",
+          "properties": {
+            "log_level": { "type": "string", "enum": ["none", "actions_only", "actions_and_reasoning", "full_trace"] },
+            "log_destination": { "type": "string", "description": "e.g. supabase_table, external_api, file" },
+            "retention_days": { "type": "integer" }
+          }
+        },
+        "rate_limits": {
+          "type": "object",
+          "properties": {
+            "max_messages_per_minute": { "type": "integer" },
+            "max_tokens_per_request": { "type": "integer" },
+            "max_cost_per_day_usd": { "type": "number" },
+            "max_sessions_per_hour": { "type": "integer" }
+          }
+        },
+        "safety": {
+          "type": "object",
+          "properties": {
+            "content_filters": { "type": "array", "items": { "type": "string" }, "description": "e.g. profanity, pii_detection, medical_advice, legal_advice" },
+            "pii_handling": { "type": "string", "enum": ["mask", "redact", "encrypt", "allow"], "default": "redact" },
+            "escalation_triggers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "condition": { "type": "string" },
+                  "action": { "type": "string", "enum": ["transfer_to_human", "pause_agent", "notify_admin", "log_alert"] }
+                }
+              }
+            },
+            "max_consecutive_failures": { "type": "integer", "description": "Pause agent after N consecutive errors" }
+          }
+        },
+        "compliance": {
+          "type": "object",
+          "properties": {
+            "frameworks": { "type": "array", "items": { "type": "string" }, "description": "e.g. LGPD, GDPR, HIPAA, SOC2" },
+            "data_residency": { "type": "string", "description": "Required data storage region" },
+            "consent_required": { "type": "boolean", "default": false },
+            "consent_message": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "learning": {
+      "type": "object",
+      "description": "How the agent improves over time",
+      "properties": {
+        "feedback_loop": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "collection_method": { "type": "string", "enum": ["explicit_rating", "implicit_signals", "human_review", "automated_metrics"] },
+            "storage": { "type": "string", "description": "Where feedback is stored" },
+            "review_cadence": { "type": "string", "enum": ["real_time", "daily", "weekly", "monthly"] }
+          }
+        },
+        "performance_tracking": {
+          "type": "object",
+          "properties": {
+            "metrics": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "metric_name": { "type": "string" },
+                  "calculation": { "type": "string" },
+                  "alert_threshold": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "knowledge_update": {
+          "type": "object",
+          "properties": {
+            "update_trigger": { "type": "string", "enum": ["manual", "scheduled", "threshold_based", "event_driven"] },
+            "validation_required": { "type": "boolean", "default": true },
+            "rollback_enabled": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+
+    "multi_agent": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "description": "Multi-agent system configuration. Present only when this blueprint defines an orchestrated system of agents.",
+      "properties": {
+        "system_name": { "type": "string" },
+        "system_description": { "type": "string" },
+        "agents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["agent_ref", "role"],
+            "properties": {
+              "agent_ref": { "type": "string", "description": "Reference to an individual agent blueprint file or agent_name" },
+              "role": { "type": "string", "description": "Role in the system (e.g. receptionist, scheduler, billing)" },
+              "priority": { "type": "integer", "description": "Execution priority (lower = first)" },
+              "can_delegate_to": { "type": "array", "items": { "type": "string" }, "description": "agent_refs this agent can hand off to" }
+            }
+          }
+        },
+        "orchestration": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "type": "string", "enum": ["sequential", "parallel", "event_driven", "hierarchical", "consensus"] },
+            "routing_rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "condition": { "type": "string" },
+                  "route_to": { "type": "string", "description": "agent_ref" },
+                  "priority": { "type": "integer" }
+                }
+              }
+            },
+            "escalation_chain": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Ordered list of agent_refs for escalation (e.g. ai_agent → senior_agent → human)"
+            },
+            "max_handoffs_per_session": { "type": "integer" }
+          }
+        },
+        "communication": {
+          "type": "object",
+          "properties": {
+            "protocol": { "type": "string", "enum": ["direct", "pub_sub", "shared_memory", "message_queue"] },
+            "message_format": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string", "enum": ["json", "text", "structured"] },
+                "schema": { "type": "object" }
+              }
+            },
+            "channels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "channel_id": { "type": "string" },
+                  "participants": { "type": "array", "items": { "type": "string" } },
+                  "direction": { "type": "string", "enum": ["unidirectional", "bidirectional"] }
+                }
+              }
+            }
+          }
+        },
+        "shared_resources": {
+          "type": "object",
+          "properties": {
+            "shared_memory": { "type": "object", "description": "Shared memory config (same structure as memory section)" },
+            "shared_tools": { "type": "array", "items": { "type": "string" }, "description": "tool_ids accessible by all agents" },
+            "shared_context_sources": { "type": "array", "items": { "type": "string" }, "description": "source_ids accessible by all agents" }
+          }
+        }
+      }
+      }
+      ]
+    }
+  }
+}

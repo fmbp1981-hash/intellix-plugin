@@ -1,0 +1,1084 @@
+{
+  "schema_version": "2.0",
+
+  "agent_metadata": {
+    "agent_name": "ReceptionAgent",
+    "agent_type": "appointment_scheduling",
+    "business_domain": "healthcare",
+    "version": "1.0",
+    "description": "Agente de recepção para clínicas médicas e odontológicas. Atende pacientes via WhatsApp, qualifica a demanda, agenda consultas e envia lembretes automáticos.",
+    "tags": ["healthcare", "whatsapp", "scheduling", "reception", "clinic"],
+    "author": "IntelliX.AI",
+    "created_at": "2026-03-06T00:00:00Z",
+    "updated_at": "2026-03-06T00:00:00Z"
+  },
+
+  "objective": {
+    "primary_goal": "Atender pacientes via WhatsApp, qualificar a demanda clínica e agendar consultas automaticamente no sistema da clínica",
+    "secondary_goals": [
+      "Reduzir taxa de no-show com lembretes automáticos",
+      "Coletar informações pré-consulta para otimizar o atendimento",
+      "Encaminhar urgências para atendimento humano imediato"
+    ],
+    "success_criteria": [
+      {
+        "metric": "appointment_booking_rate",
+        "target": ">60%",
+        "measurement_method": "Razão entre conversas iniciadas e consultas agendadas"
+      },
+      {
+        "metric": "average_response_time_seconds",
+        "target": "<30",
+        "measurement_method": "Tempo médio entre mensagem do paciente e resposta do agente"
+      },
+      {
+        "metric": "no_show_rate",
+        "target": "<15%",
+        "measurement_method": "Razão entre consultas agendadas e não comparecimentos"
+      }
+    ],
+    "constraints": [
+      "NUNCA fornecer diagnósticos ou orientações médicas",
+      "NUNCA compartilhar dados de outros pacientes",
+      "SEMPRE transferir para humano em caso de emergência relatada",
+      "SEMPRE respeitar horário de funcionamento da clínica",
+      "NUNCA agendar fora dos slots disponíveis no sistema"
+    ]
+  },
+
+  "operation_mode": {
+    "mode": "external",
+    "runtime_environment": "supabase_edge_function",
+    "concurrency": {
+      "max_concurrent_sessions": 50,
+      "session_isolation": "full"
+    }
+  },
+
+  "interfaces": {
+    "system_ui": {
+      "enabled": true,
+      "component_type": "dashboard_panel"
+    },
+    "api": {
+      "enabled": true,
+      "protocol": "rest",
+      "base_path": "/api/agents/reception"
+    },
+    "whatsapp": {
+      "enabled": true,
+      "provider": "evolution_api",
+      "webhook_path": "/webhooks/whatsapp/incoming",
+      "connection_config_ref": "cfg_whatsapp_provider"
+    },
+    "telegram": { "enabled": false, "bot_token_ref": "", "webhook_path": "" },
+    "instagram": { "enabled": false, "api_version": "", "webhook_path": "" },
+    "email": { "enabled": false, "provider": "", "inbound_address": "" },
+    "voice": { "enabled": false, "provider": "", "voice_id": "" }
+  },
+
+  "business_context": {
+    "industry": "dental_clinic",
+    "company_size": "small",
+    "pain_points": [
+      "Recepcionistas sobrecarregadas com ligações e WhatsApp simultâneos",
+      "Alta taxa de no-show (25-35%) por falta de lembretes consistentes",
+      "Pacientes desistem quando não recebem resposta em menos de 5 minutos",
+      "Dificuldade em coletar informações pré-consulta de forma padronizada"
+    ],
+    "success_metrics": [
+      "Redução de 50% no volume de ligações para a recepção",
+      "Taxa de no-show abaixo de 15%",
+      "NPS de atendimento digital acima de 8.0"
+    ],
+    "compliance_requirements": ["LGPD", "CFM_Resolucao_2314"],
+    "business_hours": {
+      "timezone": "America/Sao_Paulo",
+      "schedule": {
+        "mon": { "start": "08:00", "end": "18:00" },
+        "tue": { "start": "08:00", "end": "18:00" },
+        "wed": { "start": "08:00", "end": "18:00" },
+        "thu": { "start": "08:00", "end": "18:00" },
+        "fri": { "start": "08:00", "end": "17:00" },
+        "sat": { "start": "08:00", "end": "12:00" },
+        "sun": null
+      },
+      "outside_hours_behavior": "auto_reply",
+      "outside_hours_message": "Olá! Nosso horário de atendimento é de segunda a sexta das 8h às 18h e sábados das 8h às 12h. Sua mensagem será respondida no próximo horário disponível. Em caso de emergência, dirija-se ao pronto-socorro mais próximo."
+    },
+    "brand_voice": {
+      "tone": "empathetic",
+      "language": "pt-BR",
+      "formality": "semi_formal",
+      "vocabulary_guidelines": [
+        "Usar 'consulta' e não 'sessão'",
+        "Usar 'paciente' e não 'cliente'",
+        "Evitar termos técnicos médicos — usar linguagem acessível",
+        "Nunca usar gírias ou abreviações",
+        "Sempre se referir ao dentista como 'Dr.' ou 'Dra.'"
+      ]
+    }
+  },
+
+  "context_sources": [
+    {
+      "source_id": "src_patient_record",
+      "source_type": "database",
+      "source_name": "Ficha do Paciente",
+      "description": "Dados cadastrais e histórico de consultas do paciente identificado pelo número de WhatsApp",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT * FROM patients WHERE phone = '{{patient_phone}}' AND organization_id = '{{org_id}}'",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 300
+    },
+    {
+      "source_id": "src_available_slots",
+      "source_type": "api",
+      "source_name": "Agenda Disponível",
+      "description": "Slots de horário disponíveis para agendamento nos próximos 14 dias",
+      "connection_config": {
+        "endpoint": "{{base_url}}/api/scheduling/available-slots",
+        "method": "GET",
+        "auth_ref": "cfg_scheduling_api",
+        "query_template": "",
+        "headers": { "Content-Type": "application/json" }
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 60
+    },
+    {
+      "source_id": "src_clinic_services",
+      "source_type": "rag_knowledge_base",
+      "source_name": "Serviços da Clínica",
+      "description": "Base de conhecimento com todos os serviços, procedimentos, preços e profissionais da clínica",
+      "connection_config": {
+        "endpoint": "supabase_pgvector",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT content, similarity FROM match_documents('{{query}}', 0.75, 5)",
+        "headers": {}
+      },
+      "refresh_strategy": "cached",
+      "cache_ttl_seconds": 3600
+    }
+  ],
+
+  "tools": [
+    {
+      "tool_id": "tool_search_patient",
+      "tool_name": "buscar_paciente",
+      "tool_type": "database_query",
+      "description": "Busca o cadastro do paciente pelo número de WhatsApp. Retorna dados cadastrais e histórico de consultas.",
+      "endpoint": {
+        "url": "supabase://patients?phone=eq.{{phone}}",
+        "method": "GET",
+        "headers": {}
+      },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["phone"],
+        "properties": {
+          "phone": { "type": "string", "description": "Número de WhatsApp do paciente no formato +55XXXXXXXXXXX" }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "phone": { "type": "string" },
+            "email": { "type": "string" },
+            "last_visit": { "type": "string" },
+            "notes": { "type": "string" }
+          }
+        }
+      },
+      "error_handling": {
+        "retry_count": 2,
+        "retry_delay_ms": 500,
+        "timeout_ms": 5000,
+        "on_failure": "skip",
+        "fallback_tool_ref": ""
+      },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 5 }
+    },
+    {
+      "tool_id": "tool_create_patient",
+      "tool_name": "cadastrar_paciente",
+      "tool_type": "database_query",
+      "description": "Cria um novo cadastro de paciente no sistema. Usar apenas quando o paciente não foi encontrado na busca.",
+      "endpoint": {
+        "url": "supabase://patients",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" }
+      },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["name", "phone"],
+        "properties": {
+          "name": { "type": "string", "description": "Nome completo do paciente" },
+          "phone": { "type": "string", "description": "WhatsApp no formato +55XXXXXXXXXXX" },
+          "email": { "type": "string", "description": "Email (opcional)" },
+          "birth_date": { "type": "string", "description": "Data de nascimento YYYY-MM-DD (opcional)" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": {
+        "retry_count": 1,
+        "retry_delay_ms": 1000,
+        "timeout_ms": 5000,
+        "on_failure": "escalate",
+        "fallback_tool_ref": ""
+      },
+      "rate_limit": { "max_calls_per_minute": 10, "max_calls_per_session": 2 }
+    },
+    {
+      "tool_id": "tool_check_availability",
+      "tool_name": "verificar_disponibilidade",
+      "tool_type": "api_call",
+      "description": "Consulta os horários disponíveis para agendamento por especialidade e profissional nos próximos 14 dias.",
+      "endpoint": {
+        "url": "{{base_url}}/api/scheduling/available-slots?specialty={{specialty}}&professional={{professional_id}}&days=14",
+        "method": "GET",
+        "headers": { "Content-Type": "application/json" }
+      },
+      "auth": { "method": "bearer_token", "config_ref": "cfg_scheduling_api" },
+      "parameters": {
+        "type": "object",
+        "required": ["specialty"],
+        "properties": {
+          "specialty": { "type": "string", "description": "Especialidade desejada (e.g. ortodontia, limpeza, implante)" },
+          "professional_id": { "type": "string", "description": "ID do profissional preferido (opcional)" },
+          "preferred_period": { "type": "string", "enum": ["morning", "afternoon", "any"], "description": "Período preferido" }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "slot_id": { "type": "string" },
+              "date": { "type": "string" },
+              "time": { "type": "string" },
+              "professional_name": { "type": "string" },
+              "duration_minutes": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "error_handling": {
+        "retry_count": 2,
+        "retry_delay_ms": 1000,
+        "timeout_ms": 10000,
+        "on_failure": "fallback",
+        "fallback_tool_ref": ""
+      },
+      "rate_limit": { "max_calls_per_minute": 20, "max_calls_per_session": 10 }
+    },
+    {
+      "tool_id": "tool_book_appointment",
+      "tool_name": "agendar_consulta",
+      "tool_type": "api_call",
+      "description": "Confirma o agendamento de uma consulta no slot selecionado pelo paciente.",
+      "endpoint": {
+        "url": "{{base_url}}/api/scheduling/book",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" }
+      },
+      "auth": { "method": "bearer_token", "config_ref": "cfg_scheduling_api" },
+      "parameters": {
+        "type": "object",
+        "required": ["slot_id", "patient_id"],
+        "properties": {
+          "slot_id": { "type": "string", "description": "ID do slot de horário selecionado" },
+          "patient_id": { "type": "string", "description": "ID do paciente no sistema" },
+          "notes": { "type": "string", "description": "Observações para o profissional (queixa principal, alergias)" },
+          "send_confirmation": { "type": "boolean", "description": "Enviar confirmação por WhatsApp" }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "appointment_id": { "type": "string" },
+            "date": { "type": "string" },
+            "time": { "type": "string" },
+            "professional_name": { "type": "string" },
+            "status": { "type": "string" }
+          }
+        }
+      },
+      "error_handling": {
+        "retry_count": 1,
+        "retry_delay_ms": 2000,
+        "timeout_ms": 15000,
+        "on_failure": "escalate",
+        "fallback_tool_ref": ""
+      },
+      "rate_limit": { "max_calls_per_minute": 10, "max_calls_per_session": 3 }
+    },
+    {
+      "tool_id": "tool_send_whatsapp",
+      "tool_name": "enviar_mensagem_whatsapp",
+      "tool_type": "api_call",
+      "description": "Envia uma mensagem de texto via WhatsApp para o paciente.",
+      "endpoint": {
+        "url": "{{whatsapp_api_url}}/message/sendText/{{instance_name}}",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" }
+      },
+      "auth": { "method": "api_key", "config_ref": "cfg_whatsapp_provider" },
+      "parameters": {
+        "type": "object",
+        "required": ["number", "text"],
+        "properties": {
+          "number": { "type": "string", "description": "Número do destinatário" },
+          "text": { "type": "string", "description": "Conteúdo da mensagem" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": {
+        "retry_count": 3,
+        "retry_delay_ms": 2000,
+        "timeout_ms": 10000,
+        "on_failure": "abort",
+        "fallback_tool_ref": ""
+      },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 20 }
+    },
+    {
+      "tool_id": "tool_transfer_human",
+      "tool_name": "transferir_para_humano",
+      "tool_type": "function",
+      "description": "Transfere a conversa para um atendente humano. Usar em emergências, reclamações graves ou quando o paciente solicita.",
+      "endpoint": { "url": "", "method": "POST", "headers": {} },
+      "auth": { "method": "none", "config_ref": "" },
+      "parameters": {
+        "type": "object",
+        "required": ["conversation_id", "reason"],
+        "properties": {
+          "conversation_id": { "type": "string" },
+          "reason": { "type": "string", "description": "Motivo da transferência" },
+          "priority": { "type": "string", "enum": ["normal", "urgent", "emergency"] }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": {
+        "retry_count": 3,
+        "retry_delay_ms": 1000,
+        "timeout_ms": 5000,
+        "on_failure": "abort",
+        "fallback_tool_ref": ""
+      },
+      "rate_limit": { "max_calls_per_minute": 10, "max_calls_per_session": 3 }
+    },
+    {
+      "tool_id": "tool_search_knowledge",
+      "tool_name": "consultar_base_conhecimento",
+      "tool_type": "database_query",
+      "description": "Busca informações sobre serviços, procedimentos, preços e profissionais na base de conhecimento da clínica usando busca semântica.",
+      "endpoint": {
+        "url": "supabase://rpc/match_documents",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" }
+      },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": { "type": "string", "description": "Pergunta ou tema a buscar na base de conhecimento" },
+          "max_results": { "type": "integer", "description": "Máximo de resultados (default: 5)" }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "content": { "type": "string" },
+              "similarity": { "type": "number" },
+              "source": { "type": "string" }
+            }
+          }
+        }
+      },
+      "error_handling": {
+        "retry_count": 2,
+        "retry_delay_ms": 500,
+        "timeout_ms": 5000,
+        "on_failure": "skip",
+        "fallback_tool_ref": ""
+      },
+      "rate_limit": { "max_calls_per_minute": 20, "max_calls_per_session": 15 }
+    }
+  ],
+
+  "memory": {
+    "short_term": {
+      "enabled": true,
+      "max_messages": 30,
+      "summarization": {
+        "enabled": true,
+        "trigger_message_count": 20,
+        "strategy": "key_points"
+      }
+    },
+    "long_term": {
+      "enabled": true,
+      "storage_backend": "supabase_table",
+      "table_name": "agent_conversations",
+      "schema": {
+        "columns": [
+          { "name": "id", "type": "uuid", "nullable": false, "default": "gen_random_uuid()", "description": "PK" },
+          { "name": "organization_id", "type": "uuid", "nullable": false, "default": "", "description": "FK para organização (multi-tenant)" },
+          { "name": "patient_phone", "type": "text", "nullable": false, "default": "", "description": "Número WhatsApp do paciente" },
+          { "name": "patient_id", "type": "uuid", "nullable": true, "default": "", "description": "FK para patients (após identificação)" },
+          { "name": "status", "type": "text", "nullable": false, "default": "'active'", "description": "active, human_active, resolved, abandoned" },
+          { "name": "summary", "type": "text", "nullable": true, "default": "", "description": "Resumo da conversa gerado pelo agente" },
+          { "name": "intent", "type": "text", "nullable": true, "default": "", "description": "Intenção identificada (scheduling, inquiry, complaint, emergency)" },
+          { "name": "sentiment", "type": "text", "nullable": true, "default": "", "description": "Sentimento detectado (positive, neutral, negative, urgent)" },
+          { "name": "last_message_at", "type": "timestamptz", "nullable": false, "default": "now()", "description": "" },
+          { "name": "created_at", "type": "timestamptz", "nullable": false, "default": "now()", "description": "" },
+          { "name": "metadata", "type": "jsonb", "nullable": true, "default": "'{}'", "description": "Dados coletados durante a conversa" }
+        ],
+        "indexes": [
+          { "columns": ["organization_id", "patient_phone"], "type": "btree" },
+          { "columns": ["status"], "type": "btree" },
+          { "columns": ["last_message_at"], "type": "btree" }
+        ]
+      },
+      "ttl_days": 365,
+      "max_entries_per_session": 200
+    },
+    "episodic": {
+      "enabled": true,
+      "embedding_model": "text-embedding-3-small",
+      "vector_store": "supabase_pgvector",
+      "similarity_threshold": 0.75,
+      "max_results": 5,
+      "chunk_strategy": {
+        "method": "semantic",
+        "chunk_size_tokens": 512,
+        "overlap_tokens": 50
+      }
+    }
+  },
+
+  "reasoning": {
+    "strategy": "react",
+    "fallback_strategy": "escalate_to_human",
+    "max_reasoning_steps": 8,
+    "confidence_threshold": 0.7,
+    "model_config": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-20250514",
+      "temperature": 0.3,
+      "max_tokens": 1024,
+      "config_ref": "cfg_llm_api_key"
+    }
+  },
+
+  "cognitive_loop": {
+    "enabled": true,
+    "observe": {
+      "data_sources": ["src_patient_record", "src_available_slots", "src_clinic_services"],
+      "event_listeners": [
+        { "event_type": "message.received", "source": "whatsapp", "filter": {} }
+      ],
+      "polling_interval_seconds": 0
+    },
+    "think": {
+      "analysis_strategy": "composite",
+      "context_window_strategy": "hybrid",
+      "max_context_tokens": 4096
+    },
+    "plan": {
+      "planning_method": "conditional",
+      "max_plan_steps": 5,
+      "resource_constraints": ["max_api_calls:10", "max_time_seconds:25"],
+      "replanning_enabled": true
+    },
+    "act": {
+      "execution_mode": "sync",
+      "timeout_seconds": 30,
+      "rollback_enabled": false,
+      "confirmation_required": false
+    },
+    "reflect": {
+      "evaluation_criteria": [
+        { "criterion": "patient_question_answered", "weight": 0.4 },
+        { "criterion": "appointment_booked_if_requested", "weight": 0.4 },
+        { "criterion": "response_tone_appropriate", "weight": 0.2 }
+      ],
+      "success_threshold": 0.7,
+      "logging": {
+        "level": "actions_only",
+        "destination": "supabase://agent_logs"
+      }
+    },
+    "learn": {
+      "learning_type": "episodic",
+      "update_frequency": "per_interaction",
+      "knowledge_base_ref": "src_clinic_services",
+      "human_review_required": false
+    }
+  },
+
+  "workflow": [
+    {
+      "step_id": "step_001",
+      "step_name": "Receber mensagem",
+      "step_type": "receive_input",
+      "description": "Recebe a mensagem do paciente via webhook do WhatsApp",
+      "inputs": [
+        { "name": "message_text", "source": "trigger.payload.message.text", "required": true },
+        { "name": "sender_phone", "source": "trigger.payload.sender.phone", "required": true },
+        { "name": "message_type", "source": "trigger.payload.message.type", "required": true }
+      ],
+      "outputs": [
+        { "name": "raw_message", "type": "object", "description": "Mensagem bruta do WhatsApp" }
+      ],
+      "tool_ref": "",
+      "on_error": { "strategy": "abort", "retry_count": 0, "fallback_step": "", "error_message": "Falha ao receber mensagem" },
+      "timeout_seconds": 5,
+      "next_step": "step_002"
+    },
+    {
+      "step_id": "step_002",
+      "step_name": "Verificar horário de funcionamento",
+      "step_type": "condition",
+      "description": "Verifica se a mensagem chegou dentro do horário de atendimento da clínica",
+      "inputs": [
+        { "name": "current_time", "source": "system.current_time", "required": true },
+        { "name": "business_hours", "source": "business_context.business_hours", "required": true }
+      ],
+      "outputs": [
+        { "name": "is_business_hours", "type": "boolean", "description": "" }
+      ],
+      "tool_ref": "",
+      "condition": {
+        "expression": "current_time WITHIN business_hours.schedule",
+        "if_true": "step_003",
+        "if_false": "step_002b"
+      },
+      "on_error": { "strategy": "fallback", "retry_count": 0, "fallback_step": "step_003", "error_message": "" },
+      "timeout_seconds": 2,
+      "next_step": ""
+    },
+    {
+      "step_id": "step_002b",
+      "step_name": "Enviar resposta fora do horário",
+      "step_type": "tool_call",
+      "description": "Envia mensagem automática informando horário de atendimento",
+      "inputs": [
+        { "name": "sender_phone", "source": "step_001.raw_message.sender_phone", "required": true },
+        { "name": "message", "source": "business_context.business_hours.outside_hours_message", "required": true }
+      ],
+      "outputs": [],
+      "tool_ref": "tool_send_whatsapp",
+      "on_error": { "strategy": "abort", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 10,
+      "next_step": "step_010"
+    },
+    {
+      "step_id": "step_003",
+      "step_name": "Identificar paciente",
+      "step_type": "tool_call",
+      "description": "Busca o paciente no banco de dados pelo número de WhatsApp",
+      "inputs": [
+        { "name": "phone", "source": "step_001.raw_message.sender_phone", "required": true }
+      ],
+      "outputs": [
+        { "name": "patient", "type": "object", "description": "Dados do paciente ou null se não encontrado" },
+        { "name": "is_new_patient", "type": "boolean", "description": "" }
+      ],
+      "tool_ref": "tool_search_patient",
+      "on_error": { "strategy": "skip", "retry_count": 2, "fallback_step": "step_005", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_004"
+    },
+    {
+      "step_id": "step_004",
+      "step_name": "Verificar se é emergência",
+      "step_type": "llm_reasoning",
+      "description": "Analisa o conteúdo da mensagem para detectar urgências ou emergências. Usa intent classification.",
+      "inputs": [
+        { "name": "message_text", "source": "step_001.raw_message.message_text", "required": true },
+        { "name": "patient_history", "source": "step_003.patient", "required": false }
+      ],
+      "outputs": [
+        { "name": "intent", "type": "string", "description": "scheduling | inquiry | complaint | emergency | greeting | other" },
+        { "name": "is_emergency", "type": "boolean", "description": "" },
+        { "name": "extracted_entities", "type": "object", "description": "Entidades extraídas: specialty, symptom, preferred_date, preferred_time" }
+      ],
+      "tool_ref": "",
+      "on_error": { "strategy": "fallback", "retry_count": 1, "fallback_step": "step_005", "error_message": "" },
+      "timeout_seconds": 10,
+      "next_step": "step_004b"
+    },
+    {
+      "step_id": "step_004b",
+      "step_name": "Rotear por intenção",
+      "step_type": "condition",
+      "description": "Direciona o fluxo com base na intenção identificada",
+      "inputs": [
+        { "name": "intent", "source": "step_004.intent", "required": true },
+        { "name": "is_emergency", "source": "step_004.is_emergency", "required": true }
+      ],
+      "outputs": [],
+      "tool_ref": "",
+      "condition": {
+        "expression": "is_emergency == true",
+        "if_true": "step_009",
+        "if_false": "step_005"
+      },
+      "on_error": { "strategy": "fallback", "retry_count": 0, "fallback_step": "step_005", "error_message": "" },
+      "timeout_seconds": 2,
+      "next_step": ""
+    },
+    {
+      "step_id": "step_005",
+      "step_name": "Compor contexto e raciocinar",
+      "step_type": "llm_reasoning",
+      "description": "Com base na intenção, histórico do paciente e base de conhecimento, formula a melhor resposta ou ação. Se o paciente quer agendar, consulta disponibilidade. Se tem dúvida, busca na knowledge base.",
+      "inputs": [
+        { "name": "message_text", "source": "step_001.raw_message.message_text", "required": true },
+        { "name": "intent", "source": "step_004.intent", "required": true },
+        { "name": "patient", "source": "step_003.patient", "required": false },
+        { "name": "extracted_entities", "source": "step_004.extracted_entities", "required": false },
+        { "name": "conversation_history", "source": "memory.short_term", "required": true }
+      ],
+      "outputs": [
+        { "name": "response_text", "type": "string", "description": "Resposta a enviar ao paciente" },
+        { "name": "actions_to_execute", "type": "array", "description": "Lista de action_ids a executar" },
+        { "name": "needs_more_info", "type": "boolean", "description": "Se precisa pedir mais informações ao paciente" }
+      ],
+      "tool_ref": "",
+      "on_error": { "strategy": "escalate", "retry_count": 1, "fallback_step": "step_009", "error_message": "Desculpe, tive um problema técnico. Vou transferir você para nossa recepcionista." },
+      "timeout_seconds": 20,
+      "next_step": "step_006"
+    },
+    {
+      "step_id": "step_006",
+      "step_name": "Executar ações decididas",
+      "step_type": "process",
+      "description": "Executa as ações decididas pelo raciocínio: agendar consulta, buscar horários, cadastrar paciente, etc.",
+      "inputs": [
+        { "name": "actions_to_execute", "source": "step_005.actions_to_execute", "required": true }
+      ],
+      "outputs": [
+        { "name": "action_results", "type": "object", "description": "Resultados das ações executadas" }
+      ],
+      "tool_ref": "",
+      "on_error": { "strategy": "fallback", "retry_count": 1, "fallback_step": "step_008", "error_message": "" },
+      "timeout_seconds": 20,
+      "next_step": "step_007"
+    },
+    {
+      "step_id": "step_007",
+      "step_name": "Compor e enviar resposta",
+      "step_type": "tool_call",
+      "description": "Compõe a mensagem final considerando resultados das ações e envia via WhatsApp",
+      "inputs": [
+        { "name": "response_text", "source": "step_005.response_text", "required": true },
+        { "name": "action_results", "source": "step_006.action_results", "required": false },
+        { "name": "sender_phone", "source": "step_001.raw_message.sender_phone", "required": true }
+      ],
+      "outputs": [
+        { "name": "message_sent", "type": "boolean", "description": "" }
+      ],
+      "tool_ref": "tool_send_whatsapp",
+      "on_error": { "strategy": "retry", "retry_count": 3, "fallback_step": "step_009", "error_message": "" },
+      "timeout_seconds": 10,
+      "next_step": "step_008"
+    },
+    {
+      "step_id": "step_008",
+      "step_name": "Salvar estado da conversa",
+      "step_type": "state_update",
+      "description": "Atualiza o registro da conversa no banco: histórico, intenção, sentimento, resumo",
+      "inputs": [
+        { "name": "conversation_id", "source": "context.conversation_id", "required": true },
+        { "name": "intent", "source": "step_004.intent", "required": false },
+        { "name": "response_sent", "source": "step_007.message_sent", "required": false }
+      ],
+      "outputs": [],
+      "tool_ref": "",
+      "on_error": { "strategy": "skip", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_010"
+    },
+    {
+      "step_id": "step_009",
+      "step_name": "Transferir para atendente humano",
+      "step_type": "tool_call",
+      "description": "Transfere a conversa para um humano em caso de emergência, falha grave ou solicitação do paciente",
+      "inputs": [
+        { "name": "conversation_id", "source": "context.conversation_id", "required": true },
+        { "name": "reason", "source": "step_004.intent", "required": true }
+      ],
+      "outputs": [],
+      "tool_ref": "tool_transfer_human",
+      "on_error": { "strategy": "abort", "retry_count": 3, "fallback_step": "", "error_message": "Não foi possível transferir. Por favor, ligue para a clínica." },
+      "timeout_seconds": 10,
+      "next_step": "step_010"
+    },
+    {
+      "step_id": "step_010",
+      "step_name": "Finalizar ciclo",
+      "step_type": "terminate",
+      "description": "Encerra o ciclo de processamento desta mensagem. O agente aguarda a próxima mensagem.",
+      "inputs": [],
+      "outputs": [],
+      "tool_ref": "",
+      "on_error": { "strategy": "skip", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 1,
+      "next_step": ""
+    }
+  ],
+
+  "actions": [
+    {
+      "action_id": "action_book_appointment",
+      "action_name": "Agendar consulta",
+      "action_type": "tool_call",
+      "description": "Confirma o agendamento de uma consulta para o paciente",
+      "tool_ref": "tool_book_appointment",
+      "parameters": {},
+      "conditions": [
+        { "field": "patient.id", "operator": "exists", "value": true },
+        { "field": "selected_slot.slot_id", "operator": "exists", "value": true }
+      ],
+      "side_effects": ["creates_appointment", "sends_confirmation_whatsapp", "updates_calendar"],
+      "requires_confirmation": false
+    },
+    {
+      "action_id": "action_register_patient",
+      "action_name": "Cadastrar novo paciente",
+      "action_type": "create_record",
+      "description": "Cria cadastro de novo paciente quando não encontrado no sistema",
+      "tool_ref": "tool_create_patient",
+      "parameters": {},
+      "conditions": [
+        { "field": "step_003.is_new_patient", "operator": "equals", "value": true },
+        { "field": "collected_data.name", "operator": "exists", "value": true }
+      ],
+      "side_effects": ["creates_patient_record"],
+      "requires_confirmation": false
+    },
+    {
+      "action_id": "action_escalate",
+      "action_name": "Escalar para humano",
+      "action_type": "escalate_to_human",
+      "description": "Transfere a conversa para atendente humano",
+      "tool_ref": "tool_transfer_human",
+      "parameters": {},
+      "conditions": [],
+      "side_effects": ["changes_conversation_status", "notifies_receptionist"],
+      "requires_confirmation": false
+    },
+    {
+      "action_id": "action_send_reminder",
+      "action_name": "Enviar lembrete de consulta",
+      "action_type": "send_notification",
+      "description": "Envia lembrete 24h e 1h antes da consulta agendada",
+      "tool_ref": "tool_send_whatsapp",
+      "parameters": {},
+      "conditions": [
+        { "field": "appointment.status", "operator": "equals", "value": "confirmed" },
+        { "field": "appointment.date", "operator": "equals", "value": "{{tomorrow}}" }
+      ],
+      "side_effects": ["sends_whatsapp_message", "logs_reminder_sent"],
+      "requires_confirmation": false
+    }
+  ],
+
+  "triggers": [
+    {
+      "trigger_id": "trigger_whatsapp_message",
+      "trigger_type": "webhook",
+      "source": "whatsapp_incoming",
+      "event_name": "message.received",
+      "cron_expression": "",
+      "conditions": [
+        { "field": "message.type", "operator": "in", "value": ["text", "audio", "image"] }
+      ],
+      "payload_schema": {
+        "type": "object",
+        "properties": {
+          "sender": { "type": "object", "properties": { "phone": { "type": "string" }, "name": { "type": "string" } } },
+          "message": { "type": "object", "properties": { "type": { "type": "string" }, "text": { "type": "string" }, "media_url": { "type": "string" } } }
+        }
+      },
+      "activates_workflow_step": "step_001",
+      "debounce_seconds": 2,
+      "enabled": true
+    },
+    {
+      "trigger_id": "trigger_reminder_24h",
+      "trigger_type": "schedule",
+      "source": "cron",
+      "event_name": "appointment.reminder_24h",
+      "cron_expression": "0 8 * * *",
+      "conditions": [
+        { "field": "appointment.date", "operator": "equals", "value": "{{tomorrow}}" },
+        { "field": "appointment.status", "operator": "equals", "value": "confirmed" }
+      ],
+      "payload_schema": {},
+      "activates_workflow_step": "",
+      "debounce_seconds": 0,
+      "enabled": true
+    },
+    {
+      "trigger_id": "trigger_reminder_1h",
+      "trigger_type": "schedule",
+      "source": "cron",
+      "event_name": "appointment.reminder_1h",
+      "cron_expression": "*/15 * * * *",
+      "conditions": [
+        { "field": "appointment.datetime", "operator": "less_than", "value": "{{now + 75min}}" },
+        { "field": "appointment.reminder_1h_sent", "operator": "equals", "value": false }
+      ],
+      "payload_schema": {},
+      "activates_workflow_step": "",
+      "debounce_seconds": 0,
+      "enabled": true
+    }
+  ],
+
+  "integration": {
+    "primary_protocol": "webhook",
+    "base_url": "",
+    "auth": { "method": "api_key", "config_ref": "cfg_whatsapp_provider" },
+    "retry_policy": {
+      "max_retries": 3,
+      "backoff_strategy": "exponential",
+      "initial_delay_ms": 1000,
+      "max_delay_ms": 30000
+    },
+    "rate_limit": {
+      "max_requests_per_minute": 60,
+      "max_requests_per_day": 5000,
+      "queue_strategy": "throttle"
+    },
+    "health_check": {
+      "enabled": true,
+      "endpoint": "/health",
+      "interval_seconds": 300
+    }
+  },
+
+  "prompt_template": {
+    "system_prompt": "Você é a recepcionista virtual da clínica. Seu nome é o configurado pela clínica.\n\n## IDENTIDADE\n- Você é uma recepcionista profissional, empática e eficiente\n- Represente a clínica com cordialidade e profissionalismo\n- Nunca revele que é uma IA a menos que perguntado diretamente\n\n## REGRAS DE OURO\n1. NUNCA forneça diagnósticos ou orientações médicas de qualquer tipo\n2. NUNCA compartilhe informações de outros pacientes\n3. NUNCA invente horários disponíveis — sempre consulte o sistema\n4. NUNCA prometa preços sem consultar a base de conhecimento\n5. SEMPRE transfira para um humano em caso de emergência relatada\n6. SEMPRE colete nome completo antes de agendar\n7. SEMPRE confirme data e horário antes de finalizar agendamento\n\n## FLUXO DE ATENDIMENTO\n1. Cumprimente o paciente pelo nome (se conhecido)\n2. Identifique a necessidade (agendamento, dúvida, reagendamento, cancelamento)\n3. Se agendamento: colete especialidade desejada, verifique disponibilidade, ofereça opções\n4. Se dúvida: consulte a base de conhecimento antes de responder\n5. Se não souber a resposta: diga que vai verificar e transfira para humano\n\n## TOM DE VOZ\n- Empático e acolhedor, mas profissional\n- Use linguagem simples e acessível\n- Evite termos técnicos médicos\n- Sempre trate os profissionais como Dr./Dra.",
+    "system_prompt_sections": [
+      {
+        "section_id": "identity",
+        "content": "Você é a recepcionista virtual da clínica. Seu nome é o configurado pela clínica. Você é profissional, empática e eficiente.",
+        "condition": "",
+        "priority": 1
+      },
+      {
+        "section_id": "rules",
+        "content": "NUNCA forneça diagnósticos. NUNCA compartilhe dados de outros pacientes. NUNCA invente horários. SEMPRE transfira emergências para humano.",
+        "condition": "",
+        "priority": 2
+      },
+      {
+        "section_id": "vertical_context",
+        "content": "Contexto da clínica: {{clinic_name}}, {{clinic_specialty}}, {{clinic_address}}. Profissionais: {{professionals_list}}.",
+        "condition": "",
+        "priority": 3
+      },
+      {
+        "section_id": "patient_context",
+        "content": "Paciente: {{patient_name}}, última consulta: {{last_visit}}, histórico: {{patient_notes}}.",
+        "condition": "patient.id EXISTS",
+        "priority": 4
+      }
+    ],
+    "user_prompt_template": "Mensagem do paciente: {{message_text}}\n\nContexto da conversa:\n{{conversation_history}}\n\nDados do paciente (se disponível):\n{{patient_context}}\n\nHorários disponíveis (se consultado):\n{{available_slots}}\n\nInformações da base de conhecimento (se relevante):\n{{knowledge_context}}",
+    "few_shot_examples": [
+      {
+        "user": "Oi, gostaria de marcar uma limpeza",
+        "assistant": "Olá! Que bom que entrou em contato! 😊\n\nPara agendar sua limpeza, vou verificar os horários disponíveis. Poderia me informar:\n\n1. Seu nome completo?\n2. Tem preferência de dia da semana ou período (manhã/tarde)?",
+        "context": "Paciente novo, sem cadastro"
+      },
+      {
+        "user": "Estou com muita dor de dente, preciso de atendimento urgente",
+        "assistant": "Entendo que está com dor e vou te ajudar o mais rápido possível.\n\nVou transferir você agora mesmo para nossa equipe para verificar o primeiro horário de encaixe disponível. Um momento, por favor.",
+        "context": "Paciente relatando dor — classificado como urgência"
+      }
+    ],
+    "output_format": {
+      "type": "free_text",
+      "schema": {},
+      "instructions": "Responda de forma natural como uma recepcionista humana. Use parágrafos curtos. Inclua emojis com moderação (máximo 1-2 por mensagem). Nunca use markdown ou formatação especial."
+    },
+    "guardrails": [
+      {
+        "rule": "NUNCA fornecer diagnósticos ou orientações médicas",
+        "severity": "hard_block",
+        "action_on_violation": "rephrase"
+      },
+      {
+        "rule": "NUNCA compartilhar dados de outros pacientes",
+        "severity": "hard_block",
+        "action_on_violation": "block_response"
+      },
+      {
+        "rule": "Transferir imediatamente em caso de emergência relatada",
+        "severity": "hard_block",
+        "action_on_violation": "escalate"
+      },
+      {
+        "rule": "Não enviar mais de 3 mensagens consecutivas sem resposta do paciente",
+        "severity": "soft_warn",
+        "action_on_violation": "log"
+      }
+    ]
+  },
+
+  "pending_configuration": [
+    {
+      "config_id": "cfg_whatsapp_provider",
+      "field_path": "interfaces.whatsapp",
+      "description": "Credenciais do provedor WhatsApp (Evolution API, Cloud API ou Z-API). Inclui URL base, API key e nome da instância.",
+      "type": "json",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "Deve conter: api_url, api_key, instance_name",
+      "sensitive": true,
+      "example_value": "{\"api_url\": \"https://evolution.example.com\", \"api_key\": \"xxx\", \"instance_name\": \"clinic-main\"}"
+    },
+    {
+      "config_id": "cfg_supabase",
+      "field_path": "context_sources.*.connection_config",
+      "description": "Credenciais do Supabase: Project URL e Service Role Key",
+      "type": "json",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "Deve conter: project_url, service_role_key",
+      "sensitive": true,
+      "example_value": "{\"project_url\": \"https://xxx.supabase.co\", \"service_role_key\": \"eyJ...\"}"
+    },
+    {
+      "config_id": "cfg_scheduling_api",
+      "field_path": "tools.tool_check_availability.auth",
+      "description": "Token de acesso à API de agendamento da clínica",
+      "type": "api_key",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "Bearer token válido",
+      "sensitive": true,
+      "example_value": "Bearer eyJ..."
+    },
+    {
+      "config_id": "cfg_llm_api_key",
+      "field_path": "reasoning.model_config",
+      "description": "API key do provedor de LLM (Anthropic, OpenAI, etc.)",
+      "type": "api_key",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "Formato válido para o provider selecionado",
+      "sensitive": true,
+      "example_value": "sk-ant-..."
+    },
+    {
+      "config_id": "cfg_clinic_name",
+      "field_path": "prompt_template.system_prompt_sections.vertical_context",
+      "description": "Nome da clínica para uso no prompt do agente",
+      "type": "string",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "",
+      "sensitive": false,
+      "example_value": "Clínica Sorriso"
+    },
+    {
+      "config_id": "cfg_agent_display_name",
+      "field_path": "prompt_template.system_prompt_sections.identity",
+      "description": "Nome que o agente usará ao se apresentar aos pacientes",
+      "type": "string",
+      "required": false,
+      "default_value": "Assistente Virtual",
+      "validation_rule": "",
+      "sensitive": false,
+      "example_value": "Ana"
+    }
+  ],
+
+  "governance": {
+    "permissions": {
+      "allowed_actions": ["action_book_appointment", "action_register_patient", "action_escalate", "action_send_reminder"],
+      "denied_actions": [],
+      "approval_required": []
+    },
+    "audit": {
+      "log_level": "actions_and_reasoning",
+      "log_destination": "supabase://agent_audit_logs",
+      "retention_days": 365
+    },
+    "rate_limits": {
+      "max_messages_per_minute": 30,
+      "max_tokens_per_request": 2048,
+      "max_cost_per_day_usd": 15.0,
+      "max_sessions_per_hour": 100
+    },
+    "safety": {
+      "content_filters": ["medical_advice", "pii_detection"],
+      "pii_handling": "redact",
+      "escalation_triggers": [
+        { "condition": "patient reports emergency or severe pain", "action": "transfer_to_human" },
+        { "condition": "patient requests human agent", "action": "transfer_to_human" },
+        { "condition": "agent confidence below threshold for 3 consecutive turns", "action": "transfer_to_human" },
+        { "condition": "patient expresses strong dissatisfaction", "action": "notify_admin" }
+      ],
+      "max_consecutive_failures": 3
+    },
+    "compliance": {
+      "frameworks": ["LGPD"],
+      "data_residency": "Brazil",
+      "consent_required": true,
+      "consent_message": "Para melhor atendê-lo(a), utilizamos um assistente virtual. Suas informações são tratadas conforme nossa Política de Privacidade e a LGPD. Ao continuar, você concorda com o processamento dos seus dados para fins de atendimento."
+    }
+  },
+
+  "learning": {
+    "feedback_loop": {
+      "enabled": true,
+      "collection_method": "implicit_signals",
+      "storage": "supabase://agent_feedback",
+      "review_cadence": "weekly"
+    },
+    "performance_tracking": {
+      "metrics": [
+        { "metric_name": "booking_success_rate", "calculation": "appointments_booked / conversations_with_scheduling_intent", "alert_threshold": "<50%" },
+        { "metric_name": "avg_response_time_ms", "calculation": "avg(response_timestamp - message_timestamp)", "alert_threshold": ">30000" },
+        { "metric_name": "escalation_rate", "calculation": "escalated_conversations / total_conversations", "alert_threshold": ">25%" },
+        { "metric_name": "no_show_rate", "calculation": "no_shows / confirmed_appointments", "alert_threshold": ">20%" }
+      ]
+    },
+    "knowledge_update": {
+      "update_trigger": "manual",
+      "validation_required": true,
+      "rollback_enabled": true
+    }
+  },
+
+  "multi_agent": null
+}

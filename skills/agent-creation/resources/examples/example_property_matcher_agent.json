@@ -1,0 +1,686 @@
+{
+  "schema_version": "2.0",
+
+  "agent_metadata": {
+    "agent_name": "PropertyMatcherAgent",
+    "agent_type": "sales_assistant",
+    "business_domain": "real_estate",
+    "version": "1.0",
+    "description": "Agente externo para imobiliárias que atende clientes via WhatsApp, entende o perfil de busca, faz match com imóveis disponíveis via RAG no catálogo, apresenta opções e agenda visitas.",
+    "tags": ["real_estate", "whatsapp", "property_matching", "rag", "catalog", "scheduling"],
+    "author": "IntelliX.AI",
+    "created_at": "2026-03-06T00:00:00Z",
+    "updated_at": "2026-03-06T00:00:00Z"
+  },
+
+  "objective": {
+    "primary_goal": "Entender o perfil de busca do cliente, encontrar imóveis compatíveis no catálogo e agendar visitas com corretores",
+    "secondary_goals": [
+      "Coletar dados completos do perfil de busca (tipo, região, faixa de preço, quartos, diferenciais)",
+      "Apresentar imóveis com descrições atrativas e links para fotos/tour virtual",
+      "Qualificar o interesse real do cliente antes de agendar visita",
+      "Reengajar clientes que não responderam após receber opções"
+    ],
+    "success_criteria": [
+      { "metric": "match_relevance_score", "target": ">75%", "measurement_method": "Avaliação do corretor: imóveis apresentados eram relevantes para o perfil" },
+      { "metric": "visit_scheduling_rate", "target": ">35%", "measurement_method": "Conversas com intent de compra/aluguel que resultaram em visita agendada" },
+      { "metric": "profile_completion_rate", "target": ">80%", "measurement_method": "Percentual de campos do perfil coletados antes da primeira sugestão" },
+      { "metric": "avg_response_time_seconds", "target": "<45", "measurement_method": "Tempo médio entre mensagem do cliente e resposta" }
+    ],
+    "constraints": [
+      "NUNCA inventar características de imóveis — sempre consultar o catálogo",
+      "NUNCA fornecer endereço exato sem aprovação do corretor responsável",
+      "NUNCA garantir disponibilidade sem verificar status atualizado",
+      "SEMPRE informar que valores são sujeitos a confirmação",
+      "SEMPRE coletar no mínimo tipo, região e faixa de preço antes de sugerir imóveis"
+    ]
+  },
+
+  "operation_mode": {
+    "mode": "external",
+    "runtime_environment": "supabase_edge_function",
+    "concurrency": {
+      "max_concurrent_sessions": 80,
+      "session_isolation": "full"
+    }
+  },
+
+  "interfaces": {
+    "system_ui": {
+      "enabled": true,
+      "component_type": "dashboard_panel"
+    },
+    "api": {
+      "enabled": true,
+      "protocol": "rest",
+      "base_path": "/api/agents/property-matcher"
+    },
+    "whatsapp": {
+      "enabled": true,
+      "provider": "",
+      "webhook_path": "/webhooks/whatsapp/incoming",
+      "connection_config_ref": "cfg_whatsapp_provider"
+    },
+    "telegram": { "enabled": false, "bot_token_ref": "", "webhook_path": "" },
+    "instagram": {
+      "enabled": true,
+      "api_version": "v18.0",
+      "webhook_path": "/webhooks/instagram/incoming"
+    },
+    "email": { "enabled": false, "provider": "", "inbound_address": "" },
+    "voice": { "enabled": false, "provider": "", "voice_id": "" }
+  },
+
+  "business_context": {
+    "industry": "real_estate_agency",
+    "company_size": "small",
+    "pain_points": [
+      "Corretores perdem leads porque demoram para responder no WhatsApp",
+      "Clientes recebem imóveis que não têm nada a ver com o que procuram",
+      "Não há processo padronizado de coleta de perfil de busca",
+      "Catálogo de imóveis desatualizado ou difícil de consultar rapidamente",
+      "Visitas agendadas com clientes que não são qualificados desperdiçam tempo dos corretores"
+    ],
+    "success_metrics": [
+      "Tempo de primeira resposta abaixo de 1 minuto",
+      "Taxa de match relevante acima de 75%",
+      "Redução de 40% em visitas com clientes não qualificados"
+    ],
+    "compliance_requirements": ["LGPD", "CRECI_Normas"],
+    "business_hours": {
+      "timezone": "America/Sao_Paulo",
+      "schedule": {
+        "mon": { "start": "08:00", "end": "19:00" },
+        "tue": { "start": "08:00", "end": "19:00" },
+        "wed": { "start": "08:00", "end": "19:00" },
+        "thu": { "start": "08:00", "end": "19:00" },
+        "fri": { "start": "08:00", "end": "19:00" },
+        "sat": { "start": "09:00", "end": "14:00" },
+        "sun": null
+      },
+      "outside_hours_behavior": "auto_reply",
+      "outside_hours_message": "Olá! Nosso horário de atendimento é de segunda a sexta das 8h às 19h e sábados das 9h às 14h. Recebemos sua mensagem e retornaremos assim que possível!"
+    },
+    "brand_voice": {
+      "tone": "consultative",
+      "language": "pt-BR",
+      "formality": "semi_formal",
+      "vocabulary_guidelines": [
+        "Usar 'imóvel' e não 'propriedade'",
+        "Usar 'cliente' e não 'lead'",
+        "Descrever imóveis de forma atrativa mas honesta",
+        "Sempre mencionar o bairro, nunca endereço exato",
+        "Usar 'investimento' ao invés de 'gasto' ao falar de valores"
+      ]
+    }
+  },
+
+  "context_sources": [
+    {
+      "source_id": "src_property_catalog",
+      "source_type": "rag_knowledge_base",
+      "source_name": "Catálogo de Imóveis",
+      "description": "Base vetorial com todos os imóveis disponíveis: descrição, características, fotos, valores, localização, status",
+      "connection_config": {
+        "endpoint": "supabase_pgvector",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT p.*, similarity FROM match_properties('{{search_query}}', '{{org_id}}', {{filters}}, 0.65, 10)",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 120
+    },
+    {
+      "source_id": "src_client_profile",
+      "source_type": "database",
+      "source_name": "Perfil do Cliente",
+      "description": "Dados do cliente e seu perfil de busca coletado ao longo das conversas",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT c.*, sp.* FROM contacts c LEFT JOIN search_profiles sp ON sp.contact_id = c.id WHERE c.phone = '{{phone}}' AND c.organization_id = '{{org_id}}'",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 60
+    },
+    {
+      "source_id": "src_broker_availability",
+      "source_type": "api",
+      "source_name": "Disponibilidade de Corretores",
+      "description": "Agenda dos corretores para agendamento de visitas",
+      "connection_config": {
+        "endpoint": "{{base_url}}/api/brokers/availability",
+        "method": "GET",
+        "auth_ref": "cfg_scheduling_api",
+        "query_template": "",
+        "headers": { "Content-Type": "application/json" }
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 60
+    }
+  ],
+
+  "tools": [
+    {
+      "tool_id": "tool_search_properties",
+      "tool_name": "buscar_imoveis",
+      "tool_type": "database_query",
+      "description": "Busca imóveis no catálogo por similaridade semântica + filtros estruturados (tipo, região, preço, quartos). Retorna até 10 imóveis rankeados por relevância.",
+      "endpoint": { "url": "supabase://rpc/match_properties", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["search_query"],
+        "properties": {
+          "search_query": { "type": "string", "description": "Descrição textual do que o cliente busca" },
+          "filters": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["apartment", "house", "commercial", "land", "farm"], "description": "Tipo de imóvel" },
+              "transaction": { "type": "string", "enum": ["sale", "rent"], "description": "Compra ou aluguel" },
+              "region": { "type": "string", "description": "Bairro ou região" },
+              "min_price": { "type": "number" },
+              "max_price": { "type": "number" },
+              "min_bedrooms": { "type": "integer" },
+              "min_area_m2": { "type": "number" },
+              "amenities": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "max_results": { "type": "integer" }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "property_id": { "type": "string" },
+              "title": { "type": "string" },
+              "type": { "type": "string" },
+              "neighborhood": { "type": "string" },
+              "price": { "type": "number" },
+              "bedrooms": { "type": "integer" },
+              "area_m2": { "type": "number" },
+              "description_short": { "type": "string" },
+              "photo_urls": { "type": "array", "items": { "type": "string" } },
+              "tour_url": { "type": "string" },
+              "similarity": { "type": "number" },
+              "status": { "type": "string" }
+            }
+          }
+        }
+      },
+      "error_handling": { "retry_count": 2, "retry_delay_ms": 500, "timeout_ms": 8000, "on_failure": "fallback", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 20, "max_calls_per_session": 15 }
+    },
+    {
+      "tool_id": "tool_save_search_profile",
+      "tool_name": "salvar_perfil_busca",
+      "tool_type": "database_query",
+      "description": "Salva ou atualiza o perfil de busca do cliente com as preferências coletadas na conversa.",
+      "endpoint": { "url": "supabase://search_profiles", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["contact_id", "profile_data"],
+        "properties": {
+          "contact_id": { "type": "string" },
+          "profile_data": {
+            "type": "object",
+            "properties": {
+              "transaction_type": { "type": "string" },
+              "property_type": { "type": "string" },
+              "preferred_regions": { "type": "array", "items": { "type": "string" } },
+              "budget_min": { "type": "number" },
+              "budget_max": { "type": "number" },
+              "min_bedrooms": { "type": "integer" },
+              "min_area_m2": { "type": "number" },
+              "must_have": { "type": "array", "items": { "type": "string" } },
+              "nice_to_have": { "type": "array", "items": { "type": "string" } },
+              "deal_breakers": { "type": "array", "items": { "type": "string" } },
+              "urgency": { "type": "string", "enum": ["immediate", "1_3_months", "3_6_months", "exploring"] },
+              "financing": { "type": "string", "enum": ["cash", "financing", "fgts", "undecided"] }
+            }
+          }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 1, "retry_delay_ms": 500, "timeout_ms": 5000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 10, "max_calls_per_session": 5 }
+    },
+    {
+      "tool_id": "tool_schedule_visit",
+      "tool_name": "agendar_visita",
+      "tool_type": "api_call",
+      "description": "Agenda uma visita ao imóvel com o corretor responsável. Verifica disponibilidade do corretor e do imóvel.",
+      "endpoint": { "url": "{{base_url}}/api/visits/schedule", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "bearer_token", "config_ref": "cfg_scheduling_api" },
+      "parameters": {
+        "type": "object",
+        "required": ["property_id", "contact_id", "preferred_datetime"],
+        "properties": {
+          "property_id": { "type": "string" },
+          "contact_id": { "type": "string" },
+          "preferred_datetime": { "type": "string", "description": "ISO datetime preferido pelo cliente" },
+          "alternative_datetime": { "type": "string" },
+          "notes": { "type": "string", "description": "Observações para o corretor" }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "visit_id": { "type": "string" },
+            "confirmed_datetime": { "type": "string" },
+            "broker_name": { "type": "string" },
+            "property_address_partial": { "type": "string" },
+            "status": { "type": "string" }
+          }
+        }
+      },
+      "error_handling": { "retry_count": 1, "retry_delay_ms": 2000, "timeout_ms": 10000, "on_failure": "escalate", "fallback_tool_ref": "tool_transfer_human" },
+      "rate_limit": { "max_calls_per_minute": 10, "max_calls_per_session": 5 }
+    },
+    {
+      "tool_id": "tool_send_whatsapp",
+      "tool_name": "enviar_mensagem_whatsapp",
+      "tool_type": "api_call",
+      "description": "Envia mensagem ao cliente via WhatsApp. Suporta texto e mídia (fotos de imóveis).",
+      "endpoint": { "url": "{{whatsapp_api_url}}/message/sendText/{{instance_name}}", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_whatsapp_provider" },
+      "parameters": {
+        "type": "object",
+        "required": ["number", "text"],
+        "properties": {
+          "number": { "type": "string" },
+          "text": { "type": "string" },
+          "media_url": { "type": "string", "description": "URL de imagem/documento para enviar junto" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 3, "retry_delay_ms": 2000, "timeout_ms": 10000, "on_failure": "abort", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 25 }
+    },
+    {
+      "tool_id": "tool_transfer_human",
+      "tool_name": "transferir_para_corretor",
+      "tool_type": "function",
+      "description": "Transfere a conversa para o corretor responsável pelo imóvel ou para a equipe comercial.",
+      "endpoint": { "url": "", "method": "POST", "headers": {} },
+      "auth": { "method": "none", "config_ref": "" },
+      "parameters": {
+        "type": "object",
+        "required": ["conversation_id", "reason"],
+        "properties": {
+          "conversation_id": { "type": "string" },
+          "reason": { "type": "string" },
+          "preferred_broker_id": { "type": "string", "description": "Corretor do imóvel de interesse (se houver)" },
+          "priority": { "type": "string", "enum": ["normal", "urgent"] }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 3, "retry_delay_ms": 1000, "timeout_ms": 5000, "on_failure": "abort", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 10, "max_calls_per_session": 3 }
+    }
+  ],
+
+  "memory": {
+    "short_term": {
+      "enabled": true,
+      "max_messages": 40,
+      "summarization": { "enabled": true, "trigger_message_count": 25, "strategy": "key_points" }
+    },
+    "long_term": {
+      "enabled": true,
+      "storage_backend": "supabase_table",
+      "table_name": "agent_conversations",
+      "schema": {
+        "columns": [
+          { "name": "id", "type": "uuid", "nullable": false, "default": "gen_random_uuid()", "description": "PK" },
+          { "name": "organization_id", "type": "uuid", "nullable": false, "default": "", "description": "" },
+          { "name": "contact_phone", "type": "text", "nullable": false, "default": "", "description": "" },
+          { "name": "contact_id", "type": "uuid", "nullable": true, "default": "", "description": "" },
+          { "name": "status", "type": "text", "nullable": false, "default": "'active'", "description": "" },
+          { "name": "intent", "type": "text", "nullable": true, "default": "", "description": "buy, rent, invest, inquire" },
+          { "name": "properties_shown", "type": "jsonb", "nullable": true, "default": "'[]'", "description": "IDs dos imóveis apresentados" },
+          { "name": "properties_liked", "type": "jsonb", "nullable": true, "default": "'[]'", "description": "IDs dos imóveis que o cliente demonstrou interesse" },
+          { "name": "visits_scheduled", "type": "jsonb", "nullable": true, "default": "'[]'", "description": "" },
+          { "name": "search_profile_snapshot", "type": "jsonb", "nullable": true, "default": "'{}'", "description": "Snapshot do perfil de busca no momento" },
+          { "name": "last_message_at", "type": "timestamptz", "nullable": false, "default": "now()", "description": "" },
+          { "name": "created_at", "type": "timestamptz", "nullable": false, "default": "now()", "description": "" }
+        ],
+        "indexes": [
+          { "columns": ["organization_id", "contact_phone"], "type": "btree" },
+          { "columns": ["status"], "type": "btree" }
+        ]
+      },
+      "ttl_days": 365,
+      "max_entries_per_session": 200
+    },
+    "episodic": {
+      "enabled": true,
+      "embedding_model": "text-embedding-3-small",
+      "vector_store": "supabase_pgvector",
+      "similarity_threshold": 0.65,
+      "max_results": 10,
+      "chunk_strategy": { "method": "semantic", "chunk_size_tokens": 256, "overlap_tokens": 30 }
+    }
+  },
+
+  "reasoning": {
+    "strategy": "react",
+    "fallback_strategy": "escalate_to_human",
+    "max_reasoning_steps": 8,
+    "confidence_threshold": 0.65,
+    "model_config": {
+      "provider": "",
+      "model": "",
+      "temperature": 0.4,
+      "max_tokens": 1536,
+      "config_ref": "cfg_llm_api_key"
+    }
+  },
+
+  "cognitive_loop": {
+    "enabled": true,
+    "observe": {
+      "data_sources": ["src_property_catalog", "src_client_profile", "src_broker_availability"],
+      "event_listeners": [{ "event_type": "message.received", "source": "whatsapp", "filter": {} }],
+      "polling_interval_seconds": 0
+    },
+    "think": {
+      "analysis_strategy": "composite",
+      "context_window_strategy": "hybrid",
+      "max_context_tokens": 6144
+    },
+    "plan": {
+      "planning_method": "conditional",
+      "max_plan_steps": 6,
+      "resource_constraints": ["max_api_calls:12", "max_time_seconds:25"],
+      "replanning_enabled": true
+    },
+    "act": {
+      "execution_mode": "sync",
+      "timeout_seconds": 30,
+      "rollback_enabled": false,
+      "confirmation_required": false
+    },
+    "reflect": {
+      "evaluation_criteria": [
+        { "criterion": "profile_collected_before_suggestion", "weight": 0.3 },
+        { "criterion": "properties_match_profile", "weight": 0.4 },
+        { "criterion": "response_engaging_and_helpful", "weight": 0.3 }
+      ],
+      "success_threshold": 0.7,
+      "logging": { "level": "actions_only", "destination": "supabase://agent_logs" }
+    },
+    "learn": {
+      "learning_type": "episodic",
+      "update_frequency": "per_interaction",
+      "knowledge_base_ref": "src_property_catalog",
+      "human_review_required": false
+    }
+  },
+
+  "workflow": [
+    {
+      "step_id": "step_001", "step_name": "Receber mensagem", "step_type": "receive_input",
+      "description": "Recebe mensagem do cliente via WhatsApp/Instagram",
+      "inputs": [
+        { "name": "message_text", "source": "trigger.payload.message.text", "required": true },
+        { "name": "sender_phone", "source": "trigger.payload.sender.phone", "required": true }
+      ],
+      "outputs": [{ "name": "raw_message", "type": "object", "description": "" }],
+      "tool_ref": "", "on_error": { "strategy": "abort", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5, "next_step": "step_002"
+    },
+    {
+      "step_id": "step_002", "step_name": "Verificar horário", "step_type": "condition",
+      "description": "Verifica se está dentro do horário de atendimento",
+      "inputs": [{ "name": "current_time", "source": "system.current_time", "required": true }],
+      "outputs": [{ "name": "is_business_hours", "type": "boolean", "description": "" }],
+      "tool_ref": "",
+      "condition": { "expression": "current_time WITHIN business_hours", "if_true": "step_003", "if_false": "step_002b" },
+      "on_error": { "strategy": "fallback", "retry_count": 0, "fallback_step": "step_003", "error_message": "" },
+      "timeout_seconds": 2, "next_step": ""
+    },
+    {
+      "step_id": "step_002b", "step_name": "Resposta fora do horário", "step_type": "tool_call",
+      "description": "Envia mensagem de fora do horário",
+      "inputs": [{ "name": "sender_phone", "source": "step_001.raw_message.sender_phone", "required": true }],
+      "outputs": [], "tool_ref": "tool_send_whatsapp",
+      "on_error": { "strategy": "abort", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 10, "next_step": "step_010"
+    },
+    {
+      "step_id": "step_003", "step_name": "Identificar cliente e carregar perfil", "step_type": "process",
+      "description": "Busca cliente pelo telefone, carrega perfil de busca existente e histórico de imóveis vistos",
+      "inputs": [{ "name": "sender_phone", "source": "step_001.raw_message.sender_phone", "required": true }],
+      "outputs": [
+        { "name": "client", "type": "object", "description": "Dados do cliente ou null" },
+        { "name": "search_profile", "type": "object", "description": "Perfil de busca existente ou vazio" },
+        { "name": "is_new_client", "type": "boolean", "description": "" }
+      ],
+      "tool_ref": "", "on_error": { "strategy": "skip", "retry_count": 2, "fallback_step": "step_004", "error_message": "" },
+      "timeout_seconds": 5, "next_step": "step_004"
+    },
+    {
+      "step_id": "step_004", "step_name": "Analisar intenção e extrair dados", "step_type": "llm_reasoning",
+      "description": "Analisa a mensagem para: classificar intenção (comprar, alugar, investir, dúvida), extrair preferências mencionadas (tipo, região, preço, quartos), detectar urgência e sentimento",
+      "inputs": [
+        { "name": "message_text", "source": "step_001.raw_message.message_text", "required": true },
+        { "name": "search_profile", "source": "step_003.search_profile", "required": false },
+        { "name": "conversation_history", "source": "memory.short_term", "required": true }
+      ],
+      "outputs": [
+        { "name": "intent", "type": "string", "description": "buy, rent, invest, inquire, schedule_visit, other" },
+        { "name": "extracted_preferences", "type": "object", "description": "Preferências extraídas da mensagem" },
+        { "name": "profile_completeness", "type": "number", "description": "0-1: quão completo o perfil está" },
+        { "name": "ready_for_suggestions", "type": "boolean", "description": "True se perfil suficiente para sugerir imóveis" }
+      ],
+      "tool_ref": "", "on_error": { "strategy": "fallback", "retry_count": 1, "fallback_step": "step_005", "error_message": "" },
+      "timeout_seconds": 10, "next_step": "step_004b"
+    },
+    {
+      "step_id": "step_004b", "step_name": "Decidir fluxo", "step_type": "condition",
+      "description": "Se perfil completo o suficiente, busca imóveis. Se não, continua coletando.",
+      "inputs": [{ "name": "ready", "source": "step_004.ready_for_suggestions", "required": true }],
+      "outputs": [], "tool_ref": "",
+      "condition": { "expression": "ready_for_suggestions == true", "if_true": "step_005", "if_false": "step_007" },
+      "on_error": { "strategy": "fallback", "retry_count": 0, "fallback_step": "step_007", "error_message": "" },
+      "timeout_seconds": 2, "next_step": ""
+    },
+    {
+      "step_id": "step_005", "step_name": "Buscar imóveis compatíveis", "step_type": "tool_call",
+      "description": "Busca no catálogo usando RAG semântico + filtros estruturados do perfil",
+      "inputs": [
+        { "name": "search_query", "source": "step_004.extracted_preferences", "required": true },
+        { "name": "filters", "source": "step_003.search_profile", "required": false }
+      ],
+      "outputs": [{ "name": "properties", "type": "array", "description": "Lista de imóveis rankeados" }],
+      "tool_ref": "tool_search_properties",
+      "on_error": { "strategy": "fallback", "retry_count": 2, "fallback_step": "step_007", "error_message": "" },
+      "timeout_seconds": 8, "next_step": "step_006"
+    },
+    {
+      "step_id": "step_006", "step_name": "Atualizar perfil de busca", "step_type": "tool_call",
+      "description": "Salva as preferências coletadas/atualizadas no perfil do cliente",
+      "inputs": [
+        { "name": "contact_id", "source": "step_003.client.id", "required": true },
+        { "name": "profile_data", "source": "step_004.extracted_preferences", "required": true }
+      ],
+      "outputs": [], "tool_ref": "tool_save_search_profile",
+      "on_error": { "strategy": "skip", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5, "next_step": "step_007"
+    },
+    {
+      "step_id": "step_007", "step_name": "Compor resposta", "step_type": "llm_reasoning",
+      "description": "Gera a resposta ao cliente. Se tem imóveis, apresenta os melhores matches. Se precisa de mais info, faz perguntas direcionadas. Se cliente quer agendar, busca disponibilidade.",
+      "inputs": [
+        { "name": "intent", "source": "step_004.intent", "required": true },
+        { "name": "properties", "source": "step_005.properties", "required": false },
+        { "name": "profile_completeness", "source": "step_004.profile_completeness", "required": true },
+        { "name": "conversation_history", "source": "memory.short_term", "required": true },
+        { "name": "client", "source": "step_003.client", "required": false }
+      ],
+      "outputs": [
+        { "name": "response_text", "type": "string", "description": "Resposta ao cliente" },
+        { "name": "actions_needed", "type": "array", "description": "schedule_visit, transfer_human, send_media" }
+      ],
+      "tool_ref": "", "on_error": { "strategy": "escalate", "retry_count": 1, "fallback_step": "step_009", "error_message": "" },
+      "timeout_seconds": 15, "next_step": "step_008"
+    },
+    {
+      "step_id": "step_008", "step_name": "Enviar resposta", "step_type": "tool_call",
+      "description": "Envia a resposta via WhatsApp",
+      "inputs": [
+        { "name": "sender_phone", "source": "step_001.raw_message.sender_phone", "required": true },
+        { "name": "response_text", "source": "step_007.response_text", "required": true }
+      ],
+      "outputs": [{ "name": "sent", "type": "boolean", "description": "" }],
+      "tool_ref": "tool_send_whatsapp",
+      "on_error": { "strategy": "retry", "retry_count": 3, "fallback_step": "step_009", "error_message": "" },
+      "timeout_seconds": 10, "next_step": "step_010"
+    },
+    {
+      "step_id": "step_009", "step_name": "Transferir para corretor", "step_type": "tool_call",
+      "description": "Transfere para corretor humano",
+      "inputs": [{ "name": "conversation_id", "source": "context.conversation_id", "required": true }],
+      "outputs": [], "tool_ref": "tool_transfer_human",
+      "on_error": { "strategy": "abort", "retry_count": 3, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 10, "next_step": "step_010"
+    },
+    {
+      "step_id": "step_010", "step_name": "Finalizar ciclo", "step_type": "terminate",
+      "description": "Encerra processamento desta mensagem",
+      "inputs": [], "outputs": [], "tool_ref": "",
+      "on_error": { "strategy": "skip", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 1, "next_step": ""
+    }
+  ],
+
+  "actions": [
+    {
+      "action_id": "action_suggest_properties", "action_name": "Sugerir imóveis", "action_type": "tool_call",
+      "description": "Busca e apresenta imóveis compatíveis com o perfil do cliente",
+      "tool_ref": "tool_search_properties", "parameters": {},
+      "conditions": [{ "field": "profile_completeness", "operator": "greater_than", "value": 0.5 }],
+      "side_effects": ["updates_properties_shown"], "requires_confirmation": false
+    },
+    {
+      "action_id": "action_schedule_visit", "action_name": "Agendar visita", "action_type": "tool_call",
+      "description": "Agenda visita ao imóvel com corretor",
+      "tool_ref": "tool_schedule_visit", "parameters": {},
+      "conditions": [
+        { "field": "selected_property.property_id", "operator": "exists", "value": true },
+        { "field": "client.id", "operator": "exists", "value": true }
+      ],
+      "side_effects": ["creates_visit", "notifies_broker", "sends_confirmation"], "requires_confirmation": false
+    },
+    {
+      "action_id": "action_escalate", "action_name": "Transferir para corretor", "action_type": "escalate_to_human",
+      "description": "Transfere para corretor humano",
+      "tool_ref": "tool_transfer_human", "parameters": {},
+      "conditions": [], "side_effects": ["changes_conversation_status", "notifies_broker"], "requires_confirmation": false
+    }
+  ],
+
+  "triggers": [
+    {
+      "trigger_id": "trigger_whatsapp_message", "trigger_type": "webhook", "source": "whatsapp_incoming",
+      "event_name": "message.received", "cron_expression": "",
+      "conditions": [{ "field": "message.type", "operator": "in", "value": ["text", "audio", "image"] }],
+      "payload_schema": { "type": "object", "properties": { "sender": { "type": "object" }, "message": { "type": "object" } } },
+      "activates_workflow_step": "step_001", "debounce_seconds": 2, "enabled": true
+    },
+    {
+      "trigger_id": "trigger_instagram_message", "trigger_type": "webhook", "source": "instagram_incoming",
+      "event_name": "message.received", "cron_expression": "", "conditions": [],
+      "payload_schema": { "type": "object" },
+      "activates_workflow_step": "step_001", "debounce_seconds": 2, "enabled": true
+    },
+    {
+      "trigger_id": "trigger_new_property", "trigger_type": "event", "source": "catalog_database",
+      "event_name": "property.created", "cron_expression": "",
+      "conditions": [{ "field": "property.status", "operator": "equals", "value": "available" }],
+      "payload_schema": { "type": "object", "properties": { "property_id": { "type": "string" } } },
+      "activates_workflow_step": "", "debounce_seconds": 60, "enabled": true
+    }
+  ],
+
+  "integration": {
+    "primary_protocol": "webhook", "base_url": "",
+    "auth": { "method": "api_key", "config_ref": "cfg_whatsapp_provider" },
+    "retry_policy": { "max_retries": 3, "backoff_strategy": "exponential", "initial_delay_ms": 1000, "max_delay_ms": 30000 },
+    "rate_limit": { "max_requests_per_minute": 60, "max_requests_per_day": 5000, "queue_strategy": "throttle" },
+    "health_check": { "enabled": true, "endpoint": "/health", "interval_seconds": 300 }
+  },
+
+  "prompt_template": {
+    "system_prompt": "Você é o consultor imobiliário virtual da imobiliária. Seu nome é o configurado pela empresa.\n\n## IDENTIDADE\n- Você é um consultor imobiliário experiente, atencioso e conhecedor do mercado local\n- Seu objetivo é entender o que o cliente busca e encontrar o imóvel ideal\n- Nunca revele que é IA a menos que perguntado\n\n## REGRAS\n1. NUNCA invente características de imóveis — consulte sempre o catálogo\n2. NUNCA forneça endereço exato — apenas bairro e referências\n3. NUNCA garanta disponibilidade — diga 'vou confirmar'\n4. SEMPRE colete tipo, região e faixa de preço antes de sugerir\n5. SEMPRE informe que valores são sujeitos a confirmação\n6. Apresente no máximo 3 imóveis por mensagem para não sobrecarregar\n7. Destaque diferenciais que combinam com o que o cliente mencionou\n\n## COLETA DE PERFIL\nAntes de sugerir imóveis, colete progressivamente:\n- Compra ou aluguel?\n- Tipo (apartamento, casa, comercial)?\n- Região/bairro preferido?\n- Faixa de preço?\n- Mínimo de quartos?\n- Itens indispensáveis? (garagem, elevador, área de lazer)\n\nNão faça todas as perguntas de uma vez — intercale com a conversa natural.\n\n## TOM\n- Consultivo e acolhedor\n- Demonstre conhecimento do mercado local\n- Use descrições que criam visualização do imóvel",
+    "system_prompt_sections": [],
+    "user_prompt_template": "Mensagem do cliente: {{message_text}}\n\nPerfil de busca atual:\n{{search_profile_json}}\n\nImóveis encontrados (se consultado):\n{{properties_json}}\n\nHistórico da conversa:\n{{conversation_history}}",
+    "few_shot_examples": [
+      {
+        "user": "Quero comprar um apto de 3 quartos na zona sul, até 600 mil",
+        "assistant": "Que ótimo! A zona sul tem excelentes opções nessa faixa. Deixa eu buscar os apartamentos disponíveis para você.\n\nAntes, uma pergunta rápida: tem preferência por algum bairro específico da zona sul? E garagem é indispensável para você?",
+        "context": "Cliente novo, primeira mensagem, perfil parcialmente informado"
+      },
+      {
+        "user": "Gostei do segundo imóvel, quero visitar",
+        "assistant": "Que bom que gostou! O apartamento no Jardim Europa é realmente uma ótima opção.\n\nVou verificar a disponibilidade de visita. Qual dia e período seriam melhores para você? Temos agenda de segunda a sábado.",
+        "context": "Cliente já recebeu sugestões, quer agendar visita"
+      }
+    ],
+    "output_format": { "type": "free_text", "schema": {}, "instructions": "Responda naturalmente como um consultor imobiliário. Parágrafos curtos. Emojis com moderação (máx 1-2). Nunca markdown." },
+    "guardrails": [
+      { "rule": "Nunca inventar características de imóveis não presentes no catálogo", "severity": "hard_block", "action_on_violation": "rephrase" },
+      { "rule": "Nunca fornecer endereço exato do imóvel", "severity": "hard_block", "action_on_violation": "rephrase" },
+      { "rule": "Sempre informar que valores são sujeitos a confirmação", "severity": "soft_warn", "action_on_violation": "log" }
+    ]
+  },
+
+  "pending_configuration": [
+    { "config_id": "cfg_whatsapp_provider", "field_path": "interfaces.whatsapp", "description": "Credenciais do provedor WhatsApp", "type": "json", "required": true, "default_value": null, "validation_rule": "api_url, api_key, instance_name", "sensitive": true, "example_value": "{\"api_url\": \"https://evolution.example.com\", \"api_key\": \"xxx\", \"instance_name\": \"imob-main\"}" },
+    { "config_id": "cfg_supabase", "field_path": "context_sources.*.connection_config", "description": "Credenciais Supabase", "type": "json", "required": true, "default_value": null, "validation_rule": "project_url, service_role_key", "sensitive": true, "example_value": "{\"project_url\": \"https://xxx.supabase.co\", \"service_role_key\": \"eyJ...\"}" },
+    { "config_id": "cfg_scheduling_api", "field_path": "tools.tool_schedule_visit.auth", "description": "Token da API de agendamento de visitas", "type": "api_key", "required": true, "default_value": null, "validation_rule": "", "sensitive": true, "example_value": "Bearer eyJ..." },
+    { "config_id": "cfg_llm_api_key", "field_path": "reasoning.model_config", "description": "API key do LLM", "type": "api_key", "required": true, "default_value": null, "validation_rule": "", "sensitive": true, "example_value": "sk-ant-..." }
+  ],
+
+  "governance": {
+    "permissions": { "allowed_actions": ["action_suggest_properties", "action_schedule_visit", "action_escalate"], "denied_actions": [], "approval_required": [] },
+    "audit": { "log_level": "actions_and_reasoning", "log_destination": "supabase://agent_audit_logs", "retention_days": 365 },
+    "rate_limits": { "max_messages_per_minute": 30, "max_tokens_per_request": 2048, "max_cost_per_day_usd": 20.0, "max_sessions_per_hour": 150 },
+    "safety": {
+      "content_filters": ["pii_detection"],
+      "pii_handling": "redact",
+      "escalation_triggers": [
+        { "condition": "client requests human/broker explicitly", "action": "transfer_to_human" },
+        { "condition": "negotiation of price or conditions", "action": "transfer_to_human" },
+        { "condition": "client mentions legal/contractual issues", "action": "transfer_to_human" }
+      ],
+      "max_consecutive_failures": 3
+    },
+    "compliance": { "frameworks": ["LGPD"], "data_residency": "Brazil", "consent_required": false, "consent_message": "" }
+  },
+
+  "learning": {
+    "feedback_loop": { "enabled": true, "collection_method": "implicit_signals", "storage": "supabase://agent_feedback", "review_cadence": "weekly" },
+    "performance_tracking": {
+      "metrics": [
+        { "metric_name": "match_relevance", "calculation": "broker_rated_relevant / total_suggestions", "alert_threshold": "<60%" },
+        { "metric_name": "visit_scheduling_rate", "calculation": "visits_scheduled / conversations_with_buy_rent_intent", "alert_threshold": "<25%" },
+        { "metric_name": "profile_completion_rate", "calculation": "avg(profile_completeness) at first suggestion", "alert_threshold": "<60%" }
+      ]
+    },
+    "knowledge_update": { "update_trigger": "event_driven", "validation_required": true, "rollback_enabled": true }
+  },
+
+  "multi_agent": null
+}
