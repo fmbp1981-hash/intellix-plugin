@@ -413,5 +413,13 @@ Projeto existente (refatorar)?
 | Agentes | `intellix-agent-creation` | GPT Maker + n8n + Blueprint unificado |
 | n8n patterns | `n8n-workflow-patterns` | Padrões comprovados de automação |
 | Testes | `SKILL_TestE2E` | Smoke → stress → security, cobertura total |
+| **Debug de testes no browser** | **`browser-testing-with-devtools`** | **DevTools: breakpoints, network panel, console — diagnóstico visual de falhas E2E** |
 | Debug | `superpowers:systematic-debugging` | Metodologia antes de tentar correções |
 | Code review | `superpowers:requesting-code-review` | Antes de merge ou feature completa |
+| **Contexto CLAUDE.md + AGENTS.md** | **`context-engineering`** | **Validar qualidade do contexto entregue aos agentes — evita context starvation e flooding** |
+| **API pública / webhooks / contratos** | **`api-and-interface-design`** | **Contract-first, versionamento, branded IDs — apenas quando há API consumida externamente** |
+| **Git workflow + commits atômicos** | **`git-workflow-and-versioning`** | **Trunk-based dev, save-point pattern, worktrees para agentes paralelos, pre-commit gates** |
+| **Decisões incertas em /plan** | **`doubt-driven-development`** | **Mapeia dúvidas técnicas antes de implementar — evita retrabalho por assunções erradas** |
+| **Pipeline CI/CD (uma vez por projeto)** | **`ci-cd-and-automation`** | **GitHub Actions, branch protection, Dependabot, preview deploys automáticos por PR** |
+| **Go-live com staged rollout** | **`shipping-and-launch`** | **5%→25%→50%→100%, feature flags, monitoramento 1ª hora, rollback plan documentado** |
+| **Tech debt / migração de legado** | **`deprecation-and-migration`** | **Strangler pattern, zombie code, atualização de deps com breaking changes — projetos existentes** |

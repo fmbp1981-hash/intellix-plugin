@@ -277,6 +277,7 @@ Após validar o roadmap com o usuário, execute sprint por sprint usando as skil
 | Sprint 3 — TypeScript | `intellix:dev-standards` |
 | Sprint 3 — Frontend | `intellix:frontend-design` |
 | Sprint 3 — Integrações | `intellix:integration` |
+| Sprint 2 — Migração de Tech Debt (se aplicável) | `deprecation-and-migration` |
 | Sprint 4 — Testes | `intellix:test-e2e` |
 | Sprint 4 — CI/CD | `intellix:deploy` (seção GitHub Actions) |
 | Final — Deploy & Handoff | `intellix:deploy` + `intellix:handoff` |
@@ -333,3 +334,4 @@ Após apresentar o relatório e o roadmap:
 | Debug de comportamento inesperado ao refatorar | `superpowers:systematic-debugging` |
 | Supabase — otimização de queries existentes | `supabase-postgres-best-practices` |
 | React/Next.js — identificar antipatterns | `vercel-react-best-practices` |
+| Migrar dependências legadas, strangler pattern, zombie code | `deprecation-and-migration` |

@@ -243,6 +243,21 @@ Next.js 15 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Vercel
 }
 ```
 
+### Passo 4b — Qualidade do Contexto `context-engineering` (projetos novos)
+
+**Invoke:** `Skill("context-engineering")`
+
+Após criar `CLAUDE.md` e `AGENTS.md`, valide a qualidade do contexto entregue aos agentes:
+
+- Verificar se `CLAUDE.md` tem as 5 camadas de informação: stack, fase atual, convenções, integrações, anti-patterns
+- Confirmar que `AGENTS.md` tem comandos operacionais verificáveis (não documentação genérica)
+- Garantir ausência de "context flooding" (informação demais) e "context starvation" (informação de menos)
+- Estruturar regras em ordem de prioridade — agentes lêem o início com mais atenção
+
+**Gatilho:** obrigatório em projetos novos. Opcional em projetos existentes (só se CLAUDE.md estiver desatualizado).
+
+---
+
 ### Passo 5 — Handover para Fase 01
 
 Ao concluir, informe:

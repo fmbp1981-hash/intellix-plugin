@@ -13,8 +13,23 @@ disable-model-invocation: true
 Checklist completo de deploy IntelliX. Esta skill é de invocação manual apenas
 (`disable-model-invocation: true`) — você controla quando fazer o deploy.
 
+## Passo 0 — Pipeline CI/CD `ci-cd-and-automation` (obrigatório, uma vez por projeto)
+
+**Invoke:** `Skill("ci-cd-and-automation")`
+
+Antes do primeiro deploy em produção, garantir que o pipeline está configurado:
+- GitHub Actions com quality gates: lint → typecheck → testes → build → segurança
+- Branch protection em `main` (PRs obrigatórios, status checks bloqueadores)
+- Preview deploy automático por PR (Vercel)
+- Dependabot/Renovate para atualizações de dependências
+
+> Este passo é executado **uma vez** no início do projeto ou ao detectar que não existe `.github/workflows/`. Em deploys subsequentes, verificar apenas se o pipeline está passando.
+
+---
+
 ## Pré-requisitos obrigatórios
 - [ ] Fase 05 (test-e2e) concluída com 100% dos testes passando
+- [ ] Pipeline CI/CD configurado (Passo 0)
 - [ ] `.intellix-phase` = `deploy`
 - [ ] Sem `console.log` ou código de debug em produção
 
@@ -412,10 +427,27 @@ Documente em `docs/runbook.md`:
 
 ---
 
+## Passo Final — Launch `shipping-and-launch` (deploy em produção)
+
+**Quando invocar:** deploy para produção real (não preview). **Não invocar** em deploys de preview/staging.
+
+**Invoke:** `Skill("shipping-and-launch")`
+
+Garante que o go-live é reversível, observável e incremental:
+- Pre-launch checklist: code quality, security, performance, acessibilidade, infra, docs
+- Feature flags: código chega antes da feature ser visível (`NEXT_PUBLIC_FF_*`)
+- Staged rollout: 5% → 25% → 50% → 100% com métricas em cada etapa
+- Monitoramento da 1ª hora: error rate, latência, business metrics
+- Rollback plan documentado: triggers + passos exatos
+
+---
+
 ## Skills Relacionadas
 
 | Quando usar | Skill |
 |-------------|-------|
+| Configurar pipeline CI/CD (uma vez por projeto) | `ci-cd-and-automation` |
+| Go-live em produção com staged rollout | `shipping-and-launch` |
 | Boas práticas de performance e otimização Vercel + Next.js | `vercel-react-best-practices` |
 | Verificação sistemática antes de declarar deploy pronto | `superpowers:verification-before-completion` |
 | Finalizar branch e criar PR para main | `superpowers:finishing-a-development-branch` |

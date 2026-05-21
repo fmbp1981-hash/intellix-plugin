@@ -1082,3 +1082,4 @@ Executada após `intellix:dev-standards` e antes de `intellix:deploy`.
 | Diagnosticar falha de teste de forma sistemática | `superpowers:systematic-debugging` |
 | Verificação completa antes de declarar testes aprovados | `superpowers:verification-before-completion` |
 | Testes E2E standalone com Playwright + abordagem vibecoding | `SKILL_TestE2E` |
+| Inspecionar falhas de teste com DevTools do browser (breakpoints, network, console) | `browser-testing-with-devtools` |

@@ -83,6 +83,20 @@ export interface Contact {
 export type ContactFormData = Pick<Contact, 'name' | 'phone' | 'email'>
 ```
 
+### Passo 3b — Design de API `api-and-interface-design` (condicional)
+
+**Quando invocar:** projeto tem Route Handlers públicos, webhooks externos, ou API consumida por outros clientes.
+**Não invocar:** projeto SaaS interno onde só Server Actions/componentes consomem os dados.
+
+**Invoke:** `Skill("api-and-interface-design")`
+
+Antes de escrever o primeiro `route.ts`:
+- Contract-first: definir o contrato (request/response shapes) antes de implementar
+- Versioning strategy: `/api/v1/` ou header `API-Version`?
+- Error semantics: padronizar estrutura de erro (RFC 7807 — já padrão IntelliX)
+- Validation boundary: Zod em toda entrada de `request.json()` sem exceção
+- TypeScript branded types para IDs: `type UserId = string & { readonly __brand: 'UserId' }`
+
 ### Passo 4 — Handover para Fase 02 ou 03
 
 Se houver agentes → `intellix:agent-creation`

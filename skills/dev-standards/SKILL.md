@@ -31,6 +31,21 @@ para evitar os erros mais comuns de LLMs em tarefas de desenvolvimento:
 **Gatilho obrigatório:** Antes de qualquer implementação nova, refatoração ou bugfix.
 **Exceção:** Tarefas triviais (renomear variável, adicionar import simples).
 
+## Passo 0b — Disciplina de Git `git-workflow-and-versioning`
+
+**Invoke:** `Skill("git-workflow-and-versioning")`
+
+Executar em paralelo com o Passo 0 (karpathy-guidelines). Define o contrato de versionamento antes de começar:
+
+- **Trunk-based:** branches de feature com vida máxima de 1-3 dias — sem branches de longa duração
+- **Atomic commits:** cada commit faz uma coisa lógica, mensagem explica o *porquê* não o *o quê*
+- **Save-point pattern:** a cada incremento que funciona → commit. Nunca perder mais de um incremento de trabalho
+- **Worktrees para agentes paralelos:** quando múltiplos sub-agentes trabalham em paralelo, usar `git worktree` para isolamento
+- **Pre-commit:** lint + typecheck + testes antes de qualquer commit (não na CI, no commit)
+
+**Gatilho:** início de qualquer feature nova ou sessão de desenvolvimento.
+**Exceção:** hotfixes triviais de 1 linha.
+
 ---
 
 ## TypeScript Strict — Regras absolutas
