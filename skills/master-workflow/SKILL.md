@@ -86,6 +86,35 @@ Gera documento estruturado com:
 
 **Gate 1:** Apresente o PRD ao usuário. Aguarde aprovação antes de continuar.
 
+**Passo 1.3 — Stress-test do PRD (opcional mas recomendado):**
+
+```
+Skill("grill-me")
+```
+
+Questiona implacavelmente cada decisão do PRD — features, arquitetura, personas, roadmap — até que não restem ambiguidades. Use antes de commitar o plano ao time.
+
+- Percorre cada galho da árvore de decisão
+- Para cada pergunta, oferece a resposta recomendada
+- Resolve dependências entre decisões na sequência certa
+
+> Use quando o projeto é alto risco, tem muitas incógnitas, ou quando o usuário quer "grill me on this plan".
+
+**Alternativa rápida — PRD direto do contexto:**
+
+```
+Skill("to-prd")
+```
+
+Quando já há contexto suficiente na conversa e no codebase, `to-prd` sintetiza um PRD completo sem entrevista. Use no lugar de `ai-project-brainstorm` quando o escopo já está claro.
+
+| Skill | Quando usar |
+|---|---|
+| `superpowers:brainstorming` | Ideia bruta — explorar ângulos antes de qualquer estrutura |
+| `ai-project-brainstorm` | PRD completo guiado por perguntas interativas |
+| `to-prd` | PRD rápido quando o contexto já está claro na conversa |
+| `grill-me` | Stress-test de PRD/plano aprovado antes de commitar |
+
 ---
 
 ## ETAPA 2 — Planejamento
@@ -222,6 +251,14 @@ Referência contínua durante todo o desenvolvimento:
 
 ### FASE 04b — Implementação com Epic Workflow + Review em Dois Estágios
 
+**Antes do `/spec` — spec de produto (opcional, features complexas):**
+
+```
+Skill("write-product-spec")  → PRODUCT.md: comportamento do usuário, invariantes, edge cases
+```
+
+Use quando a feature é substancial ou comportamentalmente ambígua. O PRODUCT.md descreve o que o usuário vê e faz, sem detalhes de implementação — contexto essencial para o agente implementar sem regressões.
+
 Para cada feature/módulo, execute os 4 comandos:
 
 ```
@@ -229,6 +266,12 @@ Para cada feature/módulo, execute os 4 comandos:
 /break → issues/ atômicas ordenadas (UI protótipos → behaviors → integrações)
 /plan  → 7 seções por issue (aguarda aprovação)
 /execute → ciclo de 3 estágios por arquivo (ver abaixo)
+```
+
+**Alternativa para `/break` — quebrar em issues via skill:**
+
+```
+Skill("to-issues")  → converte plano/PRD em issues independentes usando tracer bullets verticais
 ```
 
 **Ciclo `/execute` por arquivo (3 estágios obrigatórios):**
@@ -423,3 +466,25 @@ Projeto existente (refatorar)?
 | **Pipeline CI/CD (uma vez por projeto)** | **`ci-cd-and-automation`** | **GitHub Actions, branch protection, Dependabot, preview deploys automáticos por PR** |
 | **Go-live com staged rollout** | **`shipping-and-launch`** | **5%→25%→50%→100%, feature flags, monitoramento 1ª hora, rollback plan documentado** |
 | **Tech debt / migração de legado** | **`deprecation-and-migration`** | **Strangler pattern, zombie code, atualização de deps com breaking changes — projetos existentes** |
+
+---
+
+## Troubleshooting — Claude repetindo o mesmo erro em loop
+
+**Sintoma:** O Claude continua cometendo o mesmo erro ou tomando a mesma decisão errada mesmo após correção.
+
+**Causa:** A memória persistente do projeto (`MEMORY.md` + arquivos em `memory/`) contém uma entrada incorreta ou desatualizada que é reinjetada no contexto a cada sessão.
+
+**Solução:**
+
+```
+1. Digite /memory no terminal do Claude Code
+2. O painel de memórias do projeto abre
+3. Localize a entrada incorreta (busque pelo erro ou comportamento problemático)
+4. Edite ou delete a entrada manualmente
+5. Continue — o Claude não repetirá mais o comportamento errado
+```
+
+**Alternativa via arquivo:** edite diretamente `~/.claude/projects/<projeto>/memory/MEMORY.md` e o arquivo de memória referenciado.
+
+> Esta é a causa mais comum de "o Claude não aprende" — não é o modelo, é uma memória errada sendo injetada silenciosamente.
