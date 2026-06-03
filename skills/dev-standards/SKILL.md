@@ -486,6 +486,28 @@ const ref = `${prefix}-${Date.now().toString(36).toUpperCase()}`
 const { data } = await supabase.rpc('next_sequence', { p_table: 'items', p_user_id: userId })
 ```
 
+### 5. Chamadas LLM sempre com guardrails (projetos com IA)
+
+```typescript
+// ❌ Chamada direta ao LLM — sem filtro de input, sem PII, sem validação de output
+const result = await anthropic.messages.create({ messages: [{ role: 'user', content: userMessage }] })
+
+// ✅ Sempre envolver com prePromptFilter + postOutputValidator
+import { prePromptFilter, postOutputValidator } from '@/lib/ai/guardrails'
+
+const pre = prePromptFilter(userMessage)
+if (!pre.safe) return { error: 'Input inválido' }  // detectou injection ou PII
+
+const raw = await anthropic.messages.create({
+  messages: [{ role: 'user', content: pre.sanitized }]
+})
+
+const post = postOutputValidator(raw.content[0].text)
+return post.sanitized  // PII removida, system prompt leak bloqueado
+```
+
+**Por quê:** Chamada direta expõe CPF/email no contexto do LLM (LGPD Art. 6 III) e permite prompt injection (OWASP LLM01). Os guardrails estão em `src/lib/ai/guardrails.ts` — criados na Fase 01 (Architecture), obrigatórios em todas as chamadas LLM do projeto.
+
 ---
 
 ## Configuração TypeScript IntelliX (obrigatória)

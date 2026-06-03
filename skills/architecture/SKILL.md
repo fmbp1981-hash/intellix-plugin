@@ -45,6 +45,23 @@ CREATE POLICY "users_own_contacts" ON contacts
 - `user_id` FK para `auth.users` quando dados são por usuário
 - `metadata JSONB` para campos extensíveis sem migração
 - RLS em TODA tabela, sem exceção
+- Soft delete preferível a hard delete em tabelas com dados pessoais (`deleted_at TIMESTAMPTZ`)
+
+**Se o projeto processa dados pessoais de pessoas físicas (LGPD):**
+
+Incluir a migration LGPD junto às primeiras migrations do projeto — não como afterthought na Fase 06:
+
+```sql
+-- supabase/migrations/00001_lgpd_tables.sql
+-- Gerado automaticamente pelo /projeto novo; criar manualmente se ausente
+-- Skill de referência: lgpd-compliance
+CREATE TABLE consent_records ( ... );   -- consentimentos por finalidade
+CREATE TABLE titular_requests ( ... );  -- direitos dos titulares (prazo: 15 dias)
+CREATE TABLE data_processing_log ( ... ); -- log de operações + decisões por IA (Art. 20)
+-- SQL completo: ver lgpd-compliance → Seção 2
+```
+
+> Invocar `lgpd-compliance` para o SQL completo + RLS. A decisão de incluir ou não é de arquitetura — tomada agora, não na Fase 06.
 
 ### Passo 2 — Rotas Next.js App Router
 
@@ -234,6 +251,31 @@ export const contactsService = {
     return contactsRepository.delete(id, userId)
   },
 }
+```
+
+### LLM Layer (se o projeto tiver IA/agentes)
+
+Se o projeto usa LLMs, criar estes dois arquivos como **artefatos de arquitetura** — não como afterthought na Fase 06:
+
+```
+src/lib/
+├── ai/
+│   └── guardrails.ts        # prePromptFilter + postOutputValidator
+└── lgpd/
+    └── pii-redactor.ts      # redactPII — strip CPF/email/tel antes do LLM
+```
+
+**Motivo:** Toda chamada LLM do projeto deve passar por estes helpers. Definir na arquitetura garante que nenhum desenvolvedor faça chamadas diretas sem guardrails. Invocar `lgpd-compliance` para o código completo de ambos os arquivos.
+
+```typescript
+// Padrão obrigatório para qualquer chamada LLM no projeto
+import { prePromptFilter, postOutputValidator } from '@/lib/ai/guardrails'
+
+const pre = prePromptFilter(userInput)
+if (!pre.safe) return { error: 'Input inválido' }
+const raw = await llm.complete(pre.sanitized)
+const post = postOutputValidator(raw)
+return post.sanitized
 ```
 
 ---
