@@ -30,6 +30,13 @@ Pergunta 3: Nome do cliente ou "IntelliX Interno".
 Pergunta 4: Cor primária em hex? (ex: #007AFF) — ou pressione Enter para usar #6366F1
 Pergunta 5: Tem Supabase project ID ou Vercel project ID já criados?
            (opcional — pressione Enter para gerar placeholders)
+Pergunta 6: O projeto processará dados pessoais de pessoas físicas?
+           (nome, email, CPF, telefone, endereço, comportamento de uso, etc.)
+           [S] Sim — scaffoldar LGPD: tabelas + pii-redactor + checklist
+           [N] Não — pular scaffolding LGPD
+Pergunta 7: O projeto terá chamadas a LLMs (OpenAI, Anthropic, etc.) ou agentes autônomos?
+           [S] Sim — scaffoldar guardrails: prePromptFilter + postOutputValidator
+           [N] Não — pular scaffolding LLM
 ```
 
 **Inputs opcionais** (se não informados, geram placeholders em `.env.example`):
@@ -40,9 +47,11 @@ Pergunta 5: Tem Supabase project ID ou Vercel project ID já criados?
 Ao receber todas as respostas, derive os valores calculados:
 
 ```
-PROJECT_SLUG    = projectName em lowercase, sem espaços, sem acentos (ex: "nossocrm")
-SECONDARY_COLOR = se não informado, usar #10B981
-CREATED_AT      = data atual no formato YYYY-MM-DD
+PROJECT_SLUG        = projectName em lowercase, sem espaços, sem acentos (ex: "nossocrm")
+SECONDARY_COLOR     = se não informado, usar #10B981
+CREATED_AT          = data atual no formato YYYY-MM-DD
+HAS_PERSONAL_DATA   = S ou N (Pergunta 6)
+HAS_LLM             = S ou N (Pergunta 7)
 ```
 
 Confirme o resumo com o usuário antes de prosseguir:
@@ -84,6 +93,9 @@ Criar a seguinte estrutura de pastas (apenas diretórios — arquivos vêm nos p
 
 ```
 {{PROJECT_SLUG}}/
+├── .github/
+│   └── workflows/
+│       └── security.yml          ← DevSecOps CI/CD (sempre criado)
 ├── .claude/
 ├── src/
 │   ├── app/
@@ -98,10 +110,14 @@ Criar a seguinte estrutura de pastas (apenas diretórios — arquivos vêm nos p
 │   │   ├── auth/
 │   │   ├── db/
 │   │   ├── ai/
+│   │   │   └── guardrails.ts     ← se HAS_LLM=S
+│   │   ├── lgpd/
+│   │   │   └── pii-redactor.ts   ← se HAS_PERSONAL_DATA=S
 │   │   └── utils/
 │   └── types/
 ├── supabase/
 │   └── migrations/
+│       └── 00001_lgpd_tables.sql ← se HAS_PERSONAL_DATA=S
 ├── tests/
 │   ├── unit/
 │   ├── integration/
@@ -308,6 +324,136 @@ Execute /clear nos seguintes momentos:
 
 ❌ `if (user.isAdmin)` no client — hacker abre DevTools e muda em 30 segundos
 ✅ Sempre buscar role no banco no server action antes de qualquer operação privilegiada
+```
+
+---
+
+## PASSO 4b — DevSecOps Scaffold (SEMPRE executar — não condicional)
+
+### `.github/workflows/security.yml`
+
+```yaml
+name: DevSecOps Security Scan
+on: [push, pull_request]
+
+jobs:
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+
+  sast-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/typescript p/owasp-top-ten p/nextjs"
+
+  sca-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: "trivy-results.sarif" }
+```
+
+> Custo zero. PRs com CRITICAL não fazem merge. HIGH exige dispensa documentada.
+
+---
+
+### `src/lib/lgpd/pii-redactor.ts` — criar SE `HAS_PERSONAL_DATA = S`
+
+```typescript
+// Redação de PII — executar ANTES de enviar qualquer dado ao LLM (LGPD Art. 46)
+const PII_PATTERNS = [
+  { regex: /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, token: '[CPF]' },
+  { regex: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, token: '[EMAIL]' },
+  { regex: /\b(\+55\s?)?(\(?\d{2}\)?\s?)?[\d\s\-]{8,}\b/g, token: '[TELEFONE]' },
+  { regex: /\b\d{5}-?\d{3}\b/g, token: '[CEP]' },
+]
+export function redactPII(text: string): string {
+  return PII_PATTERNS.reduce((acc, { regex, token }) => acc.replace(regex, token), text)
+}
+```
+
+### `supabase/migrations/00001_lgpd_tables.sql` — criar SE `HAS_PERSONAL_DATA = S`
+
+```sql
+-- Tabelas LGPD obrigatórias — Lei 13.709/2018 | gerado por /projeto novo
+CREATE TABLE consent_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  purpose TEXT NOT NULL, granted BOOLEAN NOT NULL,
+  granted_at TIMESTAMPTZ, revoked_at TIMESTAMPTZ,
+  version TEXT NOT NULL DEFAULT '1.0',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE titular_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id), email TEXT NOT NULL,
+  request_type TEXT NOT NULL CHECK (request_type IN (
+    'access','correction','deletion','portability',
+    'consent_revoke','anonymization','automated_review'
+  )),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN (
+    'pending','in_progress','completed','rejected'
+  )),
+  deadline TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '15 days'),
+  response TEXT, created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE data_processing_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  operation TEXT NOT NULL, data_categories TEXT[] NOT NULL,
+  purpose TEXT NOT NULL, legal_basis TEXT NOT NULL,
+  automated BOOLEAN DEFAULT false, ai_model TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE consent_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE titular_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE data_processing_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "titular_own_consents" ON consent_records FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "titular_own_requests" ON titular_requests FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "admin_manage_requests" ON titular_requests FOR ALL USING (
+  EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+CREATE POLICY "admin_read_log" ON data_processing_log FOR SELECT USING (
+  EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+```
+
+### `src/lib/ai/guardrails.ts` — criar SE `HAS_LLM = S`
+
+```typescript
+// Pipeline de guardrails — Camadas 1 e 4 obrigatórias (OWASP LLM Top 10 2025)
+import { redactPII } from '@/lib/lgpd/pii-redactor'
+
+const INJECTION_PATTERNS = [
+  /ignore\s+(previous|all|above)\s+instructions/i,
+  /you\s+are\s+now\s+(a|an)\s+/i,
+  /system\s*:\s*you/i,
+]
+
+export function prePromptFilter(input: string): { safe: boolean; sanitized: string } {
+  if (INJECTION_PATTERNS.some(p => p.test(input))) return { safe: false, sanitized: '' }
+  return { safe: true, sanitized: redactPII(input) }
+}
+
+export function postOutputValidator(output: string): { valid: boolean; sanitized: string } {
+  const LEAKS = [/you are (a|an) .+ assistant/i, /system prompt/i]
+  if (LEAKS.some(p => p.test(output)))
+    return { valid: false, sanitized: '[Resposta bloqueada por política de segurança]' }
+  return { valid: true, sanitized: redactPII(output) }
+}
 ```
 
 ---
@@ -594,6 +740,7 @@ Exibir relatório:
 
 📁 Estrutura criada:
    {{PROJECT_SLUG}}/
+   ├── .github/workflows/security.yml  ← DevSecOps CI/CD (Gitleaks + Semgrep + Trivy)
    ├── references/    ← 5 arquivos customizados (architecture, design_system, workflow, stack, security)
    ├── agentes/       ← 4 agentes compilados (model_writer, action_writer, component_writer, test_writer)
    ├── src/           ← estrutura SDD pronta
@@ -605,6 +752,12 @@ Exibir relatório:
    [listar status de cada secret: ✓ configurado | ⚠ PREENCHER]
 
 📦 Dependências: npm install ✓ (ou ⚠ com erro específico)
+
+🛡️ DevSecOps:
+   ✓ .github/workflows/security.yml — CI/CD rodará em todo PR automaticamente
+   [se HAS_PERSONAL_DATA=S] ✓ src/lib/lgpd/pii-redactor.ts — redação de PII antes de LLMs
+   [se HAS_PERSONAL_DATA=S] ✓ supabase/migrations/00001_lgpd_tables.sql — consent_records + titular_requests + data_processing_log
+   [se HAS_LLM=S] ✓ src/lib/ai/guardrails.ts — prePromptFilter + postOutputValidator
 
 🤖 Agentes prontos:
    ✓ model_writer    → lib/db/ + supabase/migrations/

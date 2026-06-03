@@ -401,6 +401,185 @@ npm audit --audit-level=high
 # Se houver: npm audit fix ou atualizar manualmente
 ```
 
+### 9 — Segurança LLM (OWASP LLM Top 10 2025)
+
+> Executar quando o projeto tem chamadas a LLMs (OpenAI, Anthropic, etc.)
+
+| Risco OWASP LLM | Verificação | Status |
+|----------------|-------------|--------|
+| LLM01 Prompt Injection | Pré-prompt filter ativo — input sanitizado antes de enviar ao modelo | [ ] |
+| LLM02 Insecure Output Handling | Pós-output validator ativo — output sanitizado antes de exibir/executar | [ ] |
+| LLM06 Excessive Agency | Agentes têm allowlist de tools — acesso apenas ao necessário | [ ] |
+| LLM08 Vector/Embedding Weakness | RAG com filtragem por entitlement (usuário só recupera o que tem permissão) | [ ] |
+| LLM09 Misinformation | Validador de output verificável implementado | [ ] |
+| LLM10 Unbounded Consumption | Rate limit por usuário/tenant + limite de tokens por request | [ ] |
+
+```typescript
+// src/lib/ai/guardrails.ts — Pipeline obrigatório para todo LLM em produção
+
+import { redactPII } from '@/lib/lgpd/pii-redactor' // obrigatório se dados de clientes
+
+// Camada 1: Pré-prompt filter
+export function prePromptFilter(userInput: string): { safe: boolean; sanitized: string } {
+  const INJECTION_PATTERNS = [
+    /ignore\s+(previous|all|above)\s+instructions/i,
+    /you\s+are\s+now\s+(a|an)\s+/i,
+    /system\s*:\s*you/i,
+    /\[INST\]|\[\/INST\]|<\|im_start\|>/i, // format injection
+  ]
+  
+  const hasInjection = INJECTION_PATTERNS.some(p => p.test(userInput))
+  if (hasInjection) return { safe: false, sanitized: '' }
+  
+  const sanitized = redactPII(userInput) // remove PII antes de enviar
+  return { safe: true, sanitized }
+}
+
+// Camada 4: Pós-output validator (obrigatório)
+export function postOutputValidator(output: string): { valid: boolean; sanitized: string } {
+  // Detectar vazamento de system prompt
+  const SYSTEM_LEAK_PATTERNS = [
+    /you are (a|an) .+ assistant/i,
+    /your instructions are/i,
+    /system prompt/i,
+  ]
+  
+  const hasLeak = SYSTEM_LEAK_PATTERNS.some(p => p.test(output))
+  if (hasLeak) return { valid: false, sanitized: '[Resposta bloqueada por política de segurança]' }
+  
+  const sanitized = redactPII(output) // garantir que PII não vaze no output
+  return { valid: true, sanitized }
+}
+
+// Uso em route handler ou server action:
+// const pre = prePromptFilter(userMessage)
+// if (!pre.safe) return { error: 'Input inválido' }
+// const response = await llm.complete(pre.sanitized)
+// const post = postOutputValidator(response)
+// return post.sanitized
+```
+
+**Regra de Conta LLM — sem exceção:**
+
+| Provedor | Produto seguro | Proibido com dados de clientes |
+|----------|---------------|-------------------------------|
+| OpenAI | API (platform.openai.com) | ChatGPT Free/Plus/Pro/Team |
+| Anthropic | API (console.anthropic.com) | Claude.ai Free/Pro/Max |
+| Azure OpenAI | Qualquer tier | — |
+
+### 10 — Segurança de Agentes (OWASP Agentic Top 10 2026)
+
+> Executar quando o projeto tem agentes autônomos (n8n multi-step, GPT Maker com tools, agentes Anthropic/OpenAI)
+
+| Risco OWASP Agêntico | Verificação | Status |
+|---------------------|-------------|--------|
+| A01 Privilege Escalation | Cada agente tem allowlist de tools — nenhum herda privilégios de outro | [ ] |
+| A02 Context Poisoning | Memória/contexto persistente sanitizado antes de gravar | [ ] |
+| A03 Insecure Tool Use | Tools com ações irreversíveis têm step de confirmação humana | [ ] |
+| A05 Resource Overuse | Timeout + max_tokens + max_iterations configurados | [ ] |
+| A07 Human Manipulation | Output para o usuário validado — sem instrução de ação financeira sem confirmação | [ ] |
+| A09 Cascading Failures | Circuit breaker em workflows multi-step | [ ] |
+
+**As 4 Perguntas Obrigatórias Antes de Colocar Agente em Produção**
+
+> Regra IntelliX: Se qualquer resposta for "não sei" → o problema NÃO é técnico, é de processo.
+> Reverter ao `/plan` antes de avançar.
+
+1. **Quais dados (incluindo PII) entram no agente e qual LLM os processa?**
+   → Mapeado + base legal LGPD documentada + conta API comercial confirmada
+
+2. **Qual o critério objetivo para "essa resposta é boa"? Existe validador implementado?**
+   → Não é feeling — é função que retorna true/false com threshold definido
+
+3. **Quem valida o output antes de impactar usuário ou sistema externo?**
+   → Humano (human-in-the-loop) ou validador automático com fallback definido
+
+4. **Em workflows multi-step: como valido estados intermediários?**
+   → Cada step tem saída verificável + rollback se falhar
+
+```typescript
+// src/lib/ai/agent-guardrails.ts
+
+// Menor privilégio: allowlist explícita de tools por agente
+const AGENT_TOOL_ALLOWLIST: Record<string, string[]> = {
+  'sdr-agent': ['search_contacts', 'send_whatsapp', 'update_lead_status'],
+  'analyst-agent': ['read_reports', 'generate_chart'],
+  // Sem wildcard — cada agente lista APENAS suas tools
+}
+
+// Ação irreversível: exige confirmação antes de executar
+export async function executeIrreversibleAction(
+  agentId: string,
+  action: string,
+  payload: unknown,
+  requireConfirmation = true
+) {
+  if (requireConfirmation) {
+    // Em produção: criar pending_action e aguardar aprovação humana
+    // Nunca executar delete, envio de mensagem, pagamento sem aprovação
+    throw new Error(`HUMAN_REVIEW_REQUIRED: ${action}`)
+  }
+  // ... execução
+}
+```
+
+### 11 — Pipeline DevSecOps CI/CD
+
+> Configurar uma vez por repositório. Jobs rodando em todo PR.
+
+```yaml
+# .github/workflows/security.yml
+name: DevSecOps Security Scan
+on: [push, pull_request]
+
+jobs:
+  # Job 1: Detectar secrets commitados
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+
+  # Job 2: SAST — análise estática de código
+  sast-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/typescript p/owasp-top-ten p/nextjs"
+
+  # Job 3: SCA — dependências vulneráveis
+  sca-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: "trivy-results.sarif" }
+```
+
+**Regra de bloqueio:** PRs com vulnerabilidade CRITICAL não fazem merge.
+HIGH exige dispensa documentada com justificativa no PR.
+
+**Gestão de Credenciais por Ambiente:**
+
+| Ambiente | Onde guardar | Nunca fazer |
+|----------|-------------|-------------|
+| Local | `.env.local` (no .gitignore) | Commitar qualquer `.env` |
+| CI/CD | GitHub Encrypted Secrets | Printar secrets em logs |
+| Produção (Vercel) | Vercel Environment Variables | Prefixar com `NEXT_PUBLIC_` |
+| n8n self-hosted | n8n Credentials (criptografadas) | Deixar `N8N_ENCRYPTION_KEY` vazio |
+| Dados sensíveis por tenant | Supabase Vault (pgcrypto) | Armazenar em tabela sem criptografia |
+
 ---
 
 ## Checklist de Conclusão
@@ -424,11 +603,40 @@ npm audit --audit-level=high
 - [ ] `npm audit` zero high/critical
 - [ ] Core Web Vitals medidos (LCP < 2.5s, INP < 200ms, CLS < 0.1)
 
+**LLM & IA (se o projeto usa LLMs):**
+- [ ] Pré-prompt filter ativo (redação de PII + detecção de injection)
+- [ ] Pós-output validator ativo (sanitização de output + detecção de vazamento)
+- [ ] System prompt separado do user input por delimitadores explícitos
+- [ ] Conta API comercial (não conta de consumo ChatGPT/Claude.ai)
+- [ ] Rate limiting por usuário/tenant em chamadas LLM
+- [ ] Limite de tokens por request definido (previne Denial of Wallet)
+
+**Agentes (se o projeto tem agentes autônomos):**
+- [ ] Allowlist de tools por agente definida
+- [ ] 4 Perguntas de go-live respondidas com SIM
+- [ ] Ações irreversíveis têm human-in-the-loop ou confirmação explícita
+- [ ] Circuit breaker em workflows multi-step
+
+**DevSecOps CI/CD (por repositório):**
+- [ ] `.github/workflows/security.yml` configurado (Gitleaks + Semgrep + Trivy)
+- [ ] Zero secrets detectados pelo Gitleaks
+- [ ] Zero vulnerabilidades CRITICAL abertas
+- [ ] Gestão de credenciais por ambiente seguindo tabela da Seção 11
+
+**LGPD (se o projeto processa dados pessoais):**
+- [ ] `lgpd-compliance` executada em paralelo com esta skill
+- [ ] Mapa de dados e base legal documentados
+- [ ] Tabelas LGPD no schema (`consent_records`, `titular_requests`, `data_processing_log`)
+
 ---
 
 ## Handover para Fase 07 (Test E2E)
 
 > "Security & Observability configurados (Nível [BÁSICO/MÉDIO/COMPLETO]).
+> LGPD: [executada/não aplicável].
+> LLM Security: [executada/não aplicável].
+> Agentic Security: [executada/não aplicável].
+> DevSecOps CI/CD: [configurado/não aplicável].
 > Próxima fase: **intellix:test-e2e** para validação completa antes do deploy."
 
 Atualize `.intellix-phase` para `test`.

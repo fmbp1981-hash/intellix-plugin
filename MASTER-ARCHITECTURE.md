@@ -230,6 +230,7 @@ Dois conjuntos de referências disponíveis: arquivos do **plugin IntelliX** (di
 
 | Arquivo | O que contém | Quando consultar |
 |---------|-------------|-----------------|
+| [`skills/lgpd-compliance/SKILL.md`](skills/lgpd-compliance/SKILL.md) | Compliance LGPD: bases legais, direitos dos titulares, schema de tabelas, Privacy by Design, incidentes | Ao implementar qualquer feature com dados pessoais de brasileiros |
 | [`skills/projeto-novo/SKILL.md`](skills/projeto-novo/SKILL.md) | Automação zero-touch: /projeto novo — 9 passos de setup com templates e agentes | Ao iniciar projeto novo do zero |
 | [`intellix-templates/`](intellix-templates/) | Boilerplate com references/, agents-template/, version.json | Consultado automaticamente pelo /projeto novo |
 | [`references/four-commands.md`](references/four-commands.md) | Templates completos de /spec, /break, /plan, /execute + Checklist Fatal | Ao executar qualquer um dos 4 comandos |
@@ -238,7 +239,7 @@ Dois conjuntos de referências disponíveis: arquivos do **plugin IntelliX** (di
 | [`references/data-layer.md`](references/data-layer.md) | Repository + Service pattern, Behavior isolation, Schema SQL + RBAC | Ao criar repositories, services, schemas ou behaviors |
 | [`references/api-standards.md`](references/api-standards.md) | apiResponse RFC 7807, Route Handler padrão, Paginação cursor | Ao criar Route Handlers ou APIs |
 | [`references/frontend-patterns.md`](references/frontend-patterns.md) | TypeScript strict, Naming conventions, Estrutura de componentes | Ao criar componentes `.tsx` ou hooks |
-| [`references/security-rules.md`](references/security-rules.md) | Checklist de segurança BÁSICO/COMPLETO, headers CSP/HSTS | Ao implementar rotas, middleware ou autenticação |
+| [`references/security-rules.md`](references/security-rules.md) | Checklist BÁSICO/COMPLETO, headers CSP/HSTS, Regras DevSecOps 4-9, 5 Regras de Ouro | Ao implementar rotas, middleware, autenticação ou qualquer LLM |
 | [`references/operations.md`](references/operations.md) | Estratégia de testes, variáveis de ambiente, CLAUDE.md template, deploy | Ao configurar projeto ou preparar deploy |
 
 ### Referências por Projeto
@@ -275,7 +276,8 @@ Criadas durante o kickoff de cada projeto em `references/` na raiz do projeto:
 | 9 | Padrões TypeScript + naming + components | `intellix:dev-standards` | Plugin |
 | 10 | /spec → /break → /plan → /execute | `skill-epic-workflow` | Externa |
 | 11 | APIs externas + WhatsApp + n8n | `intellix:integration` | Plugin |
-| 12 | OWASP + rate limit + observabilidade | `intellix:security-observability` | Plugin |
+| 12 | OWASP + rate limit + observabilidade + LLM/Agentes | `intellix:security-observability` | Plugin |
+| 12b | LGPD + Privacy by Design (dados pessoais) | `lgpd-compliance` | Plugin |
 | 13 | Testes E2E smoke → stress | `intellix:test-e2e` | Plugin → Externa |
 | 14 | Deploy Vercel + Cloudflare | `intellix:deploy` | Plugin |
 | 15 | README + ADRs + documentação final | `intellix:handoff` | Plugin |

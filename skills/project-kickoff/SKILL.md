@@ -43,13 +43,17 @@ define o tipo de sistema e inicializa a estrutura canônica antes de qualquer c�
 
 ## Workflow
 
-### Passo 1 — Diagnóstico (3 perguntas máximo)
+### Passo 1 — Diagnóstico (5 perguntas)
 
 Colete as respostas antes de continuar:
 
 1. **Tipo de sistema**: Landing page / CRM / SaaS / Agente WhatsApp / API / Outro?
 2. **Integrações previstas**: WhatsApp (Evolution API)? n8n? Supabase? Pagamentos?
 3. **Agentes de IA**: O sistema terá agentes ou automações com LLM?
+4. **Dados pessoais**: O sistema processará dados de pessoas físicas? (nome, email, CPF, telefone, comportamento, etc.)
+   → SE SIM: scaffold LGPD obrigatório na Fase 01 (Architecture) + invocar `lgpd-compliance` na Fase 06
+5. **Dados sensíveis**: Saúde, biometria, finanças, dados de crianças?
+   → SE SIM: regime de proteção reforçado — criptografia AES-256 + consentimento específico
 
 Se o usuário já forneceu essas informações na conversa, pule direto ao Passo 2.
 
@@ -262,6 +266,9 @@ Após criar `CLAUDE.md` e `AGENTS.md`, valide a qualidade do contexto entregue a
 
 Ao concluir, informe:
 > "Kickoff concluído. Estrutura inicializada. Próxima fase: **intellix:architecture** para definir o schema de banco, rotas e componentes principais."
+
+Se `HAS_PERSONAL_DATA = S`, adicionar ao handover:
+> "⚠️ Projeto com dados pessoais detectado. Na Fase 01 (Architecture): incluir tabelas LGPD no schema (`consent_records`, `titular_requests`, `data_processing_log`). Na Fase 06: executar `lgpd-compliance` em paralelo com `security-observability`."
 
 Atualize `.intellix-phase` para `arch`.
 
