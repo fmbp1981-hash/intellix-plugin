@@ -272,7 +272,7 @@ Ver `.claude/rules/` — convenções específicas daqui (as globais já valem p
 ```json
 {
   "enabledPlugins": {
-    "intellix@intellix-marketplace": true
+    "intellix@intellix-plugin": true
   }
 }
 ```

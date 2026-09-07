@@ -89,7 +89,7 @@ Ler MASTER-ARCHITECTURE.md para todas as regras de arquitetura, padrões e workf
 ```json
 {
   "enabledPlugins": {
-    "intellix@intellix-marketplace": true
+    "intellix@intellix-plugin": true
   }
 }
 ```

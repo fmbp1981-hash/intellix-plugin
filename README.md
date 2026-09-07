@@ -154,7 +154,7 @@ Adicione ao `.claude/settings.json` do projeto:
 ### Global (todos os projetos)
 ```bash
 /plugin marketplace add intellixai/marketplace
-/plugin install intellix@intellixai-marketplace
+/plugin install intellix@intellix-plugin
 ```
 
 ---

@@ -574,7 +574,7 @@ init
 ```json
 {
   "enabledPlugins": {
-    "intellix@intellix-marketplace": true
+    "intellix@intellix-plugin": true
   }
 }
 ```
