@@ -523,6 +523,41 @@ Garante que o go-live é reversível, observável e incremental:
 
 ---
 
+## Registro de deploy — instrumentação DORA (obrigatório)
+
+> **Por que uma linha de log e não uma seção sobre DORA:** métrica sem coleta de
+> dado é prosa. As quatro métricas DORA saem todas deste arquivo; sem ele, não há
+> o que medir. Uma linha por deploy é o custo total.
+
+Ao concluir **todo** deploy (sucesso ou falha), acrescente uma linha a
+`docs/deploys.jsonl` no repositório do projeto:
+
+```bash
+cat >> docs/deploys.jsonl <<EOF
+{"ts":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","commit":"$(git rev-parse --short HEAD)","ambiente":"producao","resultado":"sucesso","rollback":false,"incidente_ref":null,"primeiro_commit_da_entrega":"<sha>"}
+EOF
+```
+
+Campos e para que servem:
+
+| Campo | Alimenta |
+|---|---|
+| `ts` + `primeiro_commit_da_entrega` | **Lead time for changes** — do primeiro commit até produção |
+| `ts` (contagem por período) | **Deployment frequency** |
+| `resultado` + `rollback` | **Change failure rate** — proporção de deploys que falharam ou reverteram |
+| `incidente_ref` + `ts` do deploy de correção | **MTTR** — tempo até restaurar serviço |
+
+**Regra:** deploy sem linha registrada é deploy não rastreável. Se o log não
+existir ainda, crie-o neste deploy — a série histórica começa em algum momento.
+
+**ADRs:** toda decisão técnica que restringe opções futuras (escolha de biblioteca,
+padrão arquitetural, trade-off aceito) vira um ADR em `docs/adr/NNNN-titulo.md`
+antes do deploy que a materializa. Sem ADR, a decisão vira folclore e alguém a
+reverte por desconhecer o motivo — foi o que aconteceu com as decisões
+não documentadas encontradas na auditoria de 2026-09-07.
+
+---
+
 ## Handover para Fase 09
 > "Deploy concluído. Sistema em produção. Próxima fase: **intellix:handoff** para documentação final."
 
