@@ -47,7 +47,7 @@ cat <<EOF
 
     STACK IMUTÁVEL:
     Next.js 15 App Router | TypeScript strict | Tailwind + Shadcn/UI
-    Supabase (DB + Auth + Edge Functions) | Vercel | Vitest + Playwright
+    Supabase (DB + Auth + Edge Functions) | Cloudflare (Workers/Pages) | Vitest + Playwright
   </mandatory-standards>
 
   <activation-protocol>
@@ -75,7 +75,7 @@ cat <<EOF
     - intellix:integration              → fase 05: SDKs nativos, WhatsApp, n8n opcional
     - intellix:security-observability   → fase 06: OWASP, rate limit, Sentry, logging (auto-nivel)
     - intellix:test-e2e                 → fase 07: Playwright, Vitest, TDD
-    - intellix:deploy                   → fase 08: Vercel, CI/CD, DevOps, runbook
+    - intellix:deploy                   → fase 08: Cloudflare Workers (wrangler), CI/CD, DevOps, runbook
     - intellix:handoff                  → fase 09: README, ADRs, entrega ao cliente
     - intellix:live-chat                → fase 10: omnichannel IA + humano (opcional)
 
@@ -85,8 +85,7 @@ cat <<EOF
 
   <complementary-skills>
     DESIGN E UI:
-    - frontend-dev-workflow       → orquestra vibestack + ui-ux-pro-max + frontend-design-pro
-    - frontend-design-pro         → interfaces com padrão $50k+ agency
+    - impeccable                  → init/shape/new-work (estrutura+implementação) + polish/animate/colorize
     - ckm-ui-styling              → shadcn/ui avançado e tokens de design
     - ui-ux-pro-max               → 50+ estilos, 161 paletas, análise UX
 

@@ -55,7 +55,7 @@ export async function generateResponse(
   systemPrompt?: string
 ): Promise<string> {
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 1024,
     system: systemPrompt,
     messages: [{ role: 'user', content: prompt }],
@@ -72,7 +72,7 @@ export async function* streamResponse(
   systemPrompt?: string
 ): AsyncGenerator<string> {
   const stream = anthropic.messages.stream({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 1024,
     system: systemPrompt,
     messages: [{ role: 'user', content: prompt }],

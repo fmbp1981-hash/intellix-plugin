@@ -64,6 +64,136 @@
 
 ---
 
+## Artefatos de Código Canônicos
+
+> Esta seção é a **fonte única de verdade** dos três artefatos de segurança usados em
+> todo projeto IntelliX. Nenhuma outra skill ou template deve reimplementar o código
+> completo abaixo — apenas referenciar este arquivo (`references/security.md` no projeto
+> gerado). Copie o código destes blocos ao fazer scaffold, retrofit ou ao revisar
+> chamadas LLM existentes.
+
+### 1 — `src/lib/lgpd/pii-redactor.ts`
+
+Redação de PII — executar ANTES de enviar qualquer dado ao LLM (LGPD Art. 46). Camada
+obrigatória do pré-prompt filter (ver guardrails.ts abaixo).
+
+```typescript
+// src/lib/lgpd/pii-redactor.ts
+const PII_PATTERNS = [
+  { regex: /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, token: '[CPF]' },
+  { regex: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, token: '[EMAIL]' },
+  { regex: /\b(\+55\s?)?(\(?\d{2}\)?\s?)?[\d\s\-]{8,}\b/g, token: '[TELEFONE]' },
+  { regex: /\b\d{5}-?\d{3}\b/g, token: '[CEP]' },
+]
+
+export function redactPII(text: string): string {
+  return PII_PATTERNS.reduce((acc, { regex, token }) => acc.replace(regex, token), text)
+}
+
+// Uso no pré-prompt filter:
+// const safeInput = redactPII(userMessage)
+// const response = await llm.complete({ prompt: safeInput })
+```
+
+### 2 — `src/lib/ai/guardrails.ts`
+
+Pipeline obrigatório para toda chamada LLM em produção — Camadas 1 e 4 do modelo de
+5 camadas (OWASP LLM Top 10 2025). Depende de `pii-redactor.ts` acima.
+
+```typescript
+// src/lib/ai/guardrails.ts — Pipeline obrigatório para todo LLM em produção
+import { redactPII } from '@/lib/lgpd/pii-redactor' // obrigatório se dados de clientes
+
+// Camada 1: Pré-prompt filter
+export function prePromptFilter(userInput: string): { safe: boolean; sanitized: string } {
+  const INJECTION_PATTERNS = [
+    /ignore\s+(previous|all|above)\s+instructions/i,
+    /you\s+are\s+now\s+(a|an)\s+/i,
+    /system\s*:\s*you/i,
+    /\[INST\]|\[\/INST\]|<\|im_start\|>/i, // format injection
+  ]
+
+  const hasInjection = INJECTION_PATTERNS.some(p => p.test(userInput))
+  if (hasInjection) return { safe: false, sanitized: '' }
+
+  const sanitized = redactPII(userInput) // remove PII antes de enviar
+  return { safe: true, sanitized }
+}
+
+// Camada 4: Pós-output validator (obrigatório)
+export function postOutputValidator(output: string): { valid: boolean; sanitized: string } {
+  // Detectar vazamento de system prompt
+  const SYSTEM_LEAK_PATTERNS = [
+    /you are (a|an) .+ assistant/i,
+    /your instructions are/i,
+    /system prompt/i,
+  ]
+
+  const hasLeak = SYSTEM_LEAK_PATTERNS.some(p => p.test(output))
+  if (hasLeak) return { valid: false, sanitized: '[Resposta bloqueada por política de segurança]' }
+
+  const sanitized = redactPII(output) // garantir que PII não vaze no output
+  return { valid: true, sanitized }
+}
+
+// Uso em route handler ou server action:
+// const pre = prePromptFilter(userMessage)
+// if (!pre.safe) return { error: 'Input inválido' }
+// const response = await llm.complete(pre.sanitized)
+// const post = postOutputValidator(response)
+// return post.sanitized
+```
+
+### 3 — `.github/workflows/security.yml`
+
+Pipeline DevSecOps CI/CD — configurar uma vez por repositório, roda em todo PR.
+
+```yaml
+# .github/workflows/security.yml
+name: DevSecOps Security Scan
+on: [push, pull_request]
+
+jobs:
+  # Job 1: Detectar secrets commitados
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+
+  # Job 2: SAST — análise estática de código
+  sast-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/typescript p/owasp-top-ten p/nextjs"
+
+  # Job 3: SCA — dependências vulneráveis
+  sca-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: "trivy-results.sarif" }
+```
+
+**Regra de bloqueio:** PRs com vulnerabilidade CRITICAL não fazem merge.
+HIGH exige dispensa documentada com justificativa no PR. Custo: zero — os três
+scanners são open-source e gratuitos no GitHub Actions.
+
+---
+
 ## Anti-patterns Críticos
 
 ```typescript

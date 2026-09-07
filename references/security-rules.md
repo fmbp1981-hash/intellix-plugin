@@ -160,7 +160,7 @@ Antes de implementar qualquer feature que toca dados pessoais, responder:
 4. **RETENÇÃO**: por quanto tempo? Quem exclui e quando?
 5. **TITULAR**: como o usuário acessa, corrige e exclui?
 
-Se qualquer resposta for "não sei" → invocar `lgpd-compliance` antes de continuar.
+Se qualquer resposta for "não sei" → invocar `devsecops:lgpd-compliance` antes de continuar.
 
 **Prazos inegociáveis:**
 - Resposta ao titular: 15 dias corridos (Art. 18, §3)

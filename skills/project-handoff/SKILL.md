@@ -5,10 +5,10 @@ description: >
   README, entregar projeto, handoff, cliente, "projeto concluído",
   "preparar para o cliente", documentar decisões, "o que foi feito",
   débitos técnicos, "próximos passos após entrega".
-  Esta é a Fase 07 — última fase do fluxo IntelliX.
+  Esta é a Fase 09 — última fase do fluxo IntelliX.
 ---
 
-# Fase 07 — Project Handoff
+# Fase 09 — Project Handoff
 
 Gera a documentação final do projeto e prepara a entrega ao cliente.
 

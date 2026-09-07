@@ -40,6 +40,22 @@ problemas de segurança e gargalos de performance.
 - O pedido é para configurar um framework de testes (sem executar)
 - A aplicação ainda não tem nenhum código funcional
 
+## Passo 0 — Pergunta obrigatória sobre critério de aceite (Gauntlet Loop)
+
+> **Decisão de 2026-09-07:** antes de rodar a bateria padrão, pergunte proativamente —
+> não espere o usuário mencionar por conta própria:
+> "Existem critérios de aceite ou uma spec concreta (da Fase 00 ou de um PRODUCT.md)
+> que valham ser validados como 'juiz cego' contra o comportamento real, além dos
+> testes padrão?"
+
+- Se houver critérios **concretos e verificáveis** (não "deve funcionar bem"): ofereça
+  o Gauntlet Loop no formato exato de `modules/new-skills-triggers.md` seção "Gauntlet
+  Loop" — builder+critic binário via `Workflow`, custo ~15x, **exige confirmação
+  explícita** antes de rodar. Isso é complementar à bateria abaixo, não substitui.
+- Se não houver critério concreto, ou o usuário preferir seguir sem: prossiga a
+  bateria padrão normalmente, sem insistir de novo nesta mesma tarefa.
+- Perguntar é automático; **rodar o `Workflow` nunca é** — a resposta do usuário decide.
+
 ## Setup
 
 ```bash
@@ -973,7 +989,7 @@ Após executar todas as fases, compile os resultados em um relatório Markdown:
 [Resultados completos de cada fase]
 ```
 
-Salve o relatório em `/mnt/user-data/outputs/` e use `present_files` para compartilhar.
+Salve o relatório em `tests/reports/test-report-[YYYY-MM-DD].md` (versionado no repo) e apresente o resumo executivo no chat.
 
 ## Padrões e templates
 
@@ -1047,28 +1063,64 @@ Antes de entregar o relatório final, verifique:
 
 ## Output e entrega
 
-- Salvar relatório em `/mnt/user-data/outputs/test-report-[nome-app].md`
-- Salvar scripts de teste em `/mnt/user-data/outputs/tests/`
-- Salvar screenshots em `/mnt/user-data/outputs/tests/screenshots/`
-- Usar `present_files` para compartilhar o relatório com o usuário
-- Apresentar o resumo executivo no chat antes do link para o relatório completo
+Tudo é versionado **dentro do repositório do projeto** — nada de diretórios fora do repo.
+Um teste que não está no repo não roda no CI, e um teste que não roda no CI não protege ninguém.
+
+- Relatório da rodada: `tests/reports/test-report-[YYYY-MM-DD].md`
+- Testes E2E (Playwright, versionados): `tests/e2e/`
+- Scripts exploratórios/de carga (Python, versionados): `tests/exploratory/`
+- Screenshots de falha: `tests/reports/screenshots/` (adicionar ao `.gitignore` se pesarem)
+- Apresentar o resumo executivo no chat, com o caminho do relatório completo
+
+> ⚠️ Versões antigas desta skill salvavam em `/mnt/user-data/outputs/` — caminho de um
+> ambiente diferente (Claude.ai Files), que não existe no Claude Code local e deixava os
+> testes fora do controle de versão. Não use mais esse caminho.
+
+### Integração obrigatória com CI
+
+Testes exploratórios são complemento, não substituto do CI. Ao concluir esta fase,
+os testes E2E precisam estar rodando no pipeline:
+
+```yaml
+# .github/workflows/ci.yml — job de testes
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run test          # Vitest — unit + integration
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e      # Playwright — tests/e2e/
+```
+
+Critério de conclusão da fase: `npm run test` e `npm run test:e2e` passam localmente
+E no CI. Bateria exploratória sem CI verde não fecha a Fase 07.
 
 ---
 
-## Integração com o Fluxo IntelliX (Fase 05)
+## Integração com o Fluxo IntelliX (Fase 07)
 
-Esta skill é a **Fase 05** do fluxo IntelliX Engineering Plugin.
-Executada após `intellix:dev-standards` e antes de `intellix:deploy`.
+Esta skill é a **Fase 07** do fluxo IntelliX Engineering Plugin
+(ver numeração normativa em `MASTER-ARCHITECTURE.md §1`).
+Executada após a Fase 06 (security-observability) e antes da Fase 08 (deploy).
 
 **Ao concluir esta fase:**
 1. Todas as 7 fases de teste devem ter taxa de aprovação documentada
 2. Zero bugs críticos em aberto
-3. Atualize `.intellix-phase` para `deploy`
-4. Oriente: *"Testes concluídos. Próxima fase: **intellix:deploy** para checklist de produção."*
+3. Testes E2E versionados em `tests/e2e/` e passando no CI
+4. Atualize `.intellix-phase` para `deploy`
+5. Oriente: *"Testes concluídos. Próxima fase: **intellix:deploy** para checklist de produção."*
+
+> A numeração "FASE 1..7" usada ao longo desta skill refere-se aos **tipos de teste**
+> (smoke, funcional, negativo, edge case, segurança, UI/UX, stress) — é uma numeração
+> interna desta skill e não tem relação com as fases 00-09 do projeto.
 
 **Stack IntelliX complementar a esta skill:**
 - Unit/Integration: Vitest (já na skill `intellix:dev-standards`)
-- E2E/UI: Playwright (esta skill)
+- E2E/UI: Playwright (esta skill) — versionado em `tests/e2e/`, obrigatório no CI
 - Testes de paridade (migração n8n → TypeScript): use os fixtures reais do workflow legado
 - Testes de carga: locust já incluído nesta skill (use para projetos de agentes com alta concorrência)
 

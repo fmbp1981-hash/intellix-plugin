@@ -320,7 +320,7 @@
     "confidence_threshold": 0.75,
     "model_config": {
       "provider": "anthropic",
-      "model": "claude-sonnet-4-20250514",
+      "model": "claude-sonnet-5",
       "temperature": 0.2,
       "max_tokens": 2048,
       "config_ref": "cfg_llm_api_key"

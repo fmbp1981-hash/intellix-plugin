@@ -63,19 +63,31 @@ Estas regras se aplicam a 100% das decisões. Nunca negocie com elas.
 ### Visão Macro — Fases do Projeto
 
 ```
-[FASE 00] /projeto novo    →  zero-touch: references/ + agentes/ + estrutura SDD + npm install
-[FASE 00] Kickoff manual   →  (projetos existentes) diagnóstico, tipo, stack
-[FASE 00b] Code Audit      →  (projetos existentes) auditoria antes de refatorar
-[FASE 01] Architecture     →  schema DB, rotas, tipos, repository/service pattern
-[FASE 02] Frontend Design  →  design system, tokens, componentes base, UI kit
-[FASE 03] Dev Standards    →  TypeScript, naming, estrutura de componentes
-[FASE 04] Implementation   →  /spec → /break → /plan → /execute (ver seção 2)
-[FASE 05] Integration      →  APIs externas, WhatsApp, n8n, SDKs de IA
-[FASE 06] Security         →  auditoria OWASP, rate limiting, observabilidade
-[FASE 07] Test E2E         →  Playwright/Pytest, smoke → stress
-[FASE 08] Deploy           →  Vercel + Cloudflare DNS checklist
-[FASE 09] Handoff          →  README técnico, documentação final
+[FASE 00]  /projeto novo    →  zero-touch: references/ + agentes/ + estrutura SDD + npm install
+[FASE 00]  Kickoff manual   →  (projetos existentes) diagnóstico, tipo, stack
+[FASE 00b] Code Audit       →  (projetos existentes) auditoria antes de refatorar
+[FASE 01]  Architecture     →  schema DB, rotas, tipos, repository/service pattern
+[FASE 02]  Frontend Design  →  design system, tokens, componentes base, UI kit
+[FASE 03]  Dev Standards    →  TypeScript, naming, estrutura de componentes
+[FASE 03b] Agent Creation   →  (condicional) blueprint de agentes IA — pular se sistema é UI-only
+[FASE 04]  Implementation   →  /spec → /break → /plan → /execute (ver seção 2)
+[FASE 05]  Integration      →  APIs externas, WhatsApp, n8n, SDKs de IA
+[FASE 06]  Security         →  auditoria OWASP, rate limiting, observabilidade, LGPD
+[FASE 07]  Test E2E         →  Playwright/Pytest, smoke → stress
+[FASE 08]  Deploy           →  Vercel + Cloudflare DNS checklist
+[FASE 09]  Handoff          →  README técnico, documentação final
+
+[COMPLEMENTAR] Live Chat   →  módulo opcional de atendimento omnichannel — não é fase de
+                              processo; entra como escopo de produto quando o sistema
+                              inclui inbox/handoff humano. Depende de 01, 02 e 03b.
 ```
+
+> **Numeração é normativa.** Esta tabela é a única fonte da numeração de fases. O
+> front-matter e os títulos de cada `skills/*/SKILL.md` devem bater exatamente com ela.
+> Divergência entre um SKILL.md e esta tabela é bug — corrigir o SKILL.md, não a tabela.
+> (Exceção: `test-e2e` usa "FASE 1..7" internamente para os *tipos* de teste — smoke,
+> funcional, negativo, edge, segurança, UI/UX, stress. Essa numeração interna é local
+> à skill e não conflita com a numeração de fases do projeto.)
 
 **Arquivo de controle:** `.intellix-phase` na raiz (valores: `init|arch|dev|test|deploy|done`)
 
@@ -230,7 +242,7 @@ Dois conjuntos de referências disponíveis: arquivos do **plugin IntelliX** (di
 
 | Arquivo | O que contém | Quando consultar |
 |---------|-------------|-----------------|
-| [`skills/lgpd-compliance/SKILL.md`](skills/lgpd-compliance/SKILL.md) | Compliance LGPD: bases legais, direitos dos titulares, schema de tabelas, Privacy by Design, incidentes | Ao implementar qualquer feature com dados pessoais de brasileiros |
+| `devsecops:lgpd-compliance` (plugin `devsecops`) | Compliance LGPD: bases legais, direitos dos titulares, schema de tabelas, Privacy by Design, incidentes | Ao implementar qualquer feature com dados pessoais de brasileiros |
 | [`skills/projeto-novo/SKILL.md`](skills/projeto-novo/SKILL.md) | Automação zero-touch: /projeto novo — 9 passos de setup com templates e agentes | Ao iniciar projeto novo do zero |
 | [`intellix-templates/`](intellix-templates/) | Boilerplate com references/, agents-template/, version.json | Consultado automaticamente pelo /projeto novo |
 | [`references/four-commands.md`](references/four-commands.md) | Templates completos de /spec, /break, /plan, /execute + Checklist Fatal | Ao executar qualquer um dos 4 comandos |
@@ -277,7 +289,7 @@ Criadas durante o kickoff de cada projeto em `references/` na raiz do projeto:
 | 10 | /spec → /break → /plan → /execute | `skill-epic-workflow` | Externa |
 | 11 | APIs externas + WhatsApp + n8n | `intellix:integration` | Plugin |
 | 12 | OWASP + rate limit + observabilidade + LLM/Agentes | `intellix:security-observability` | Plugin |
-| 12b | LGPD + Privacy by Design (dados pessoais) | `lgpd-compliance` | Plugin |
+| 12b | LGPD + Privacy by Design (dados pessoais) | `devsecops:lgpd-compliance` | Plugin |
 | 13 | Testes E2E smoke → stress | `intellix:test-e2e` | Plugin → Externa |
 | 14 | Deploy Vercel + Cloudflare | `intellix:deploy` | Plugin |
 | 15 | README + ADRs + documentação final | `intellix:handoff` | Plugin |
@@ -286,9 +298,8 @@ Criadas durante o kickoff de cada projeto em `references/` na raiz do projeto:
 
 | Fase Plugin | Skills externas invocadas | Função |
 |---|---|---|
-| 02 Frontend (passo 1) | `vibestack-architect` | Arquitetura de componentes e roteamento visual |
+| 02 Frontend (passo 1 e 3) | `impeccable` (`init`/`shape`/`new-work`) | Arquitetura de componentes, roteamento visual e implementação UI qualidade $50k+ (substitui `vibestack-architect`/`frontend-design-pro`, arquivadas em 2026-09-07) |
 | 02 Frontend (passo 2) | `ui-ux-pro-max` | Design system: 50+ estilos, 161 paletas, 57 fontes |
-| 02 Frontend (passo 3) | `frontend-design-pro` | Implementação UI qualidade $50k+ |
 | 02 Frontend (passo 4) | `ckm-ui-styling` | Shadcn/UI, acessibilidade, loading/error states |
 | 02 Frontend (passo 5) | `web-design-guidelines` | Auditoria WCAG, UX, responsividade |
 | 03 Agentes | `intellix-agent-creation` | GPT Maker + n8n + IntelliX Blueprint unificado |
@@ -299,7 +310,7 @@ Criadas durante o kickoff de cada projeto em `references/` na raiz do projeto:
 | 07 Testes | `SKILL_TestE2E` (vibecode-e2e-tester) | Bateria completa smoke → stress |
 | Qualquer | `supabase-postgres-best-practices` | Queries, índices, RLS, performance |
 | Qualquer | `vercel-react-best-practices` | Server/Client components, caching, bundle |
-| Dados pessoais BR | `lgpd-compliance` | LGPD completa: bases legais, direitos do titular, Privacy by Design, ANPD 48pts |
+| Dados pessoais BR | `devsecops:lgpd-compliance` | LGPD completa: bases legais, direitos do titular, Privacy by Design, ANPD 48pts |
 
 ### Skills de Suporte (quando necessário)
 

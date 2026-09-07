@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{PROJECT_NAME}} — Relatório de Auditoria de Código</title>
+<style>
+  :root {
+    --brand: #6366f1;
+    --brand-light: #e0e7ff;
+    --text: #1e1b4b;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --bg: #ffffff;
+    --bg-alt: #f9fafb;
+    --critical: #dc2626;
+    --high: #ea580c;
+    --medium: #d97706;
+    --low: #2563eb;
+    --ok: #059669;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+  .cover { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: white; padding: 80px 60px; }
+  .cover .logo { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6; margin-bottom: 40px; }
+  .cover h1 { font-size: 38px; font-weight: 700; margin-bottom: 12px; }
+  .cover .subtitle { opacity: 0.7; margin-bottom: 48px; font-size: 16px; }
+  .cover .meta { display: flex; gap: 40px; font-size: 13px; opacity: 0.6; }
+  .cover .meta span strong { display: block; opacity: 1; color: white; font-size: 15px; margin-bottom: 2px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 60px 40px; }
+  h2 { font-size: 22px; font-weight: 700; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--brand-light); }
+  h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+  p { color: #374151; margin-bottom: 12px; font-size: 14px; }
+
+  /* Score */
+  .score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 0; }
+  .score-card { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .score-card .number { font-size: 40px; font-weight: 800; line-height: 1; }
+  .score-card .label { font-size: 12px; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .score-card.overall .number { color: var(--brand); }
+  .score-card.ok .number { color: var(--ok); }
+  .score-card.warn .number { color: var(--medium); }
+  .score-card.bad .number { color: var(--high); }
+
+  /* Findings */
+  .finding { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  .finding-header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--bg-alt); }
+  .severity { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 10px; border-radius: 20px; }
+  .sev-critical { background: #fee2e2; color: var(--critical); }
+  .sev-high { background: #ffedd5; color: var(--high); }
+  .sev-medium { background: #fef3c7; color: var(--medium); }
+  .sev-low { background: #dbeafe; color: var(--low); }
+  .finding-title { font-weight: 600; font-size: 14px; flex: 1; }
+  .finding-body { padding: 16px 18px; font-size: 13px; }
+  .finding-body code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+  .finding-fix { margin-top: 10px; padding: 10px 14px; background: #f0fdf4; border-left: 3px solid var(--ok); border-radius: 0 6px 6px 0; }
+  .finding-fix strong { color: var(--ok); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 16px 0; }
+  th { background: var(--bg-alt); text-align: left; padding: 10px 14px; font-weight: 600; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  .footer { text-align: center; padding: 40px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="logo">IntelliX.AI — Code Audit</div>
+  <h1>{{PROJECT_NAME}}</h1>
+  <div class="subtitle">Relatório de Auditoria de Código — {{AUDIT_DATE}}</div>
+  <div class="meta">
+    <span><strong>{{CLIENT_NAME}}</strong>Cliente</span>
+    <span><strong>{{AUDITOR}}</strong>Auditor</span>
+    <span><strong>{{COMMIT_REF}}</strong>Ref. de Código</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <h2>Score Geral</h2>
+  <div class="score-grid">
+    <div class="score-card overall"><div class="number">{{OVERALL_SCORE}}</div><div class="label">Score Geral /100</div></div>
+    <div class="score-card bad"><div class="number">{{CRITICAL_COUNT}}</div><div class="label">Críticos</div></div>
+    <div class="score-card warn"><div class="number">{{HIGH_COUNT}}</div><div class="label">Altos</div></div>
+    <div class="score-card ok"><div class="number">{{LOW_COUNT}}</div><div class="label">Baixos</div></div>
+  </div>
+
+  <h2>Resumo Executivo</h2>
+  <p>{{EXECUTIVE_SUMMARY}}</p>
+
+  <h2>Achados por Severidade</h2>
+
+  <!-- Duplicar blocos .finding conforme necessário -->
+
+  <div class="finding">
+    <div class="finding-header">
+      <span class="severity sev-critical">Crítico</span>
+      <span class="finding-title">{{FINDING_1_TITLE}}</span>
+    </div>
+    <div class="finding-body">
+      <p>{{FINDING_1_DESCRIPTION}}</p>
+      <p>Arquivo afetado: <code>{{FINDING_1_FILE}}</code></p>
+      <div class="finding-fix">
+        <strong>Correção Recomendada</strong>
+        {{FINDING_1_FIX}}
+      </div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-header">
+      <span class="severity sev-high">Alto</span>
+      <span class="finding-title">{{FINDING_2_TITLE}}</span>
+    </div>
+    <div class="finding-body">
+      <p>{{FINDING_2_DESCRIPTION}}</p>
+      <p>Arquivo afetado: <code>{{FINDING_2_FILE}}</code></p>
+      <div class="finding-fix">
+        <strong>Correção Recomendada</strong>
+        {{FINDING_2_FIX}}
+      </div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-header">
+      <span class="severity sev-medium">Médio</span>
+      <span class="finding-title">{{FINDING_3_TITLE}}</span>
+    </div>
+    <div class="finding-body">
+      <p>{{FINDING_3_DESCRIPTION}}</p>
+      <div class="finding-fix">
+        <strong>Correção Recomendada</strong>
+        {{FINDING_3_FIX}}
+      </div>
+    </div>
+  </div>
+
+  <h2>Cobertura da Auditoria</h2>
+  <table>
+    <thead><tr><th>Área</th><th>Avaliado</th><th>Score</th><th>Observações</th></tr></thead>
+    <tbody>
+      <tr><td>Segurança (OWASP)</td><td>✓</td><td>{{SEC_SCORE}}/100</td><td>{{SEC_NOTES}}</td></tr>
+      <tr><td>TypeScript / Tipos</td><td>✓</td><td>{{TS_SCORE}}/100</td><td>{{TS_NOTES}}</td></tr>
+      <tr><td>Performance</td><td>✓</td><td>{{PERF_SCORE}}/100</td><td>{{PERF_NOTES}}</td></tr>
+      <tr><td>Arquitetura</td><td>✓</td><td>{{ARCH_SCORE}}/100</td><td>{{ARCH_NOTES}}</td></tr>
+      <tr><td>Testes</td><td>✓</td><td>{{TEST_SCORE}}/100</td><td>{{TEST_NOTES}}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Roadmap de Correções</h2>
+  <table>
+    <thead><tr><th>Prioridade</th><th>Ação</th><th>Esforço</th><th>Impacto</th></tr></thead>
+    <tbody>
+      <tr><td>1 — Imediato</td><td>{{FIX_1}}</td><td>{{EFFORT_1}}</td><td>{{IMPACT_1}}</td></tr>
+      <tr><td>2 — Sprint</td><td>{{FIX_2}}</td><td>{{EFFORT_2}}</td><td>{{IMPACT_2}}</td></tr>
+      <tr><td>3 — Backlog</td><td>{{FIX_3}}</td><td>{{EFFORT_3}}</td><td>{{IMPACT_3}}</td></tr>
+    </tbody>
+  </table>
+
+</div>
+
+<div class="footer">
+  Auditoria realizada por <strong>IntelliX.AI</strong> — {{AUDIT_DATE}}<br>
+  contato@intellixai.com.br
+</div>
+
+</body>
+</html>

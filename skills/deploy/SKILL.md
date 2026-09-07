@@ -1,14 +1,15 @@
 ---
 name: deploy
 description: >
-  Use esta skill sempre que o usuário mencionar: deploy, Vercel, DNS,
-  domínio, Cloudflare, variáveis de ambiente, produção, release, publicar,
+  Use esta skill sempre que o usuário mencionar: deploy, Cloudflare Workers, DNS,
+  domínio, wrangler, variáveis de ambiente, produção, release, publicar,
   "colocar no ar", configurar domínio, "está pronto para produção".
-  Esta é a Fase 06 do fluxo IntelliX — só executar após test-e2e passar.
+  Esta é a Fase 08 do fluxo IntelliX — só executar após test-e2e passar.
+  Stack de deploy padrão IntelliX desde 2026-09-07: Cloudflare Workers/Pages (não Vercel).
 disable-model-invocation: true
 ---
 
-# Fase 06 — Deploy Checklist
+# Fase 08 — Deploy Checklist
 
 Checklist completo de deploy IntelliX. Esta skill é de invocação manual apenas
 (`disable-model-invocation: true`) — você controla quando fazer o deploy.
@@ -20,7 +21,7 @@ Checklist completo de deploy IntelliX. Esta skill é de invocação manual apena
 Antes do primeiro deploy em produção, garantir que o pipeline está configurado:
 - GitHub Actions com quality gates: lint → typecheck → testes → build → segurança
 - Branch protection em `main` (PRs obrigatórios, status checks bloqueadores)
-- Preview deploy automático por PR (Vercel)
+- Preview deploy automático por PR (Cloudflare Workers Preview URLs)
 - Dependabot/Renovate para atualizações de dependências
 
 > Este passo é executado **uma vez** no início do projeto ou ao detectar que não existe `.github/workflows/`. Em deploys subsequentes, verificar apenas se o pipeline está passando.
@@ -28,47 +29,90 @@ Antes do primeiro deploy em produção, garantir que o pipeline está configurad
 ---
 
 ## Pré-requisitos obrigatórios
-- [ ] Fase 05 (test-e2e) concluída com 100% dos testes passando
+- [ ] Fase 07 (test-e2e) concluída com 100% dos testes passando
 - [ ] Pipeline CI/CD configurado (Passo 0)
 - [ ] `.intellix-phase` = `deploy`
 - [ ] Sem `console.log` ou código de debug em produção
 
-## Checklist Vercel
+## Passo 1 — Adapter Next.js → Cloudflare Workers
 
-### Variáveis de ambiente
+> **Verificado via WebSearch/docs oficiais em 2026-09-07** — este espaço muda rápido,
+> reverifique antes de cada projeto novo (não confie neste texto por mais de alguns meses).
+
+Next.js não roda nativamente em Workers — precisa de um adapter que traduza o build.
+Duas opções, ambas oficiais da Cloudflare:
+
+| Adapter | Status | Quando usar |
+|---|---|---|
+| **`@opennextjs/cloudflare`** (OpenNext) | Maduro, estável | **Padrão IntelliX** — recomendado pela própria Cloudflare para manter aplicações |
+| **`vinext`** (`@vinext/cloudflare`) | Experimental — lançado 2026, ~94% de cobertura da API do Next.js, builds 4.4x mais rápidos, bundles 57% menores | Direção oficial para projetos **novos**, mas ainda jovem — avaliar caso a caso, não usar sem reconfirmar maturidade |
+
+**Setup padrão (`@opennextjs/cloudflare`):**
 ```bash
+npm i @opennextjs/cloudflare@latest
+npm i -D wrangler@latest
+```
+
+```jsonc
+// wrangler.jsonc
+{
+  "name": "nome-do-projeto",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-07",   // usar a data atual do deploy
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true },
+  "routes": [{ "pattern": "seu-dominio.com.br", "custom_domain": true }]
+}
+```
+
+```typescript
+// open-next.config.ts — mínimo obrigatório
+export default { default: { override: { wrapper: "cloudflare-node" } } }
+```
+
+**Remover antes de migrar:** qualquer `export const runtime = 'edge'` em route handlers —
+o adapter OpenNext não suporta a diretiva de edge runtime do Next.js.
+
+## Checklist Cloudflare Workers
+
+### Variáveis de ambiente e secrets
+```bash
+# Variáveis não-sensíveis: em wrangler.jsonc → "vars"
+# Secrets (nunca em wrangler.jsonc, nunca commitados):
+wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+wrangler secret put ANTHROPIC_API_KEY
+wrangler secret put EVOLUTION_API_KEY
+
 # Mínimo obrigatório para todo projeto IntelliX
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=      # Nunca expor no cliente
-NEXT_PUBLIC_APP_URL=            # URL de produção (para redirects)
+NEXT_PUBLIC_SUPABASE_URL=        # var pública, pode ir em wrangler.jsonc
+NEXT_PUBLIC_SUPABASE_ANON_KEY=   # var pública
+SUPABASE_SERVICE_ROLE_KEY=       # SECRET — nunca em NEXT_PUBLIC_, nunca no client
+NEXT_PUBLIC_APP_URL=             # URL de produção (para redirects)
 
 # Se houver agentes
-ANTHROPIC_API_KEY=
-N8N_WEBHOOK_URL=                # Se integrado ao n8n
-EVOLUTION_API_URL=              # Se integrado ao WhatsApp
-EVOLUTION_API_KEY=
+ANTHROPIC_API_KEY=               # SECRET
+N8N_WEBHOOK_URL=                 # Se integrado ao n8n
+EVOLUTION_API_URL=
+EVOLUTION_API_KEY=               # SECRET
 ```
 
-### Configurações Vercel
-- [ ] Root directory: `./` (ou pasta do app se monorepo)
-- [ ] Framework: Next.js (auto-detectado)
-- [ ] Node version: 20.x
-- [ ] Build command: `npm run build`
-- [ ] Output: `.next`
-
-## Checklist DNS (Cloudflare)
-
-```
-Tipo    Nome              Valor                   Proxy
-A       @                 76.76.21.21             ✅ (Vercel IP)
-CNAME   www               cname.vercel-dns.com    ✅
+### Build e deploy
+```bash
+npx opennextjs-cloudflare build
+npx opennextjs-cloudflare preview   # roda localmente no runtime de Workers antes de subir
+npx opennextjs-cloudflare deploy    # publica o Worker
 ```
 
-**Após adicionar DNS:**
-1. Vercel → Project → Settings → Domains → Add domain
-2. Aguardar propagação (5-30 min com Cloudflare)
-3. Verificar SSL/TLS no Cloudflare: modo "Full (strict)"
+## Checklist de Domínio (Cloudflare Custom Domains)
+
+Diferente de apontar DNS manualmente para um IP: um **Custom Domain** de Workers gerencia
+DNS e certificado SSL automaticamente — não crie registro A/CNAME manual para ele.
+
+1. `wrangler.jsonc` → `routes: [{ pattern: "seu-dominio.com.br", custom_domain: true }]`
+   (ou Dashboard → Worker → Settings → Domains & Routes → Add → Custom Domain)
+2. Cloudflare cria o registro DNS e emite o certificado automaticamente
+3. Aguardar propagação (geralmente minutos, já dentro da própria rede Cloudflare)
 
 ## Health check pós-deploy
 
@@ -76,19 +120,19 @@ CNAME   www               cname.vercel-dns.com    ✅
 # Verificar se o site está no ar
 curl -I https://seu-dominio.com.br
 
-# Verificar variáveis de ambiente (via Vercel CLI)
-vercel env ls
+# Logs em tempo real
+wrangler tail
 
-# Logs de produção
-vercel logs --follow
+# Histórico de deployments/versões
+wrangler deployments list
 ```
 
 ## Checklist final
-- [ ] Site abre em https (sem aviso de SSL)
+- [ ] Site abre em https (certificado emitido automaticamente pelo Custom Domain)
 - [ ] Login/auth funcionando em produção
 - [ ] Supabase conectado (testar uma operação de leitura)
 - [ ] Domínio customizado funcionando (www + raiz)
-- [ ] Vercel Analytics habilitado (opcional mas recomendado)
+- [ ] `observability: { enabled: true }` ativo no `wrangler.jsonc` (Workers Analytics/Logs)
 
 ## CI/CD com GitHub Actions
 
@@ -138,6 +182,26 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
+  deploy:
+    name: Deploy (Cloudflare Workers)
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Build + Deploy via OpenNext
+        run: npx opennextjs-cloudflare build && npx opennextjs-cloudflare deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -162,6 +226,8 @@ jobs:
 
 ```bash
 # Adicionar via GitHub CLI
+gh secret set CLOUDFLARE_API_TOKEN --body "..."      # token com permissão Workers Scripts:Edit
+gh secret set CLOUDFLARE_ACCOUNT_ID --body "..."
 gh secret set NEXT_PUBLIC_SUPABASE_URL --body "https://xxx.supabase.co"
 gh secret set NEXT_PUBLIC_SUPABASE_ANON_KEY --body "eyJ..."
 gh secret set SUPABASE_SERVICE_ROLE_KEY --body "eyJ..."
@@ -182,23 +248,14 @@ Configurar em: GitHub → Settings → Branches → Add rule → main
 ### Estratégia de Ambientes
 
 ```
-develop branch → preview deploy automático (Vercel Preview)
-main branch    → produção (Vercel Production)
-feature/*      → preview deploy por PR
+develop branch → preview via `wrangler versions upload` (Preview URL, não recebe tráfego de produção)
+main branch    → produção via `wrangler deploy` (ou opennextjs-cloudflare deploy)
+feature/*      → preview por PR, mesma mecânica de versions upload
 ```
 
-```yaml
-# vercel.json — configurar ambientes
-{
-  "github": {
-    "enabled": true,
-    "autoAlias": false
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
-}
-```
+Ambientes nomeados ficam declarados em `wrangler.jsonc` (`env.staging`, `env.production`)
+— cada um com seu próprio binding de recursos (D1/KV/R2) e secrets, evitando que staging
+escreva acidentalmente no banco de produção.
 
 ### `package.json` — Scripts obrigatórios
 
@@ -213,7 +270,10 @@ feature/*      → preview deploy por PR
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   }
 }
 ```
@@ -227,15 +287,15 @@ O deploy é apenas o começo. Um sistema de produção profissional requer:
 ### Estratégia de Ambientes
 
 ```
-develop branch  → Vercel Preview (staging automático)
-feature/*       → Vercel Preview por PR
-main branch     → Vercel Production
+develop branch  → wrangler versions upload (staging automático, Preview URL)
+feature/*       → wrangler versions upload por PR
+main branch     → wrangler deploy / opennextjs-cloudflare deploy (produção)
 ```
 
 ```
 .env.local          → desenvolvimento local (não commitar)
-.env.staging        → staging (Vercel Preview env vars)
-.env.production     → produção (Vercel Production env vars)
+.env.staging        → staging (secrets do env.staging em wrangler.jsonc)
+.env.production     → produção (secrets do env.production em wrangler.jsonc)
 ```
 
 **Regra de ouro:** staging deve ser idêntico a produção em configuração.
@@ -280,12 +340,16 @@ supabase db reset
 
 ### Rollback Procedure
 
-**Rollback de código (Vercel):**
+**Rollback de código (Cloudflare Workers):**
 ```bash
-# Via Vercel CLI — voltar para deployment anterior
-vercel rollback [deployment-url]
+# Reverte 100% do tráfego de produção para a última versão estável imediatamente
+wrangler rollback [version-id]
 
-# Via Dashboard: Vercel → Project → Deployments → Promote previous deployment
+# Sem version-id, o Wrangler usa a última versão que já esteve em 100% do tráfego
+wrangler rollback
+
+# Ver histórico de versões/deployments antes de decidir o rollback
+wrangler deployments list
 ```
 
 **Rollback de migration (Supabase):**
@@ -340,15 +404,15 @@ export async function GET() {
 }
 ```
 
-```yaml
-# Uptime monitoring — adicionar ao Vercel Cron Jobs ou serviço externo
-# vercel.json
+```jsonc
+// wrangler.jsonc — Cron Trigger para uptime/health check periódico
 {
-  "crons": [{
-    "path": "/api/health",
-    "schedule": "*/5 * * * *"
-  }]
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  }
 }
+// O handler `scheduled()` do Worker chama /api/health internamente ou dispara
+// um serviço externo de uptime monitoring (ex: Better Uptime, UptimeRobot).
 ```
 
 ---
@@ -360,9 +424,11 @@ export async function GET() {
 # Verificar onde cada secret é usado antes de rotacionar
 grep -r "ANTHROPIC_API_KEY\|SUPABASE_SERVICE_ROLE" src/ --include="*.ts"
 
-# Rotacionar via Vercel CLI
-vercel env rm ANTHROPIC_API_KEY production
-vercel env add ANTHROPIC_API_KEY production
+# Rotacionar via Wrangler CLI (sobrescreve o secret existente)
+wrangler secret put ANTHROPIC_API_KEY
+
+# Listar quais secrets existem (não mostra o valor)
+wrangler secret list
 
 # Verificar secrets expostos acidentalmente
 git log --all --full-history -- "*.env*"
@@ -387,8 +453,8 @@ export const featureFlags = {
 // return <OldDashboard />
 
 // Para habilitar gradualmente:
-// Vercel → Environment Variables → NEXT_PUBLIC_FF_NEW_DASHBOARD = true
-// Deploy apenas para Preview primeiro, depois Produção
+// wrangler.jsonc → "vars": { "NEXT_PUBLIC_FF_NEW_DASHBOARD": "true" } no env.staging primeiro
+// Deploy via `wrangler versions upload` (Preview) antes de promover para produção
 ```
 
 ---
@@ -401,11 +467,11 @@ Documente em `docs/runbook.md`:
 # Runbook de Incidentes — [Nome do Projeto]
 
 ## Sistema fora do ar (503)
-1. Verificar Vercel Status: status.vercel.com
+1. Verificar Cloudflare Status: cloudflarestatus.com
 2. Verificar Supabase Status: status.supabase.com
-3. Verificar último deployment: `vercel ls`
-4. Rollback se último deploy causou: `vercel rollback`
-5. Verificar logs: `vercel logs --follow`
+3. Verificar último deployment: `wrangler deployments list`
+4. Rollback se último deploy causou: `wrangler rollback`
+5. Verificar logs: `wrangler tail`
 
 ## Erro de autenticação em massa
 1. Verificar Supabase Auth logs no dashboard
@@ -448,14 +514,16 @@ Garante que o go-live é reversível, observável e incremental:
 |-------------|-------|
 | Configurar pipeline CI/CD (uma vez por projeto) | `ci-cd-and-automation` |
 | Go-live em produção com staged rollout | `shipping-and-launch` |
-| Boas práticas de performance e otimização Vercel + Next.js | `vercel-react-best-practices` |
+| Comandos Wrangler (deploy, secrets, tail, rollback, environments) | `wrangler` |
+| Workers/Pages, D1, R2, KV, Cron Triggers, WAF | `cloudflare` |
+| Boas práticas de performance React/Next.js (independe do host) | `vercel-react-best-practices` |
 | Verificação sistemática antes de declarar deploy pronto | `superpowers:verification-before-completion` |
 | Finalizar branch e criar PR para main | `superpowers:finishing-a-development-branch` |
 | Diagnosticar incidentes em produção | `superpowers:systematic-debugging` |
 
 ---
 
-## Handover para Fase 07
+## Handover para Fase 09
 > "Deploy concluído. Sistema em produção. Próxima fase: **intellix:handoff** para documentação final."
 
 Atualize `.intellix-phase` para `done`.

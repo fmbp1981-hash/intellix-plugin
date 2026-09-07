@@ -51,7 +51,7 @@ Colete as respostas antes de continuar:
 2. **Integrações previstas**: WhatsApp (Evolution API)? n8n? Supabase? Pagamentos?
 3. **Agentes de IA**: O sistema terá agentes ou automações com LLM?
 4. **Dados pessoais**: O sistema processará dados de pessoas físicas? (nome, email, CPF, telefone, comportamento, etc.)
-   → SE SIM: scaffold LGPD obrigatório na Fase 01 (Architecture) + invocar `lgpd-compliance` na Fase 06
+   → SE SIM: scaffold LGPD obrigatório na Fase 01 (Architecture) + invocar `devsecops:lgpd-compliance` na Fase 06
 5. **Dados sensíveis**: Saúde, biometria, finanças, dados de crianças?
    → SE SIM: regime de proteção reforçado — criptografia AES-256 + consentimento específico
 
@@ -64,7 +64,7 @@ Com base no diagnóstico, confirme:
 ```
 Stack padrão IntelliX (imutável):
 - Frontend: Next.js 15 App Router + TypeScript strict + Tailwind + Shadcn/UI
-- Backend: Supabase (DB + Auth + Edge Functions) + Vercel
+- Backend: Supabase (DB + Auth + Edge Functions) + Cloudflare (Workers/Pages)
 - Agentes: SDK Anthropic / n8n + Evolution API (conforme necessidade)
 - Testes: Vitest (unit) + Playwright (E2E)
 
@@ -80,9 +80,16 @@ Gere a estrutura de pastas inicial conforme o tipo de projeto:
 **Para SaaS/CRM completo:**
 ```
 projeto/
-├── .claude/                    # Skills e comandos locais do projeto
-│   ├── CLAUDE.md               # Contexto do projeto para o Claude Code
-│   └── settings.json           # Plugin IntelliX + configurações
+├── .claude/                    # Configuração e contexto DESTE projeto
+│   ├── settings.json           # Plugin IntelliX + permissões (versionado)
+│   ├── settings.local.json     # Overrides só seus (gitignored)
+│   ├── rules/                  # Convenções específicas deste projeto
+│   │   ├── code-style.md
+│   │   ├── testing.md
+│   │   └── api-conventions.md
+│   └── hooks/                  # Guardrails deste repositório
+│       └── validate-migration.sh
+├── .mcp.json                   # MCP servers deste cliente (versionado, time inteiro usa)
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (auth)/
@@ -108,41 +115,45 @@ projeto/
 │   └── e2e/                    # Playwright
 ├── .intellix-phase             # Fase atual: init|arch|dev|test|deploy|done
 ├── AGENTS.md                   # Contexto operacional para QUALQUER agente (Cursor, Codex, Copilot...)
-├── CLAUDE.md                   # Contexto Claude-específico (IntelliX phases, hooks)
+├── CLAUDE.md                   # Contexto Claude-específico (versionado — aponta para a metodologia global)
+├── CLAUDE.local.md             # Paths, branch ativa, DB local (gitignored)
 ├── .env.example
 └── README.md
 ```
 
 > **`AGENTS.md` vs `CLAUDE.md`:** `AGENTS.md` contém fatos operacionais neutros (comandos, testes, PR format) legíveis por qualquer agente de coding. `CLAUDE.md` contém regras Claude-específicas (IntelliX workflow, plugin hooks). Claude Code lê ambos; Cursor/Codex/Aider/Copilot só leem `AGENTS.md`.
 
+> **`CLAUDE.md` vs `CLAUDE.local.md`:** o primeiro é versionado e vale para o time inteiro (stack, fase, convenções). O segundo é gitignored e vale só para a sua máquina (paths absolutos, branch em que você está, string de conexão do banco local). Nunca coloque segredo em nenhum dos dois.
+
+---
+
+#### ⛔ O que **NÃO** vai para dentro do projeto (decisão de 2026-09-07)
+
+Não crie `.claude/skills/`, `.claude/agents/` nem `.claude/commands/` no projeto do cliente.
+
+**Por quê:** tudo que é copiado para dentro de um repositório vira um *fork congelado* da
+metodologia na data do scaffolding. Corrigir um bug na skill global não corrige as cópias
+espalhadas em N repositórios de cliente. Esse é exatamente o modo de falha que a auditoria
+de 2026-09-07 documentou em `WORKFLOW-SPINE-VS-ORBIT.md` — skills arquivadas continuaram
+sendo invocadas por meses em arquivos que ninguém atualizou.
+
+| Fica no projeto (config e contexto — não existe cópia canônica em outro lugar) | Fica global, invocado por referência |
+|---|---|
+| `.claude/rules/` — convenções deste cliente | `skills/` — Fases 00-09, todas as skills IntelliX |
+| `.claude/hooks/` — guardrails deste repo | `agents/` — os 5 revisores devsecops (já genéricos) |
+| `.claude/settings.json` + `.local.json` | `commands/` — `/spec`, `/break`, `/plan`, `/execute` (vêm do plugin) |
+| `.mcp.json` — endpoints deste cliente | metodologia, gates, workflow |
+| `CLAUDE.md` + `CLAUDE.local.md` + `AGENTS.md` | |
+
+**Única exceção:** uma skill ou agent genuinamente exclusivo daquele projeto, que não faz
+sentido em nenhum outro (raro). Nesse caso, documente no `CLAUDE.md` do projeto por que
+ela não é global.
+
 ### Passo 4 — Inicializar arquivos base
 
 Crie os seguintes arquivos:
 
 **`.intellix-phase`**: conteúdo `arch` (próxima fase após kickoff)
-
-**`CLAUDE.md`** (template):
-```markdown
-# [Nome do Projeto]
-
-## Contexto
-[Descrição em 2-3 linhas do que o sistema faz]
-
-## Stack
-Next.js 15 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Vercel
-
-## Fase atual
-[FASE] — ver .intellix-phase
-
-## Padrões obrigatórios
-- TypeScript strict: NUNCA usar `any`
-- Commits: Conventional Commits
-- Testes: toda feature nova precisa de test
-- RLS: toda tabela Supabase com Row Level Security
-
-## Integrações ativas
-[listar: n8n / Evolution API / WhatsApp / etc]
-```
 
 **`AGENTS.md`** (template — adaptar nome e integrações do projeto):
 ```markdown
@@ -174,7 +185,7 @@ Rodar testes antes de qualquer commit. PRs bloqueados se testes falharem.
 - **Framework:** Next.js 15 App Router + TypeScript strict
 - **Estilo:** Tailwind CSS + Shadcn/UI
 - **Banco:** Supabase (PostgreSQL + Auth + RLS)
-- **Deploy:** Vercel
+- **Deploy:** Cloudflare Workers/Pages (`wrangler` + `@opennextjs/cloudflare`)
 - [adicionar: Evolution API / n8n / etc. se aplicável]
 
 ## Estrutura de pastas
@@ -215,30 +226,49 @@ Ver `.env.example` para todas as variáveis necessárias.
 Nunca commitar `.env.local` ou `.env`.
 ```
 
-**`CLAUDE.md`** (template):
+**`CLAUDE.md`** (template — **aponta** para a metodologia global, não a reescreve):
 ```markdown
 # [Nome do Projeto]
 
 ## Contexto
-[Descrição em 2-3 linhas do que o sistema faz]
+[Descrição em 2-3 linhas do que o sistema faz e para quem]
 
 ## Stack
-Next.js 15 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Vercel
+Next.js 15 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Cloudflare (Workers/Pages)
 
 ## Fase atual
 [FASE] — ver .intellix-phase
 
-## Padrões obrigatórios
-- TypeScript strict: NUNCA usar `any`
-- Commits: Conventional Commits
-- Testes: toda feature nova precisa de test
-- RLS: toda tabela Supabase com Row Level Security
+## Metodologia
+Este projeto segue o workflow IntelliX (Fases 00-09) definido no plugin `intellix`,
+instalado na camada global. **Não replique as fases aqui** — elas evoluem no plugin e
+esta cópia ficaria desatualizada. Ver `intellix:master-workflow` para o fluxo vigente.
+
+Segurança e LGPD: `devsecops:security-baseline` / `security-gate` / `lgpd-compliance`.
+
+## Convenções deste projeto
+Ver `.claude/rules/` — convenções específicas daqui (as globais já valem por padrão).
 
 ## Integrações ativas
 [listar: n8n / Evolution API / WhatsApp / etc]
 ```
 
-**`.claude/settings.json`** (habilitar plugin por projeto):
+**`CLAUDE.local.md`** (template — adicionar ao `.gitignore`):
+```markdown
+# Contexto local — NÃO versionar
+
+## Ambiente local
+- Path do projeto: [caminho absoluto nesta máquina]
+- Banco local: [connection string do Supabase local, se usar]
+- Branch ativa: [branch em que você está trabalhando]
+
+## Notas de trabalho
+[o que você está fazendo agora, contexto temporário desta máquina]
+
+> Nunca coloque secrets aqui — use `.env.local` (também gitignored).
+```
+
+**`.claude/settings.json`** (habilitar plugin por projeto — versionado):
 ```json
 {
   "enabledPlugins": {
@@ -246,6 +276,57 @@ Next.js 15 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Vercel
   }
 }
 ```
+
+**`.claude/rules/`** — criar os 3 arquivos base, cada um só com o que é **específico
+deste projeto** (as convenções globais já valem sem precisar repetir):
+
+```markdown
+<!-- .claude/rules/code-style.md -->
+# Convenções de código — [Nome do Projeto]
+[Só o que difere do padrão IntelliX global. Ex: este cliente usa `snake_case`
+nas colunas legadas da tabela X; este projeto usa date-fns em vez de dayjs.]
+
+<!-- .claude/rules/testing.md -->
+# Testes — [Nome do Projeto]
+[Ex: fluxo de checkout exige teste E2E obrigatório; mock do gateway de pagamento
+fica em tests/mocks/gateway.ts]
+
+<!-- .claude/rules/api-conventions.md -->
+# Convenções de API — [Nome do Projeto]
+[Ex: webhooks deste cliente usam assinatura HMAC no header X-Client-Signature]
+```
+
+**`.mcp.json`** (MCP servers deste cliente — versionado, todo o time usa):
+```json
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--project-ref", "<REF_DO_CLIENTE>"]
+    }
+  }
+}
+```
+> Só inclua servers que o time inteiro precisa para trabalhar neste repositório.
+> Credenciais vão por variável de ambiente, nunca inline neste arquivo.
+
+**`.claude/hooks/`** — criar apenas se o projeto tiver um guardrail real
+(ex: bloquear escrita em `supabase/migrations/` sem review, rodar `tsc` após edit).
+Projeto sem necessidade concreta não precisa da pasta.
+
+**`.gitignore`** — obrigatório adicionar as entradas locais, senão contexto de máquina
+vaza para o repositório do cliente:
+```gitignore
+# Claude Code — contexto local (não versionar)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Ambiente
+.env
+.env.local
+```
+> `.claude/settings.json`, `.claude/rules/`, `.claude/hooks/` e `.mcp.json` **são**
+> versionados — é o contrato do time. Só os `*.local.*` ficam de fora.
 
 ### Passo 4b — Qualidade do Contexto `context-engineering` (projetos novos)
 
@@ -268,7 +349,7 @@ Ao concluir, informe:
 > "Kickoff concluído. Estrutura inicializada. Próxima fase: **intellix:architecture** para definir o schema de banco, rotas e componentes principais."
 
 Se `HAS_PERSONAL_DATA = S`, adicionar ao handover:
-> "⚠️ Projeto com dados pessoais detectado. Na Fase 01 (Architecture): incluir tabelas LGPD no schema (`consent_records`, `titular_requests`, `data_processing_log`). Na Fase 06: executar `lgpd-compliance` em paralelo com `security-observability`."
+> "⚠️ Projeto com dados pessoais detectado. Na Fase 01 (Architecture): incluir tabelas LGPD no schema (`consent_records`, `titular_requests`, `data_processing_log`). Na Fase 06: executar `devsecops:lgpd-compliance` em paralelo com `security-observability`."
 
 Atualize `.intellix-phase` para `arch`.
 
@@ -280,7 +361,7 @@ Atualize `.intellix-phase` para `arch`.
 |-------------|-------|
 | Brainstorm de produto antes de definir escopo | `superpowers:brainstorming` |
 | PRD completo com features, personas e arquitetura | `ai-project-brainstorm` |
-| Projeto é landing page ou site simples | `vibestack-architect` |
+| Projeto é landing page ou site simples | `impeccable` (`init`/`shape`) |
 | Planejar implementação em etapas antes de codar | `superpowers:writing-plans` |
 
 ---

@@ -306,40 +306,11 @@ Quando o audit identificar lacunas de DevSecOps/LGPD, criar os arquivos faltante
 
 #### Retrofit 1 — CI/CD de Segurança (SEMPRE, se ausente)
 
-Criar `.github/workflows/security.yml`:
+Criar `.github/workflows/security.yml`.
 
-```yaml
-name: DevSecOps Security Scan
-on: [push, pull_request]
-jobs:
-  secrets-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v2
-        env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
-  sast-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: returntocorp/semgrep-action@v1
-        with:
-          config: "p/typescript p/owasp-top-ten p/nextjs"
-  sca-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
-      - uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with: { sarif_file: "trivy-results.sarif" }
-```
+> **Fonte canônica:** o YAML completo (Gitleaks + Semgrep + Trivy) vive em
+> `intellix-templates/references-template/security.md` (gerado como `references/security.md`
+> no projeto). Não duplique aqui — copie de lá.
 
 > Custo zero. PRs com CRITICAL bloqueados. HIGH exige dispensa documentada.
 
@@ -347,47 +318,21 @@ jobs:
 
 #### Retrofit 2 — PII Redactor (se projeto usa LLM + dados pessoais)
 
-Criar `src/lib/lgpd/pii-redactor.ts`:
+Criar `src/lib/lgpd/pii-redactor.ts`.
 
-```typescript
-const PII_PATTERNS = [
-  { regex: /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, token: '[CPF]' },
-  { regex: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, token: '[EMAIL]' },
-  { regex: /\b(\+55\s?)?(\(?\d{2}\)?\s?)?[\d\s\-]{8,}\b/g, token: '[TELEFONE]' },
-  { regex: /\b\d{5}-?\d{3}\b/g, token: '[CEP]' },
-]
-export function redactPII(text: string): string {
-  return PII_PATTERNS.reduce((acc, { regex, token }) => acc.replace(regex, token), text)
-}
-```
+> **Fonte canônica:** o código completo de `pii-redactor.ts` vive em
+> `intellix-templates/references-template/security.md` (gerado como `references/security.md`
+> no projeto). Não duplique aqui — copie de lá.
 
 ---
 
 #### Retrofit 3 — Guardrails LLM (se projeto usa LLM)
 
-Criar `src/lib/ai/guardrails.ts`:
+Criar `src/lib/ai/guardrails.ts`.
 
-```typescript
-import { redactPII } from '@/lib/lgpd/pii-redactor'
-
-const INJECTION_PATTERNS = [
-  /ignore\s+(previous|all|above)\s+instructions/i,
-  /you\s+are\s+now\s+(a|an)\s+/i,
-  /system\s*:\s*you/i,
-]
-
-export function prePromptFilter(input: string): { safe: boolean; sanitized: string } {
-  if (INJECTION_PATTERNS.some(p => p.test(input))) return { safe: false, sanitized: '' }
-  return { safe: true, sanitized: redactPII(input) }
-}
-
-export function postOutputValidator(output: string): { valid: boolean; sanitized: string } {
-  const LEAKS = [/you are (a|an) .+ assistant/i, /system prompt/i]
-  if (LEAKS.some(p => p.test(output)))
-    return { valid: false, sanitized: '[Resposta bloqueada por política de segurança]' }
-  return { valid: true, sanitized: redactPII(output) }
-}
-```
+> **Fonte canônica:** o código completo de `guardrails.ts` (`prePromptFilter` +
+> `postOutputValidator`) vive em `intellix-templates/references-template/security.md`
+> (gerado como `references/security.md` no projeto). Não duplique aqui — copie de lá.
 
 Após criar, **localizar todas as chamadas LLM existentes** e adicionar os guardrails:
 
@@ -402,7 +347,7 @@ Para cada arquivo encontrado: envolver o input com `prePromptFilter()` e o outpu
 
 #### Retrofit 4 — Tabelas LGPD (se projeto tem dados pessoais e tabelas ausentes)
 
-Criar `supabase/migrations/[timestamp]_lgpd_retrofit.sql` com o conteúdo das tabelas `consent_records`, `titular_requests` e `data_processing_log` + RLS (ver `lgpd-compliance` Seção 2 para o SQL completo).
+Criar `supabase/migrations/[timestamp]_lgpd_retrofit.sql` com o conteúdo das tabelas `consent_records`, `titular_requests` e `data_processing_log` + RLS (ver `devsecops:lgpd-compliance` Seção 2 para o SQL completo).
 
 Verificar se já existem antes de criar:
 ```bash
@@ -498,7 +443,7 @@ Após validar o roadmap com o usuário, execute sprint por sprint usando as skil
 | Sprint | Skills a usar |
 |--------|---------------|
 | **Sprint 0 — DevSecOps Retrofit** | Fase 3b desta skill (retrofits 1-5) |
-| Sprint 1 — Segurança Crítica | `intellix:security-observability` + `lgpd-compliance` |
+| Sprint 1 — Segurança Crítica | `intellix:security-observability` + `devsecops:lgpd-compliance` |
 | Sprint 2 — Data Layer | `intellix:architecture` (Passos 5-7) |
 | Sprint 2 — API Design | `intellix:architecture` (Passo 6) |
 | Sprint 3 — TypeScript | `intellix:dev-standards` |
@@ -559,7 +504,7 @@ Após apresentar o relatório e o roadmap:
 | Executar refatoração de arquitetura | `intellix:architecture` |
 | Refatorar frontend e design system | `intellix:frontend-design` |
 | Implementar segurança técnica pós-audit | `intellix:security-observability` |
-| Compliance LGPD, tabelas e direitos dos titulares | `lgpd-compliance` |
+| Compliance LGPD, tabelas e direitos dos titulares | `devsecops:lgpd-compliance` |
 | Setup de testes em projeto legado | `intellix:test-e2e` |
 | Setup CI/CD e DevOps | `intellix:deploy` |
 | Code review após refatoração | `superpowers:requesting-code-review` |

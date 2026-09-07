@@ -506,7 +506,7 @@
           "description": "LLM configuration for reasoning",
           "properties": {
             "provider": { "type": "string", "description": "e.g. anthropic, openai, google, custom" },
-            "model": { "type": "string", "description": "e.g. claude-sonnet-4-20250514, gpt-4o, gemini-2.0-flash" },
+            "model": { "type": "string", "description": "e.g. claude-sonnet-5, gpt-5, gemini-3.0-flash (verificar IDs atuais antes de usar)" },
             "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
             "max_tokens": { "type": "integer" },
             "config_ref": { "type": "string", "description": "Reference to pending_configuration for API key" }

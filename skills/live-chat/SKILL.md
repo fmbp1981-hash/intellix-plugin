@@ -367,9 +367,9 @@ Output: Criar novo channel com provider `cloud_api`, configurar credenciais, des
 
 ---
 
-## Integração com o Fluxo IntelliX (Fase 08)
+## Integração com o Fluxo IntelliX (módulo COMPLEMENTAR)
 
-Esta skill é a **Fase 08** do fluxo IntelliX Engineering Plugin — fase complementar,
+Esta skill é um **módulo COMPLEMENTAR** do fluxo IntelliX Engineering Plugin (não é fase numerada do processo),
 acionada quando o projeto inclui atendimento omnichannel com IA + humano.
 
 **Posição no fluxo:**
@@ -378,8 +378,8 @@ agent-creation → [live-chat] → dev-standards → test-e2e → deploy
 ```
 
 **Quando usar em combinação com agent-creation:**
-- Se a Fase 02 gerou um blueprint de agente de atendimento → use esta skill para o painel
-- O `ai-agent-spec.md` desta skill deve ser alimentado com o blueprint da Fase 02
+- Se a Fase 03b (agent-creation) gerou um blueprint de agente de atendimento → use esta skill para o painel
+- O `ai-agent-spec.md` desta skill deve ser alimentado com o blueprint da Fase 03b
 - Canais definidos no blueprint (WhatsApp, Instagram, Telegram) mapeiam diretamente para os adapters desta skill
 
 **Ao concluir esta fase:**
@@ -406,7 +406,7 @@ agent-creation → [live-chat] → dev-standards → test-e2e → deploy
 | Quando usar | Skill |
 |-------------|-------|
 | Sistema de chat standalone já existente que precisa de IA + handoff | `SKILL-chat-inteligente` |
-| UI do painel de atendimento com design profissional | `frontend-design-pro` |
+| UI do painel de atendimento com design profissional | `impeccable` (`new-work`/`polish`) |
 | Styling dos componentes de chat com shadcn/ui | `ckm-ui-styling` |
 | Integração WhatsApp/n8n para roteamento de canais | `intellix:integration` |
 | Schema Supabase do chat com boas práticas de performance | `supabase-postgres-best-practices` |

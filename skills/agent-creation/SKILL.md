@@ -3,14 +3,14 @@ name: agent-creation
 description: >
   Use esta skill SEMPRE que o projeto precisar de agentes de IA, bots, chatbots,
   assistentes virtuais, automação de atendimento, WhatsApp bot, multi-agent, ou
-  qualquer sistema de atendimento automatizado. Esta é a Fase 03 do fluxo IntelliX —
+  qualquer sistema de atendimento automatizado. Esta é a Fase 03b (condicional) do fluxo IntelliX —
   executada após architecture (Fase 01) quando o sistema inclui agentes.
   Delega para a skill unificada intellix-agent-creation que suporta GPT Maker,
   n8n e IntelliX Blueprint nativo.
 user-invocable: false
 ---
 
-# Fase 03 — Agent Creation
+# Fase 03b — Agent Creation (condicional)
 
 Orquestrador de criação de agentes. Delega para a skill `intellix-agent-creation`
 que é a **plataforma unificada** com suporte a 3 plataformas: GPT Maker, n8n e
@@ -81,7 +81,7 @@ src/app/api/
 ## Handover para Fase 04
 
 Ao concluir, informe:
-> "Fase 03 concluída. Agente configurado. Próxima fase: **intellix:dev-standards** para padrões de implementação do código."
+> "Fase 03b concluída. Agente configurado. Próxima fase: **FASE 04 — Implementation** (/spec → /break → /plan → /execute)."
 
 Atualize `.intellix-phase` para `dev`.
 

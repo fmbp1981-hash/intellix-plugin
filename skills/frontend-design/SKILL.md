@@ -13,7 +13,8 @@ user-invocable: false
 # Fase 02 — Frontend Design
 
 Orquestrador de UI/UX. Garante que nenhum componente seja escrito sem design system
-definido. Executa 6 skills em sequência obrigatória antes de qualquer implementação visual.
+definido. Executa 5 skills (`impeccable` cobrindo estrutura, implementação e polish em
+pontos diferentes do fluxo) em sequência obrigatória antes de qualquer implementação visual.
 
 > **PRÉ-REQUISITO:** A Fase 01 (architecture) deve estar concluída — rotas, tipos e
 > schema definidos. Esta fase define O QUE e COMO parece antes da Fase 04 implementar.
@@ -30,7 +31,24 @@ Projeto existente com UI já implementada sendo melhorada? → executar a partir
 
 ---
 
-## Workflow — 6 Skills em Sequência Obrigatória
+## Passo 0 — Pergunta obrigatória sobre barra de qualidade (Gauntlet Loop)
+
+> **Decisão de 2026-09-07:** antes do Passo 1, pergunte proativamente ao usuário —
+> não espere ele mencionar por conta própria:
+> "Existe um produto/tela real (ex: Linear, Stripe, Vercel) que devemos usar como
+> referência de qualidade visual para este projeto?"
+
+- Se a resposta for uma **referência concreta e nomeada** (um app/tela real, coletável —
+  não "bonito"/"moderno"/"profissional"): ofereça o Gauntlet Loop no formato exato de
+  `modules/new-skills-triggers.md` seção "Gauntlet Loop" — builder+critic binário via
+  `Workflow`, custo ~15x, **exige confirmação explícita** antes de rodar.
+- Se não houver referência, ou o usuário preferir seguir sem: prossiga o Passo 1
+  normalmente, sem insistir de novo nesta mesma tarefa.
+- Perguntar é automático; **rodar o `Workflow` nunca é** — a resposta do usuário decide.
+
+---
+
+## Workflow — 5 Skills em Sequência Obrigatória
 
 Anuncie cada fase para o usuário antes de executar:
 ```
@@ -39,27 +57,38 @@ Anuncie cada fase para o usuário antes de executar:
 
 ---
 
-### Passo 1 — Arquitetura de UI `vibestack-architect`
+### Passo 1 — Contexto & Plano de UI `impeccable` (`init` → `shape`)
 
-**Invoke:** `Skill("vibestack-architect")`
+> **Nota de manutenção (2026-09-07):** `vibestack-architect` foi consolidada dentro do
+> `impeccable` e arquivada (`skills-archived-2026-09-07/`). O `impeccable` cobre
+> integralmente o que ela fazia — inclusive criação de superfície nova do zero, via
+> `init` → `shape`/`new-work` — não é só uma skill de polish. Ver `WORKFLOW-SPINE-VS-ORBIT.md`
+> seção 4A.
+
+**Invoke:** `Skill("impeccable")` com sub-comando `init`, depois `shape [feature]`
 
 Antes de qualquer pixel, defina a estrutura:
 
 **Para projetos novos:**
-- Stack visual: Next.js 15 + Tailwind + Shadcn/UI (padrão IntelliX)
+- `init` (alias `teach`) captura contexto durável do produto em `PRODUCT.md` — público,
+  plataforma (web/ios/android/adaptive), tom, restrições
+- `shape [feature]` planeja UX/UI antes de escrever código — task discovery e, para
+  superfície nova ou substituição de visual world, entra em `new-work` (decide o
+  "mundo visual": minimalismo, glassmorphism, brutalism, dark luxury etc.)
+- Stack visual: Next.js 15 + Tailwind + Shadcn/UI (padrão IntelliX) — informar isso ao
+  `impeccable` via `PRODUCT.md`/contexto do projeto
 - Estrutura de componentes: `src/components/ui/` (primitivos) + `src/components/[feature]/` (compostos)
 - Roteamento visual: grupos `(auth)`, `(dashboard)`, páginas públicas
-- Layout architecture: root layout, dashboard layout, auth layout
-- Scaffolding de componentes principais por feature
 
 **Para projetos existentes (melhoria):**
-- Mapear componentes existentes e suas dependências
-- Identificar escopo exato da mudança
-- Garantir compatibilidade com arquitetura atual
-- Listar apenas o que será modificado
+- Refinamento (`shape`, sem `new-work`) preserva identidade, comportamento, copy e tudo
+  fora do escopo — mapeie componentes existentes e suas dependências antes
+- Se for redesign completo: `new-work` trata o visual antigo como evidência/anti-referência,
+  nunca faz "meio-termo" entre o visual antigo e o novo
+- Identificar escopo exato da mudança e listar apenas o que será modificado
 
 **Entregável obrigatório antes do Passo 2:**
-Decisões de estrutura confirmadas. Lista dos componentes a criar/modificar.
+`PRODUCT.md` gravado e plano de `shape` confirmado. Lista dos componentes a criar/modificar.
 
 ---
 
@@ -111,9 +140,14 @@ Converte o design system conceitual do Passo 2 em infraestrutura real de tokens 
 
 ---
 
-### Passo 3 — Implementação Visual `frontend-design-pro`
+### Passo 3 — Implementação Visual `impeccable` (`new-work`)
 
-**Invoke:** `Skill("frontend-design-pro")`
+> **Nota de manutenção (2026-09-07):** o plugin `frontend-design` (que fornecia
+> `frontend-design-pro`) foi **desabilitado** — consolidado no `impeccable`. Não invoque
+> `frontend-design-pro`, essa skill não está mais habilitada.
+
+**Invoke:** `Skill("impeccable")` — sem sub-comando explícito, a implementação de uma
+superfície nova cai na rotina padrão `new-work` definida no Passo 1 (`shape`)
 
 Implementa a UI com qualidade de $50k+ agency, **respeitando rigorosamente** os Passos 1 e 2.
 
@@ -222,7 +256,7 @@ Revisão final obrigatória em 3 camadas — executar as 3 skills em sequência:
 **Entregável:** Lista de issues encontradas (separada por camada) e correções aplicadas.
 
 > **Fluxo completo Fase 02:**
-> `vibestack-architect` → `ui-ux-pro-max` → `design-system-patterns` → `frontend-design-pro` → `impeccable` → `ckm-ui-styling` → `web-design-guidelines` + `accessibility` + `seo`
+> `impeccable init/shape` → `ui-ux-pro-max` → `design-system-patterns` → `impeccable new-work` (implementação) → `impeccable polish/animate/colorize` → `ckm-ui-styling` → `web-design-guidelines` + `accessibility` + `seo`
 
 ---
 
@@ -318,9 +352,8 @@ Atualize `.intellix-phase` para `dev`.
 
 | Quando usar | Skill |
 |-------------|-------|
-| UI com design máximo e fotos reais integradas | `frontend-design-pro` |
+| Criação de superfície nova, plano de UX/UI, implementação e polish | `impeccable` (`init`/`shape`/`new-work`/`polish`/`animate`/...) |
 | Tokens CSS, tema Tailwind, design system em código | `design-system-patterns` |
-| Polish, animação e craft avançado de componentes | `impeccable` |
 | Design system avançado com tokens e slide deck | `ckm-design-system` |
 | Banners, assets visuais para marketing | `ckm-banner-design` |
 | Auditoria completa WCAG AA/AAA | `accessibility` |

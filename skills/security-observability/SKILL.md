@@ -13,8 +13,12 @@ user-invocable: true
 
 # Fase 06 — Security & Observability
 
-Auditoria de segurança e configuração de observabilidade. Auto-aplica o nível correto
-baseado no tipo de projeto — sem overhead para projetos simples, sem brechas para sistemas críticos.
+Configuração de observabilidade e do detalhe técnico de segurança específico da stack
+Next.js/Supabase (rate limiting, logging, CSP, LLM/Agentic, Sentry) que
+`devsecops:security-baseline` declara não duplicar. Auto-aplica o nível correto baseado
+no tipo de projeto — sem overhead para projetos simples, sem brechas para sistemas
+críticos. **O gate de segurança em si (RLS, secrets, auth, severidade, autorização de
+deploy) é sempre do devsecops — ver Nível COMPLETO, item 1.**
 
 ---
 
@@ -32,8 +36,12 @@ Projeto é dashboard interno sem dados sensíveis? → Nível MÉDIO
 ```
 
 > **LGPD:** Todo projeto que coleta dados de pessoas físicas brasileiras requer
-> execução da skill `lgpd-compliance` em paralelo com esta fase.
-> Invoque: `Skill("lgpd-compliance")`
+> execução da skill `devsecops:lgpd-compliance` em paralelo com esta fase — é a
+> única fonte de verdade de LGPD (mapa de dados, bases legais, tabelas Supabase,
+> direitos dos titulares, incidentes, sigilo fiscal). Não existe mais uma versão
+> resumida no plugin `intellix` — foi arquivada em 2026-09-07 por ser subconjunto
+> redundante desta.
+> Invoque: `Skill("devsecops:lgpd-compliance")`
 
 ---
 
@@ -134,23 +142,23 @@ Sentry.init({
 
 Inclui Níveis BÁSICO + MÉDIO mais:
 
-### 1 — Checklist OWASP Top 10 (Next.js + Supabase)
+### 1 — Security Gate (RLS, secrets, auth, LGPD, severidade, autorização)
 
-| Vulnerabilidade | Verificação | Status |
-|----------------|-------------|--------|
-| A01 Broken Access Control | RLS ativo em TODA tabela Supabase | [ ] |
-| A01 Broken Access Control | Nenhum `service_role` key no client | [ ] |
-| A02 Cryptographic Failures | Dados sensíveis nunca em localStorage | [ ] |
-| A02 Cryptographic Failures | HTTPS enforced, HSTS configurado | [ ] |
-| A03 Injection | Nunca concatenar SQL — usar Supabase query builder | [ ] |
-| A03 Injection | Validação Zod em TODA entrada de usuário | [ ] |
-| A05 Security Misconfiguration | Sem `.env` commitado | [ ] |
-| A05 Security Misconfiguration | CORS configurado explicitamente | [ ] |
-| A06 Vulnerable Components | `npm audit` executado, zero high/critical | [ ] |
-| A07 Auth Failures | PKCE habilitado no Supabase Auth | [ ] |
-| A07 Auth Failures | Rate limiting em login/register | [ ] |
-| A09 Logging Failures | Logs sem PII (email, CPF, senha) | [ ] |
-| A09 Logging Failures | Audit log para ações críticas | [ ] |
+> **Não reproduza aqui um checklist OWASP paralelo.** `devsecops:security-baseline` e
+> `devsecops:security-gate` são a única fonte de verdade para RLS, `service_role`,
+> secrets, autenticação/autorização, classificação de severidade (CRITICAL/HIGH/MEDIUM)
+> e autorização explícita de deploy — incluindo o fleet de 5 revisores somente-leitura
+> (`security-reviewer`, `privacy-lgpd-reviewer`, `multi-tenant-reviewer`,
+> `database-architect`, `architect-reviewer`).
+
+Antes de prosseguir com os itens técnicos abaixo, execute nesta ordem:
+1. `Skill("devsecops:security-baseline")` — metodologia, threat model, fleet de revisores.
+2. `Skill("devsecops:security-gate")` — gate mínimo de pré-deploy (~30 itens), resultado
+   `SECURITY_GATE: PASS|FAIL`.
+
+Esta skill assume esse gate já executado e cobre apenas o que `security-baseline`
+declara **não** duplicar: OWASP LLM/Agentic, rate limiting, logging estruturado, audit
+log, CSP, Sentry e Core Web Vitals — itens 2 a 10 abaixo.
 
 ### 2 — Rate Limiting
 
@@ -414,50 +422,10 @@ npm audit --audit-level=high
 | LLM09 Misinformation | Validador de output verificável implementado | [ ] |
 | LLM10 Unbounded Consumption | Rate limit por usuário/tenant + limite de tokens por request | [ ] |
 
-```typescript
-// src/lib/ai/guardrails.ts — Pipeline obrigatório para todo LLM em produção
-
-import { redactPII } from '@/lib/lgpd/pii-redactor' // obrigatório se dados de clientes
-
-// Camada 1: Pré-prompt filter
-export function prePromptFilter(userInput: string): { safe: boolean; sanitized: string } {
-  const INJECTION_PATTERNS = [
-    /ignore\s+(previous|all|above)\s+instructions/i,
-    /you\s+are\s+now\s+(a|an)\s+/i,
-    /system\s*:\s*you/i,
-    /\[INST\]|\[\/INST\]|<\|im_start\|>/i, // format injection
-  ]
-  
-  const hasInjection = INJECTION_PATTERNS.some(p => p.test(userInput))
-  if (hasInjection) return { safe: false, sanitized: '' }
-  
-  const sanitized = redactPII(userInput) // remove PII antes de enviar
-  return { safe: true, sanitized }
-}
-
-// Camada 4: Pós-output validator (obrigatório)
-export function postOutputValidator(output: string): { valid: boolean; sanitized: string } {
-  // Detectar vazamento de system prompt
-  const SYSTEM_LEAK_PATTERNS = [
-    /you are (a|an) .+ assistant/i,
-    /your instructions are/i,
-    /system prompt/i,
-  ]
-  
-  const hasLeak = SYSTEM_LEAK_PATTERNS.some(p => p.test(output))
-  if (hasLeak) return { valid: false, sanitized: '[Resposta bloqueada por política de segurança]' }
-  
-  const sanitized = redactPII(output) // garantir que PII não vaze no output
-  return { valid: true, sanitized }
-}
-
-// Uso em route handler ou server action:
-// const pre = prePromptFilter(userMessage)
-// if (!pre.safe) return { error: 'Input inválido' }
-// const response = await llm.complete(pre.sanitized)
-// const post = postOutputValidator(response)
-// return post.sanitized
-```
+> **Fonte canônica:** o código completo de `src/lib/ai/guardrails.ts` (Camadas 1 e 4:
+> `prePromptFilter` + `postOutputValidator`) vive em
+> `intellix-templates/references-template/security.md` (gerado como `references/security.md`
+> no projeto). Não duplique aqui — leia de lá antes de implementar ou revisar chamadas LLM.
 
 **Regra de Conta LLM — sem exceção:**
 
@@ -527,45 +495,10 @@ export async function executeIrreversibleAction(
 
 > Configurar uma vez por repositório. Jobs rodando em todo PR.
 
-```yaml
-# .github/workflows/security.yml
-name: DevSecOps Security Scan
-on: [push, pull_request]
-
-jobs:
-  # Job 1: Detectar secrets commitados
-  secrets-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v2
-        env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
-
-  # Job 2: SAST — análise estática de código
-  sast-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: returntocorp/semgrep-action@v1
-        with:
-          config: "p/typescript p/owasp-top-ten p/nextjs"
-
-  # Job 3: SCA — dependências vulneráveis
-  sca-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
-      - uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with: { sarif_file: "trivy-results.sarif" }
-```
+> **Fonte canônica:** o YAML completo de `.github/workflows/security.yml`
+> (Gitleaks + Semgrep + Trivy) vive em
+> `intellix-templates/references-template/security.md` (gerado como `references/security.md`
+> no projeto). Não duplique aqui — copie de lá ao configurar o pipeline.
 
 **Regra de bloqueio:** PRs com vulnerabilidade CRITICAL não fazem merge.
 HIGH exige dispensa documentada com justificativa no PR.
@@ -594,7 +527,7 @@ HIGH exige dispensa documentada com justificativa no PR.
 - [ ] Auth tokens com expiração adequada
 
 **Nível Completo (+ médio):**
-- [ ] OWASP Top 10 checklist 100% verde
+- [ ] `devsecops:security-gate` executado com `SECURITY_GATE: PASS` (RLS, secrets, auth, LGPD, severidade, autorização)
 - [ ] Rate limiting em endpoints críticos (auth, webhook, API pública)
 - [ ] Logging estruturado sem PII
 - [ ] Audit log para ações destrutivas
@@ -624,7 +557,7 @@ HIGH exige dispensa documentada com justificativa no PR.
 - [ ] Gestão de credenciais por ambiente seguindo tabela da Seção 11
 
 **LGPD (se o projeto processa dados pessoais):**
-- [ ] `lgpd-compliance` executada em paralelo com esta skill
+- [ ] `devsecops:lgpd-compliance` executada em paralelo com esta skill
 - [ ] Mapa de dados e base legal documentados
 - [ ] Tabelas LGPD no schema (`consent_records`, `titular_requests`, `data_processing_log`)
 
@@ -633,6 +566,7 @@ HIGH exige dispensa documentada com justificativa no PR.
 ## Handover para Fase 07 (Test E2E)
 
 > "Security & Observability configurados (Nível [BÁSICO/MÉDIO/COMPLETO]).
+> Security Gate (devsecops): [PASS/FAIL/não aplicável no nível BÁSICO ou MÉDIO].
 > LGPD: [executada/não aplicável].
 > LLM Security: [executada/não aplicável].
 > Agentic Security: [executada/não aplicável].

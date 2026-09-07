@@ -508,6 +508,10 @@ return post.sanitized  // PII removida, system prompt leak bloqueado
 
 **Por quê:** Chamada direta expõe CPF/email no contexto do LLM (LGPD Art. 6 III) e permite prompt injection (OWASP LLM01). Os guardrails estão em `src/lib/ai/guardrails.ts` — criados na Fase 01 (Architecture), obrigatórios em todas as chamadas LLM do projeto.
 
+> **Fonte canônica:** o código completo de `guardrails.ts` (`prePromptFilter` +
+> `postOutputValidator`) vive em `intellix-templates/references-template/security.md`
+> (gerado como `references/security.md` no projeto). Não duplique — leia de lá.
+
 ---
 
 ## Configuração TypeScript IntelliX (obrigatória)

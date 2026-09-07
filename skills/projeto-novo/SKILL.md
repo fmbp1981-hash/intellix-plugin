@@ -278,18 +278,24 @@ Execute /clear nos seguintes momentos:
 
 ## Versões Canônicas (IntelliX)
 
-| Pacote | Versão |
-|--------|--------|
-| next | 15.0.0 |
-| react | ^19.0.0 |
-| typescript | ^5.3.3 |
-| tailwindcss | ^3.3.5 |
-| @supabase/supabase-js | ^2.38.0 |
-| @anthropic-ai/sdk | ^0.9.0 |
-| zod | ^3.22.0 |
-| react-hook-form | ^7.48.0 |
+> ⚠️ **Antes de gerar o `package.json`, verifique a versão patch/minor exata de cada pacote via Context7 (`resolve-library-id` + `query-docs`) ou Perplexity.** A tabela abaixo fixa a major/minor de referência (atualizada em 2026-08-25) — NÃO copie os números como definitivos sem checar, pois patches saem constantemente. Isso é regra obrigatória do projeto (ver `modules/context7.md` e `modules/perplexity.md`), e o próprio plugin já violou essa regra uma vez com versões desatualizadas — não repita o erro.
 
-`package.json` é a fonte da verdade. Não sugerir upgrades ou libs alternativas sem aprovação explícita.
+| Pacote | Major/minor de referência (2026-08-25) |
+|--------|-----------------------------------------|
+| next | 16.3.x |
+| react / react-dom | 19.2.x |
+| typescript | ^5.x (checar minor atual) |
+| tailwindcss | 4.3.x |
+| @supabase/supabase-js | 2.112.x |
+| @anthropic-ai/sdk | 0.120.x |
+| zod | 4.4.x |
+| react-hook-form | 7.86.x |
+| motion (ex-framer-motion) | 13.1.x — pacote renomeado, importar de `motion/react`, não mais `framer-motion` |
+| vitest | 4.1.x |
+| @playwright/test | 1.62.x |
+| eslint | 10.x (salto de major desde a v8 — usar flat config) |
+
+`package.json` é a fonte da verdade **depois de gerado e verificado** — antes disso, esta tabela é só um ponto de partida, não uma imposição. Não sugerir upgrades ou libs alternativas sem aprovação explícita, mas SEMPRE confirmar o patch/minor atual antes do primeiro `npm install` do projeto.
 ```
 
 ### `references/security.md`
@@ -332,41 +338,9 @@ Execute /clear nos seguintes momentos:
 
 ### `.github/workflows/security.yml`
 
-```yaml
-name: DevSecOps Security Scan
-on: [push, pull_request]
-
-jobs:
-  secrets-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v2
-        env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
-
-  sast-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: returntocorp/semgrep-action@v1
-        with:
-          config: "p/typescript p/owasp-top-ten p/nextjs"
-
-  sca-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
-      - uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with: { sarif_file: "trivy-results.sarif" }
-```
+> **Fonte canônica:** o YAML completo (Gitleaks + Semgrep + Trivy) vive em
+> `intellix-templates/references-template/security.md` — este mesmo arquivo é gerado
+> como `references/security.md` no projeto novo. Copie o bloco de lá para o workflow.
 
 > Custo zero. PRs com CRITICAL não fazem merge. HIGH exige dispensa documentada.
 
@@ -374,18 +348,9 @@ jobs:
 
 ### `src/lib/lgpd/pii-redactor.ts` — criar SE `HAS_PERSONAL_DATA = S`
 
-```typescript
-// Redação de PII — executar ANTES de enviar qualquer dado ao LLM (LGPD Art. 46)
-const PII_PATTERNS = [
-  { regex: /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, token: '[CPF]' },
-  { regex: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, token: '[EMAIL]' },
-  { regex: /\b(\+55\s?)?(\(?\d{2}\)?\s?)?[\d\s\-]{8,}\b/g, token: '[TELEFONE]' },
-  { regex: /\b\d{5}-?\d{3}\b/g, token: '[CEP]' },
-]
-export function redactPII(text: string): string {
-  return PII_PATTERNS.reduce((acc, { regex, token }) => acc.replace(regex, token), text)
-}
-```
+> **Fonte canônica:** o código completo vive em
+> `intellix-templates/references-template/security.md` (gerado como `references/security.md`
+> no projeto). Copie o bloco de lá.
 
 ### `supabase/migrations/00001_lgpd_tables.sql` — criar SE `HAS_PERSONAL_DATA = S`
 
@@ -433,28 +398,9 @@ CREATE POLICY "admin_read_log" ON data_processing_log FOR SELECT USING (
 
 ### `src/lib/ai/guardrails.ts` — criar SE `HAS_LLM = S`
 
-```typescript
-// Pipeline de guardrails — Camadas 1 e 4 obrigatórias (OWASP LLM Top 10 2025)
-import { redactPII } from '@/lib/lgpd/pii-redactor'
-
-const INJECTION_PATTERNS = [
-  /ignore\s+(previous|all|above)\s+instructions/i,
-  /you\s+are\s+now\s+(a|an)\s+/i,
-  /system\s*:\s*you/i,
-]
-
-export function prePromptFilter(input: string): { safe: boolean; sanitized: string } {
-  if (INJECTION_PATTERNS.some(p => p.test(input))) return { safe: false, sanitized: '' }
-  return { safe: true, sanitized: redactPII(input) }
-}
-
-export function postOutputValidator(output: string): { valid: boolean; sanitized: string } {
-  const LEAKS = [/you are (a|an) .+ assistant/i, /system prompt/i]
-  if (LEAKS.some(p => p.test(output)))
-    return { valid: false, sanitized: '[Resposta bloqueada por política de segurança]' }
-  return { valid: true, sanitized: redactPII(output) }
-}
-```
+> **Fonte canônica:** o código completo (Camadas 1 e 4 obrigatórias — OWASP LLM Top 10 2025)
+> vive em `intellix-templates/references-template/security.md` (gerado como
+> `references/security.md` no projeto). Copie o bloco de lá.
 
 ---
 
@@ -689,35 +635,36 @@ init → ver .intellix-phase
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "next": "15.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@supabase/supabase-js": "^2.38.0",
-    "@supabase/ssr": "^0.1.0",
-    "@anthropic-ai/sdk": "^0.9.0",
-    "zod": "^3.22.0",
-    "react-hook-form": "^7.48.0",
-    "@hookform/resolvers": "^3.3.2",
-    "tailwind-merge": "^2.0.0",
-    "clsx": "^2.0.0",
+    "next": "^16.3.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "@supabase/supabase-js": "^2.112.3",
+    "@supabase/ssr": "^0.5.0",
+    "@anthropic-ai/sdk": "^0.120.0",
+    "zod": "^4.4.3",
+    "react-hook-form": "^7.86.0",
+    "@hookform/resolvers": "^3.9.0",
+    "tailwind-merge": "^2.5.0",
+    "clsx": "^2.1.0",
     "class-variance-authority": "^0.7.0",
-    "lucide-react": "^0.294.0"
+    "lucide-react": "^0.460.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "@types/node": "^20.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "tailwindcss": "^3.3.5",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32",
-    "vitest": "^1.0.0",
-    "@playwright/test": "^1.40.0",
-    "eslint": "^8.0.0",
-    "eslint-config-next": "15.0.0"
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tailwindcss": "^4.3.3",
+    "postcss": "^8.4.49",
+    "vitest": "^4.1.11",
+    "@playwright/test": "^1.62.1",
+    "eslint": "^10.9.1",
+    "eslint-config-next": "^16.3.2"
   }
 }
 ```
+
+> ⚠️ Antes de rodar `npm install`, confirme via Context7 se algum patch mais novo saiu desde 2026-08-25 (especialmente `next`, `@anthropic-ai/sdk` e `@supabase/supabase-js`, que evoluem rápido). `autoprefixer` foi removido — Tailwind v4 já inclui prefixing automático via Lightning CSS, não precisa mais como dependência separada.
 
 ---
 

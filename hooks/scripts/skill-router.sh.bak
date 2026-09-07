@@ -19,7 +19,7 @@ echo "$PROMPT" | grep -qiE "novo projeto|criar projeto|iniciar projeto|scaffoldi
 echo "$PROMPT" | grep -qiE "arquitetura|schema|banco de dados|tabelas|modelagem|erd|rotas da aplicação|estrutura de pastas|design de sistema|repository|service layer|data layer|api design|paginação|rbac|decisão técnica" && suggest "architecture"
 
 # Fase 02 — Frontend Design
-echo "$PROMPT" | grep -qiE "interface|criar tela|criar página|criar componente|design system|design do sistema|dashboard|landing page|visual|layout|mobile.first|ui|ux|frontend|shadcn|tailwind|estilo|cores|tipografia|tema" && suggest "frontend-design"
+echo "$PROMPT" | grep -qiE "interface|criar tela|criar página|criar componente|design system|design do sistema|dashboard|landing page|visual|layout|mobile.first|ui|ux|frontend|shadcn|tailwind|estilo|cores|tipografia|tema" && suggest "frontend-design-workflow"
 
 # Fase 03 — Agent Creation
 echo "$PROMPT" | grep -qiE "agente|agent|multi.?agent|whatsapp bot|chatbot|assistente de ia|automação de atendimento|blueprint de agente|nossoagent|bot de atendimento|criar bot|agente de vendas|agente de suporte|gptmaker|gpt maker" && suggest "agent-creation"
@@ -40,7 +40,7 @@ echo "$PROMPT" | grep -qiE "test|teste|e2e|playwright|cypress|jest|vitest|cobert
 echo "$PROMPT" | grep -qiE "deploy|vercel|dns|domínio|cloudflare|variável de ambiente|env|produção|release|publicar|colocar no ar|configurar domínio|ci.?cd|github actions|pipeline|devops|rollback|staging|feature flag|runbook|incidente|health check" && suggest "deploy"
 
 # Fase 09 — Handoff
-echo "$PROMPT" | grep -qiE "documentação final|readme|entregar|handoff|cliente|finalizar projeto|concluir projeto|débito técnico documentar|projeto pronto|adr|decisão de arquitetura|entregar para o cliente" && suggest "project-handoff"
+echo "$PROMPT" | grep -qiE "documentação final|readme|entregar|handoff|cliente|finalizar projeto|concluir projeto|débito técnico documentar|projeto pronto|adr|decisão de arquitetura|entregar para o cliente" && suggest "handoff"
 
 # Fase 10 — Live Chat (opcional)
 echo "$PROMPT" | grep -qiE "live chat|chat ao vivo|inbox|painel de atendimento|omnichannel|webchat|chat widget|atendimento humano|handoff humano|transferir para atendente|chat de suporte|helpdesk|inbox unificado|atendimento multicanal|atendimento ao vivo" && suggest "live-chat"

@@ -247,8 +247,42 @@ Para cada arquivo na lista "Files":
   Se ❌ Critical ou Important → agente implementador corrige → quality review repete
   Minor → registrar como nota, não bloqueia
 
+  ESTÁGIO 4 — Quality Critic (condicional, contra referência externa)
+  ─────────────────────────────────────────────────────────────────────
+  Dispatch: apenas se a issue ou o DESIGN.md define um `quality_reference`
+  (URL/produto real usado como barra de qualidade — ex: um dashboard da Linear,
+  um checkout da Stripe). Sem referência definida, pule este estágio.
+    - Para arquivos .tsx: delegue à skill `impeccable:impeccable-finish-reviewer`
+    - Para os demais: subagente crítico dedicado, contexto limpo (não recebe o
+      histórico de implementação, só o artefato final + a referência)
+  O crítico responde: ✅ APROVADO ou ❌ REPROVADO com o motivo da comparação cega
+  Se ❌ → agente implementador corrige → Estágio 4 repete
+
   ✅ Arquivo concluído → marcar no TodoWrite → próximo arquivo
 ```
+
+**Guard rail — teto de correções (obrigatório):**
+Cada estágio de review tem um limite de **3 ciclos de correção** por arquivo. Se o
+Estágio 2, 3 ou 4 reprovar pela 4ª vez consecutiva o mesmo arquivo, PARE — não
+tente uma 5ª correção. Reporte ao usuário o histórico de reprovações e pergunte
+como proceder (a spec está ambígua? o padrão é inatingível como está definido?
+a issue precisa ser quebrada?). Isso evita o cenário de loop infinito que consome
+tokens sem produzir progresso — mesmo risco descrito em qualquer engenharia de
+loops autônoma, e a razão de nunca remover este teto mesmo sob pressão de prazo.
+
+**Guard rail — decisão de negócio ambígua (obrigatório):**
+Se, em qualquer estágio, o agente ou um revisor identificar uma decisão de
+arquitetura ou regra de negócio que a spec não cobre (ex: qual biblioteca usar,
+como resolver concorrência, qual provider de pagamento) — o agente NÃO decide
+sozinho nem cria um mock arbitrário. Ele reporta a issue como `BLOCKED` com as
+opções identificadas (Opção A / Opção B + trade-offs) e o orquestrador pergunta
+ao usuário. Enquanto aguarda resposta, siga para a próxima issue independente
+da lista — não pare o restante da execução por causa de um único bloqueio.
+
+> Fundamentação teórica: este ciclo é uma implementação dos padrões
+> *evaluator-optimizer* e *orchestrator-workers* documentados pela Anthropic em
+> [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents).
+> Detalhes e trade-offs completos: [`references/verification-loop.md`](verification-loop.md).
 
 ---
 

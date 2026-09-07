@@ -29,15 +29,15 @@ especializadas externas em cada fase para máxima qualidade e eficiência.
  ├─ project-kickoff          → scaffolding + .intellix-phase
  ├─ code-audit               → (projetos existentes)
  ├─ architecture             → schema + routes + repository/service
- ├─ frontend-design          → vibestack → ui-ux-pro-max → frontend-design-pro
+ ├─ frontend-design          → impeccable (init/shape/new-work/polish) → ui-ux-pro-max
  │                              → ckm-ui-styling → web-design-guidelines
  ├─ agent-creation           → intellix-agent-creation (GPT Maker/n8n/Blueprint)
  ├─ dev-standards            → TypeScript + naming + patterns
  ├─ epic-workflow            → /spec → /break → /plan → /execute
  ├─ integration              → APIs + WhatsApp + n8n
- ├─ security-observability   → OWASP + rate limit + logs
+ ├─ security-observability   → OWASP + rate limit + logs (+ devsecops:lgpd-compliance)
  ├─ test-e2e                 → SKILL_TestE2E (smoke → stress)
- ├─ deploy                   → Vercel + Cloudflare
+ ├─ deploy                   → Cloudflare Workers/Pages (wrangler)
  └─ project-handoff          → README + ADRs + docs
 ```
 

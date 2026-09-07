@@ -65,6 +65,9 @@ ETAPA 3 — EXECUÇÃO COM INTELLIX PLUGIN
 
 ## 3. Fluxograma Completo
 
+![IntelliX Workflow Fluxograma](file:///C:/Users/Dell/.claude/plugins/marketplaces/intellix-plugin/docs/workflow-flowchart.png)
+
+<!-- mermaid-source
 ```mermaid
 flowchart TD
     START([💡 IDEIA DO CLIENTE]) --> DIAG
@@ -220,6 +223,7 @@ flowchart TD
     style DELIVERY fill:#f0fff4,stroke:#38a169
     style CYCLE fill:#faf5ff,stroke:#805ad5
 ```
+-->
 
 ---
 

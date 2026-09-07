@@ -40,14 +40,14 @@ desde a primeira ideia até o sistema em produção.
    ├─ [00] project-kickoff      → scaffolding + estrutura canônica
    ├─ [00b] code-audit          → (apenas projetos existentes)
    ├─ [01] architecture         → schema DB + rotas + types + repository/service
-   ├─ [02] frontend-design      → vibestack → ui-ux-pro-max → frontend-design-pro
+   ├─ [02] frontend-design      → impeccable (init/shape/new-work/polish) → ui-ux-pro-max
    │                              → ckm-ui-styling → web-design-guidelines
    ├─ [03] agent-creation       → intellix-agent-creation (se houver agentes)
    ├─ [04] dev-standards        → TypeScript + naming + patterns
    ├─ [05] integration          → APIs externas + WhatsApp + n8n
-   ├─ [06] security-observability → OWASP + rate limiting + logs
+   ├─ [06] security-observability → OWASP + rate limiting + logs (+ devsecops:lgpd-compliance em paralelo)
    ├─ [07] test-e2e             → SKILL_TestE2E (smoke → stress)
-   ├─ [08] deploy               → Vercel + Cloudflare DNS
+   ├─ [08] deploy               → Cloudflare Workers/Pages (wrangler + @opennextjs/cloudflare)
    └─ [09] handoff              → README + documentação final
         │
         ▼
@@ -192,18 +192,20 @@ Antes de qualquer código:
 Skill("intellix:frontend-design")
 ```
 
-Sequência de **9 steps** em ordem obrigatória (6 skills principais + auditoria 3 camadas):
+Sequência de **8 steps** em ordem obrigatória (5 skills principais + auditoria 3 camadas —
+`vibestack-architect` e `frontend-design-pro` foram arquivadas/desabilitadas em 2026-09-07
+e consolidadas dentro do `impeccable`, ver `WORKFLOW-SPINE-VS-ORBIT.md` seção 4A):
 
 ```
-1. vibestack-architect       → estrutura de componentes e roteamento visual
-2. ui-ux-pro-max             → design system conceitual: cores, tipografia, estilo visual
-2b. design-system-patterns   → tokens CSS/Tailwind em código: tailwind.config.ts + globals.css
-3. frontend-design-pro       → implementação UI com qualidade $50k+ agency
-3b. impeccable               → polish, animações avançadas e craft anti-AI-slop (23 comandos)
-4. ckm-ui-styling            → Shadcn/UI, loading/error states, consistência
-5a. web-design-guidelines    → guidelines HIG/Material, hierarquia, micro-interações
-5b. accessibility            → WCAG 2.1 AA/AAA: contraste, aria, teclado, screen readers
-5c. seo                      → meta tags, schema.org, Core Web Vitals, sitemap
+1. impeccable (init → shape)  → PRODUCT.md + plano de UX/UI, estrutura e roteamento visual
+2. ui-ux-pro-max              → design system conceitual: cores, tipografia, estilo visual
+2b. design-system-patterns    → tokens CSS/Tailwind em código: tailwind.config.ts + globals.css
+3. impeccable (new-work)      → implementação UI com qualidade $50k+ agency
+3b. impeccable (polish/...)   → polish, animações avançadas e craft anti-AI-slop
+4. ckm-ui-styling             → Shadcn/UI, loading/error states, consistência
+5a. web-design-guidelines     → guidelines HIG/Material, hierarquia, micro-interações
+5b. accessibility             → WCAG 2.1 AA/AAA: contraste, aria, teclado, screen readers
+5c. seo                       → meta tags, schema.org, Core Web Vitals, sitemap
 ```
 
 Entregável obrigatório: `docs/design-system.md` + `PRODUCT.md` (para impeccable).
@@ -325,7 +327,7 @@ Receitas prontas para:
 
 ```
 Skill("intellix:security-observability")   ← segurança técnica OWASP
-Skill("lgpd-compliance")                   ← SEMPRE que houver dados pessoais
+Skill("devsecops:lgpd-compliance")                   ← SEMPRE que houver dados pessoais
 ```
 
 Executar **em paralelo**. São complementares:
@@ -334,7 +336,7 @@ Executar **em paralelo**. São complementares:
 - Auth no servidor, rate limiting, RLS, headers CSP/HSTS
 - Logs sem PII, sem stack traces expostos ao cliente
 
-**`lgpd-compliance`** — proteção de dados pessoais (Lei 13.709/2018):
+**`devsecops:lgpd-compliance`** — proteção de dados pessoais (Lei 13.709/2018):
 - Bases legais documentadas por tabela/operação
 - Tabelas: `consent_records`, `titular_requests`, `data_audit_log`
 - Consentimento granular por finalidade com rastreio
@@ -373,12 +375,11 @@ Bateria completa:
 Skill("intellix:deploy")
 ```
 
-Checklist Vercel + Cloudflare:
-- Variáveis de ambiente configuradas
-- DNS apontado corretamente
-- SSL "Full (strict)" no Cloudflare
-- Health check pós-deploy
-- Monitoramento ativo
+Checklist Cloudflare Workers (`wrangler` + `@opennextjs/cloudflare`):
+- Secrets configurados via `wrangler secret put`
+- Custom Domain configurado em `wrangler.jsonc` (DNS e SSL gerenciados automaticamente)
+- Health check pós-deploy (`curl` + `wrangler tail`)
+- Monitoramento ativo (`observability: { enabled: true }` no `wrangler.jsonc`)
 
 ---
 
@@ -442,12 +443,11 @@ Projeto existente (refatorar)?
 | **Antes de qualquer código** | **`karpathy-guidelines`** | **Think Before Coding — evita over-engineering e mudanças cirúrgicas** |
 | **API de qualquer lib** | **Context7 MCP** (`resolve-library-id` + `query-docs`) | **Docs atuais de Next.js/Supabase/Tailwind — nunca assuma a API** |
 | Schema DB | `supabase-postgres-best-practices` | Índices, RLS, performance desde o início |
-| LGPD + dados pessoais | `lgpd-compliance` | 10 bases legais, 9 direitos, Privacy by Design, ANPD |
-| UI estrutura | `vibestack-architect` | Arquitetura de componentes antes de pixel |
+| LGPD + dados pessoais | `devsecops:lgpd-compliance` | 10 bases legais, 9 direitos, Privacy by Design, ANPD |
+| UI estrutura + implementação | `impeccable` (`init`/`shape`/`new-work`) | Arquitetura de componentes antes de pixel + implementação de superfície nova (substitui `vibestack-architect`/`frontend-design-pro`, arquivadas em 2026-09-07) |
 | Design system conceitual | `ui-ux-pro-max` | 50+ estilos, 161 paletas, 57 font pairings |
 | **Design system em código** | **`design-system-patterns`** | **Tokens CSS + Tailwind theme + dark mode infra** |
-| Implementação UI | `frontend-design-pro` | Qualidade $50k agency, fotos reais, signature details |
-| **Polish + animações** | **`impeccable`** | **Anti-AI-slop: 23 comandos craft, motion design, colorização** |
+| **Polish + animações** | **`impeccable`** (`polish`/`animate`/`colorize`/...) | **Anti-AI-slop: craft, motion design, colorização** |
 | Componentes | `ckm-ui-styling` | Shadcn/UI, loading/error states, consistência |
 | Revisão UI | `web-design-guidelines` | Guidelines HIG/Material, hierarquia, micro-interações |
 | **Acessibilidade** | **`accessibility`** | **WCAG 2.1 AA/AAA, aria, contraste, teclado, screen readers** |

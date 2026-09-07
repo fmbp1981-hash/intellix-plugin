@@ -61,7 +61,7 @@ CREATE TABLE data_processing_log ( ... ); -- log de operações + decisões por 
 -- SQL completo: ver lgpd-compliance → Seção 2
 ```
 
-> Invocar `lgpd-compliance` para o SQL completo + RLS. A decisão de incluir ou não é de arquitetura — tomada agora, não na Fase 06.
+> Invocar `devsecops:lgpd-compliance` para o SQL completo + RLS. A decisão de incluir ou não é de arquitetura — tomada agora, não na Fase 06.
 
 ### Passo 2 — Rotas Next.js App Router
 
@@ -265,7 +265,11 @@ src/lib/
     └── pii-redactor.ts      # redactPII — strip CPF/email/tel antes do LLM
 ```
 
-**Motivo:** Toda chamada LLM do projeto deve passar por estes helpers. Definir na arquitetura garante que nenhum desenvolvedor faça chamadas diretas sem guardrails. Invocar `lgpd-compliance` para o código completo de ambos os arquivos.
+**Motivo:** Toda chamada LLM do projeto deve passar por estes helpers. Definir na arquitetura garante que nenhum desenvolvedor faça chamadas diretas sem guardrails.
+
+> **Fonte canônica:** o código completo de `guardrails.ts` e `pii-redactor.ts` vive em
+> `intellix-templates/references-template/security.md` (gerado como `references/security.md`
+> no projeto). Não duplique aqui — leia de lá antes de implementar.
 
 ```typescript
 // Padrão obrigatório para qualquer chamada LLM no projeto
@@ -496,7 +500,7 @@ export function hasPermission(role: Role, permission: Permission): boolean {
 |-------------|-------|
 | Otimizar queries, índices e performance no Supabase | `supabase-postgres-best-practices` |
 | Escrever plano de arquitetura detalhado antes de implementar | `superpowers:writing-plans` |
-| Projeto é landing page / site de marketing | `vibestack-architect` |
+| Projeto é landing page / site de marketing | `impeccable` (`init`/`shape`) |
 | Performance de componentes React e Server Components | `vercel-react-best-practices` |
 
 ---

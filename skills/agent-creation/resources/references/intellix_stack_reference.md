@@ -147,7 +147,7 @@ import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 
 const result = await generateText({
-  model: anthropic('claude-sonnet-4-20250514'),
+  model: anthropic('claude-sonnet-5'),
   tools: {
     searchPatient: {
       description: 'Search patient by phone number',
@@ -176,7 +176,7 @@ const result = await generateText({
 import { streamText } from 'ai';
 
 const result = streamText({
-  model: anthropic('claude-sonnet-4-20250514'),
+  model: anthropic('claude-sonnet-5'),
   system: agentSystemPrompt,
   messages: conversationHistory
 });

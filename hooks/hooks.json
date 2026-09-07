@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Antes de escrever ou editar qualquer arquivo: verifique se o arquivo segue os padrões IntelliX (TypeScript strict, naming conventions, estrutura de pastas canônica). Se não seguir, corrija antes de prosseguir.",
+            "prompt": "File path: $TOOL_INPUT.file_path. Se o arquivo NAO for codigo de producao TypeScript/JavaScript (ex: .md, .json, .yaml, .yml, .txt, .sh, .css, arquivos de configuracao ou documentacao) -> responda apenas 'approve'. Se o caminho contiver '.claude/workflows/' (scripts da ferramenta Workflow) -> responda apenas 'approve': esses scripts sao obrigatoriamente JavaScript puro (nao TypeScript) por exigencia da propria ferramenta, nao codigo de producao da aplicacao, e nao se sujeitam aos padroes IntelliX de app. Se FOR codigo TypeScript/JavaScript de producao (fora de .claude/workflows/), verifique: strict types (zero 'any' implicito), naming conventions, estrutura de camadas (components -> services -> repositories -> Supabase). Se estiver conforme, responda 'approve'. Se houver violacao clara, responda 'deny' seguido do motivo especifico. Nunca bloqueie sem justificar a violacao encontrada.",
             "timeout": 20
           }
         ]

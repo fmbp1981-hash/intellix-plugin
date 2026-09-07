@@ -8,6 +8,5 @@
   },
   "keywords": ["nextjs", "typescript", "supabase", "clean-architecture", "saas", "devops", "audit", "agents", "n8n", "vibestack", "intellix"],
   "skills": "./skills/",
-  "commands": "./commands/",
-  "hooks": "./hooks/hooks.json"
+  "commands": "./commands/"
 }
