@@ -212,9 +212,9 @@ Componentes polidos com animações de alta qualidade. `PRODUCT.md` atualizado c
 
 ---
 
-### Passo 4 — Refinamento com Shadcn/UI `ckm-ui-styling`
+### Passo 4 — Refinamento com Shadcn/UI `vercel:shadcn`
 
-**Invoke:** `Skill("ckm-ui-styling")`
+**Invoke:** `Skill("vercel:shadcn")`
 
 Garante consistência e polimento com a biblioteca de componentes IntelliX:
 
@@ -231,7 +231,7 @@ Garante consistência e polimento com a biblioteca de componentes IntelliX:
 
 Revisão final obrigatória em 3 camadas — executar as 3 skills em sequência:
 
-**5a — Web Design Guidelines** `Skill("web-design-guidelines")`
+**5a — Web Design Guidelines** `Skill("ui-design:visual-design-foundations")`
 - Conformidade com Web Interface Guidelines (Apple HIG, Material Design, etc.)
 - Hierarquia visual, espaçamento, consistência de padrões
 - Micro-interações e estados de loading/error/empty
@@ -256,7 +256,7 @@ Revisão final obrigatória em 3 camadas — executar as 3 skills em sequência:
 **Entregável:** Lista de issues encontradas (separada por camada) e correções aplicadas.
 
 > **Fluxo completo Fase 02:**
-> `impeccable init/shape` → `ui-ux-pro-max` → `design-system-patterns` → `impeccable new-work` (implementação) → `impeccable polish/animate/colorize` → `ckm-ui-styling` → `web-design-guidelines` + `accessibility` + `seo`
+> `impeccable init/shape` → `ui-ux-pro-max` → `design-system-patterns` → `impeccable new-work` (implementação) → `impeccable polish/animate/colorize` → `vercel:shadcn` → `ui-design:visual-design-foundations` + `accessibility` + `seo`
 
 ---
 
@@ -358,7 +358,7 @@ Atualize `.intellix-phase` para `dev`.
 | Banners, assets visuais para marketing | `ckm-banner-design` |
 | Auditoria completa WCAG AA/AAA | `accessibility` |
 | SEO técnico, meta tags, Core Web Vitals | `seo` |
-| Auditoria de UI contra Web Interface Guidelines | `web-design-guidelines` |
+| Auditoria de UI contra Web Interface Guidelines | `ui-design:visual-design-foundations` |
 | Design system existente — auditoria e extensão | `design-system` |
 
 ---

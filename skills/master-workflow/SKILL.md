@@ -41,7 +41,7 @@ desde a primeira ideia até o sistema em produção.
    ├─ [00b] code-audit          → (apenas projetos existentes)
    ├─ [01] architecture         → schema DB + rotas + types + repository/service
    ├─ [02] frontend-design      → impeccable (init/shape/new-work/polish) → ui-ux-pro-max
-   │                              → ckm-ui-styling → web-design-guidelines
+   │                              → vercel:shadcn → ui-design:visual-design-foundations
    ├─ [03] agent-creation       → intellix-agent-creation (se houver agentes)
    ├─ [04] dev-standards        → TypeScript + naming + patterns
    ├─ [05] integration          → APIs externas + WhatsApp + n8n
@@ -103,16 +103,16 @@ Questiona implacavelmente cada decisão do PRD — features, arquitetura, person
 **Alternativa rápida — PRD direto do contexto:**
 
 ```
-Skill("to-prd")
+Skill("mattpocock-skills:to-spec")
 ```
 
-Quando já há contexto suficiente na conversa e no codebase, `to-prd` sintetiza um PRD completo sem entrevista. Use no lugar de `ai-project-brainstorm` quando o escopo já está claro.
+Quando já há contexto suficiente na conversa e no codebase, `mattpocock-skills:to-spec` sintetiza um PRD completo sem entrevista. Use no lugar de `ai-project-brainstorm` quando o escopo já está claro.
 
 | Skill | Quando usar |
 |---|---|
 | `superpowers:brainstorming` | Ideia bruta — explorar ângulos antes de qualquer estrutura |
 | `ai-project-brainstorm` | PRD completo guiado por perguntas interativas |
-| `to-prd` | PRD rápido quando o contexto já está claro na conversa |
+| `mattpocock-skills:to-spec` | PRD rápido quando o contexto já está claro na conversa |
 | `grill-me` | Stress-test de PRD/plano aprovado antes de commitar |
 
 ---
@@ -202,8 +202,8 @@ e consolidadas dentro do `impeccable`, ver `WORKFLOW-SPINE-VS-ORBIT.md` seção 
 2b. design-system-patterns    → tokens CSS/Tailwind em código: tailwind.config.ts + globals.css
 3. impeccable (new-work)      → implementação UI com qualidade $50k+ agency
 3b. impeccable (polish/...)   → polish, animações avançadas e craft anti-AI-slop
-4. ckm-ui-styling             → Shadcn/UI, loading/error states, consistência
-5a. web-design-guidelines     → guidelines HIG/Material, hierarquia, micro-interações
+4. vercel:shadcn             → Shadcn/UI, loading/error states, consistência
+5a. ui-design:visual-design-foundations     → guidelines HIG/Material, hierarquia, micro-interações
 5b. accessibility             → WCAG 2.1 AA/AAA: contraste, aria, teclado, screen readers
 5c. seo                       → meta tags, schema.org, Core Web Vitals, sitemap
 ```
@@ -256,7 +256,7 @@ Referência contínua durante todo o desenvolvimento:
 **Antes do `/spec` — spec de produto (opcional, features complexas):**
 
 ```
-Skill("write-product-spec")  → PRODUCT.md: comportamento do usuário, invariantes, edge cases
+Skill("mattpocock-skills:to-spec")  → PRODUCT.md: comportamento do usuário, invariantes, edge cases
 ```
 
 Use quando a feature é substancial ou comportamentalmente ambígua. O PRODUCT.md descreve o que o usuário vê e faz, sem detalhes de implementação — contexto essencial para o agente implementar sem regressões.
@@ -273,7 +273,7 @@ Para cada feature/módulo, execute os 4 comandos:
 **Alternativa para `/break` — quebrar em issues via skill:**
 
 ```
-Skill("to-issues")  → converte plano/PRD em issues independentes usando tracer bullets verticais
+Skill("mattpocock-skills:to-tickets")  → converte plano/PRD em issues independentes usando tracer bullets verticais
 ```
 
 **Ciclo `/execute` por arquivo (3 estágios obrigatórios):**
@@ -355,7 +355,7 @@ Executar **em paralelo**. São complementares:
 
 ```
 Skill("intellix:test-e2e")
-→ executa: Skill("vibecode-e2e-tester") [SKILL_TestE2E]
+→ executa: Skill("intellix:test-e2e") [SKILL_TestE2E]
 ```
 
 Bateria completa:
@@ -448,8 +448,8 @@ Projeto existente (refatorar)?
 | Design system conceitual | `ui-ux-pro-max` | 50+ estilos, 161 paletas, 57 font pairings |
 | **Design system em código** | **`design-system-patterns`** | **Tokens CSS + Tailwind theme + dark mode infra** |
 | **Polish + animações** | **`impeccable`** (`polish`/`animate`/`colorize`/...) | **Anti-AI-slop: craft, motion design, colorização** |
-| Componentes | `ckm-ui-styling` | Shadcn/UI, loading/error states, consistência |
-| Revisão UI | `web-design-guidelines` | Guidelines HIG/Material, hierarquia, micro-interações |
+| Componentes | `vercel:shadcn` | Shadcn/UI, loading/error states, consistência |
+| Revisão UI | `ui-design:visual-design-foundations` | Guidelines HIG/Material, hierarquia, micro-interações |
 | **Acessibilidade** | **`accessibility`** | **WCAG 2.1 AA/AAA, aria, contraste, teclado, screen readers** |
 | **SEO técnico** | **`seo`** | **Meta tags, schema.org, Core Web Vitals, sitemap** |
 | Performance React | `vercel-react-best-practices` | Server/Client components, bundle, caching |

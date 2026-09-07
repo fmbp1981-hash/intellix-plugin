@@ -30,7 +30,7 @@ especializadas externas em cada fase para máxima qualidade e eficiência.
  ├─ code-audit               → (projetos existentes)
  ├─ architecture             → schema + routes + repository/service
  ├─ frontend-design          → impeccable (init/shape/new-work/polish) → ui-ux-pro-max
- │                              → ckm-ui-styling → web-design-guidelines
+ │                              → vercel:shadcn → ui-design:visual-design-foundations
  ├─ agent-creation           → intellix-agent-creation (GPT Maker/n8n/Blueprint)
  ├─ dev-standards            → TypeScript + naming + patterns
  ├─ epic-workflow            → /spec → /break → /plan → /execute
@@ -70,13 +70,13 @@ especializadas externas em cada fase para máxima qualidade e eficiência.
 | 00b | `code-audit` | **Auditoria de sistemas existentes** — 10 dimensões, score, roadmap |
 | 00 | `project-kickoff` | Diagnóstico, scaffolding, estrutura canônica |
 | 01 | `architecture` | Schema Supabase, data layer, repository/service, API design, RBAC |
-| 02 | `frontend-design-workflow` | Design system, UI/UX, implementação visual (vibestack→ux→design-pro) |
+| 02 | `frontend-design-workflow` | Design system, UI/UX, implementação visual (impeccable → ui-ux-pro-max) |
 | 03 | `agent-creation` | Blueprints de agentes: GPT Maker / n8n / nativo *(opcional)* |
 | 04 | `dev-standards` | TypeScript strict, Server Actions, TanStack Query, caching, formulários |
 | 05 | `integration` | SDKs nativos (Anthropic/OpenAI), WhatsApp, Supabase Realtime, n8n opcional |
 | 06 | `security-observability` | OWASP, rate limiting, Sentry, logging estruturado *(auto-nível)* |
 | 07 | `test-e2e` | TDD, Vitest, Playwright, testes de integração |
-| 08 | `deploy` | Vercel, CI/CD GitHub Actions, DevOps, runbook, feature flags |
+| 08 | `deploy` | Cloudflare Workers, CI/CD GitHub Actions, DevOps, runbook, feature flags |
 | 09 | `handoff` | README técnico, ADRs, acesso ao cliente |
 | 10 | `live-chat` | Chat omnichannel IA + humano *(opcional)* |
 
@@ -120,7 +120,7 @@ src/
 | Linguagem | TypeScript strict |
 | Estilo | Tailwind CSS + Shadcn/UI |
 | Banco | Supabase (PostgreSQL + Auth + RLS + Edge Functions) |
-| Deploy | Vercel |
+| Deploy | Cloudflare (Workers/Pages) |
 | CI/CD | GitHub Actions |
 | Testes | Vitest (unit) + Playwright (E2E) |
 | Monitoring | Sentry + structured logging |
@@ -176,7 +176,7 @@ intellix-plugin/
 │   ├── integration/              # Native-first, n8n opcional
 │   ├── security-observability/   # ★ OWASP + Sentry + rate limit
 │   ├── test-e2e/                 # Playwright + Vitest
-│   ├── deploy/                   # Vercel + CI/CD + DevOps
+│   ├── deploy/                   # Cloudflare Workers + CI/CD + DevOps
 │   ├── project-handoff/          # Documentação + entrega
 │   └── live-chat/                # Omnichannel (opcional)
 ├── commands/

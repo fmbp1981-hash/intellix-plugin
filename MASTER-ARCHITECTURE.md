@@ -74,7 +74,7 @@ Estas regras se aplicam a 100% das decisões. Nunca negocie com elas.
 [FASE 05]  Integration      →  APIs externas, WhatsApp, n8n, SDKs de IA
 [FASE 06]  Security         →  auditoria OWASP, rate limiting, observabilidade, LGPD
 [FASE 07]  Test E2E         →  Playwright/Pytest, smoke → stress
-[FASE 08]  Deploy           →  Vercel + Cloudflare DNS checklist
+[FASE 08]  Deploy           →  Cloudflare Workers/Pages (wrangler + @opennextjs/cloudflare)
 [FASE 09]  Handoff          →  README técnico, documentação final
 
 [COMPLEMENTAR] Live Chat   →  módulo opcional de atendimento omnichannel — não é fase de
@@ -230,7 +230,7 @@ Critical/Important bloqueiam → agente corrige → revisor re-revisa. Minor →
 | Tópico | Quando consultar | Arquivo |
 |--------|-----------------|---------|
 | Segurança: checklist BÁSICO/COMPLETO, headers CSP, RBAC | Ao criar rotas, middleware, autenticação | [`references/security-rules.md`](references/security-rules.md) |
-| Testes por camada, variáveis de ambiente, CLAUDE.md template, deploy Vercel+Cloudflare | Ao configurar projeto ou preparar deploy | [`references/operations.md`](references/operations.md) |
+| Testes por camada, variáveis de ambiente, CLAUDE.md template, deploy Cloudflare (Workers/Pages) | Ao configurar projeto ou preparar deploy | [`references/operations.md`](references/operations.md) |
 
 ---
 
@@ -291,7 +291,7 @@ Criadas durante o kickoff de cada projeto em `references/` na raiz do projeto:
 | 12 | OWASP + rate limit + observabilidade + LLM/Agentes | `intellix:security-observability` | Plugin |
 | 12b | LGPD + Privacy by Design (dados pessoais) | `devsecops:lgpd-compliance` | Plugin |
 | 13 | Testes E2E smoke → stress | `intellix:test-e2e` | Plugin → Externa |
-| 14 | Deploy Vercel + Cloudflare | `intellix:deploy` | Plugin |
+| 14 | Deploy Cloudflare (Workers/Pages) | `intellix:deploy` | Plugin |
 | 15 | README + ADRs + documentação final | `intellix:handoff` | Plugin |
 
 ### Skills Externas por Fase (invocadas pelos módulos do plugin)
@@ -300,8 +300,8 @@ Criadas durante o kickoff de cada projeto em `references/` na raiz do projeto:
 |---|---|---|
 | 02 Frontend (passo 1 e 3) | `impeccable` (`init`/`shape`/`new-work`) | Arquitetura de componentes, roteamento visual e implementação UI qualidade $50k+ (substitui `vibestack-architect`/`frontend-design-pro`, arquivadas em 2026-09-07) |
 | 02 Frontend (passo 2) | `ui-ux-pro-max` | Design system: 50+ estilos, 161 paletas, 57 fontes |
-| 02 Frontend (passo 4) | `ckm-ui-styling` | Shadcn/UI, acessibilidade, loading/error states |
-| 02 Frontend (passo 5) | `web-design-guidelines` | Auditoria WCAG, UX, responsividade |
+| 02 Frontend (passo 4) | `vercel:shadcn` | Shadcn/UI, acessibilidade, loading/error states |
+| 02 Frontend (passo 5) | `ui-design:visual-design-foundations` | Auditoria WCAG, UX, responsividade |
 | 03 Agentes | `intellix-agent-creation` | GPT Maker + n8n + IntelliX Blueprint unificado |
 | 05 Integrações n8n | `n8n-workflow-patterns` | Padrões de workflow comprovados |
 | 05 Integrações n8n | `n8n-node-configuration` | Configuração de nodes por operação |

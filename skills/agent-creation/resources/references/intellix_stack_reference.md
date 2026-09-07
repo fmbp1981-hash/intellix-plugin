@@ -16,7 +16,7 @@ Reference document for the common technology stack used in IntelliX.AI agent imp
 | Animations | Framer Motion | GSAP, CSS animations |
 | State | TanStack Query v5 + Zustand | SWR, Redux, Jotai |
 | AI SDK | Vercel AI SDK v6 | LangChain, LlamaIndex, custom |
-| Deploy | Vercel | Netlify, Railway, Fly.io |
+| Deploy | Cloudflare (Workers/Pages) | Vercel, Netlify, Railway |
 | Automation | n8n (self-hosted) | Make, Zapier, Temporal |
 | WhatsApp | Evolution API | Cloud API (Meta), Z-API, WPPConnect |
 
