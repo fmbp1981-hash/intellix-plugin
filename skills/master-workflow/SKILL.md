@@ -42,8 +42,9 @@ desde a primeira ideia até o sistema em produção.
    ├─ [01] architecture         → schema DB + rotas + types + repository/service
    ├─ [02] frontend-design      → impeccable (init/shape/new-work/polish) → ui-ux-pro-max
    │                              → vercel:shadcn → ui-design:visual-design-foundations
-   ├─ [03] agent-creation       → intellix-agent-creation (se houver agentes)
-   ├─ [04] dev-standards        → TypeScript + naming + patterns
+   ├─ [03] dev-standards        → TypeScript + naming + patterns
+   ├─ [03b] agent-creation      → intellix-agent-creation (se houver agentes)
+   ├─ [04] implementação        → /spec → /break → /plan → /execute
    ├─ [05] integration          → APIs externas + WhatsApp + n8n
    ├─ [06] security-observability → OWASP + rate limiting + logs (+ devsecops:lgpd-compliance em paralelo)
    ├─ [07] test-e2e             → SKILL_TestE2E (smoke → stress)
@@ -212,26 +213,7 @@ Entregável obrigatório: `docs/design-system.md` + `PRODUCT.md` (para impeccabl
 
 ---
 
-### FASE 03 — Agent Creation
-
-> **Executar apenas se o sistema tem agentes, bots ou automação com IA.**
-
-```
-Skill("intellix:agent-creation")
-→ delega para: Skill("intellix-agent-creation")
-```
-
-A skill unificada pergunta a plataforma e executa o módulo correto:
-
-| Plataforma | Módulo | Resultado |
-|---|---|---|
-| GPT Maker | Módulo 1 | Agente configurado via MCP diretamente |
-| n8n | Módulo 2 | Workflow completo de agente no n8n |
-| IntelliX Blueprint | Módulo 3 | Blueprint v2 JSON + 20 seções |
-
----
-
-### FASE 04 — Dev Standards
+### FASE 03 — Dev Standards
 
 ```
 Skill("intellix:dev-standards")
@@ -251,7 +233,26 @@ Referência contínua durante todo o desenvolvimento:
 
 ---
 
-### FASE 04b — Implementação com Epic Workflow + Review em Dois Estágios
+### FASE 03b — Agent Creation
+
+> **Executar apenas se o sistema tem agentes, bots ou automação com IA.**
+
+```
+Skill("intellix:agent-creation")
+→ delega para: Skill("intellix-agent-creation")
+```
+
+A skill unificada pergunta a plataforma e executa o módulo correto:
+
+| Plataforma | Módulo | Resultado |
+|---|---|---|
+| GPT Maker | Módulo 1 | Agente configurado via MCP diretamente |
+| n8n | Módulo 2 | Workflow completo de agente no n8n |
+| IntelliX Blueprint | Módulo 3 | Blueprint v2 JSON + 20 seções |
+
+---
+
+### FASE 04 — Implementação com Epic Workflow + Review em Dois Estágios
 
 **Antes do `/spec` — spec de produto (opcional, features complexas):**
 
