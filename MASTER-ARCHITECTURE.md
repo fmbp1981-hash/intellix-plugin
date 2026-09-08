@@ -66,6 +66,7 @@ Estas regras se aplicam a 100% das decisões. Nunca negocie com elas.
 [FASE 00]  /projeto novo    →  zero-touch: references/ + agentes/ + estrutura SDD + npm install
 [FASE 00]  Kickoff manual   →  (projetos existentes) diagnóstico, tipo, stack
 [FASE 00b] Code Audit       →  (projetos existentes) auditoria antes de refatorar
+[FASE 00c] System Scan      →  (opcional) veredito Classe A/B/C — pré-handoff, demo, manutenção trimestral
 [FASE 01]  Architecture     →  schema DB, rotas, tipos, repository/service pattern
 [FASE 02]  Frontend Design  →  design system, tokens, componentes base, UI kit
 [FASE 03]  Dev Standards    →  TypeScript, naming, estrutura de componentes

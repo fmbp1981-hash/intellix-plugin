@@ -501,6 +501,7 @@ Após apresentar o relatório e o roadmap:
 
 | Quando usar | Skill |
 |-------------|-------|
+| Veredito de maturidade Classe A/B/C do sistema inteiro (pré-handoff, demo) | `intellix:system-scan` |
 | Executar refatoração de arquitetura | `intellix:architecture` |
 | Refatorar frontend e design system | `intellix:frontend-design` |
 | Implementar segurança técnica pós-audit | `intellix:security-observability` |

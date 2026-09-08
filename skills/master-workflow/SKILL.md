@@ -163,6 +163,11 @@ Skill("intellix:code-audit")
 ```
 Auditoria completa antes de qualquer refatoração.
 
+> **Fase 00c — System Scan (opcional, veredito Classe A/B/C):** diferente de
+> decidir "posso continuar desenvolvendo?" (code-audit), responde "este sistema
+> está no padrão de mercado 2026 pra SaaS profissional?". Rodar antes de handoff,
+> demo importante, ou como prática trimestral. `Skill("intellix:system-scan")`.
+
 ---
 
 ### FASE 01 — Architecture
