@@ -301,14 +301,23 @@ fica em tests/mocks/gateway.ts]
 {
   "mcpServers": {
     "supabase": {
-      "command": "npx",
-      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--project-ref", "<REF_DO_CLIENTE>"]
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp"
     }
   }
 }
 ```
+> **Verificado em 2026-09-08:** a Supabase descontinuou o servidor local
+> (`@supabase/mcp-server-supabase` via stdio + Personal Access Token) em favor
+> do servidor hospedado acima, com OAuth no navegador — não precisa mais de
+> token nenhum no `.mcp.json`. Cada membro do time faz login na própria conta
+> na primeira vez que o MCP conecta, e escolhe a organização/projeto certos.
+> Reverifique antes de reaproveitar este template em projeto novo — este é
+> exatamente o tipo de fato que muda rápido e não deve ser copiado de memória.
+
 > Só inclua servers que o time inteiro precisa para trabalhar neste repositório.
-> Credenciais vão por variável de ambiente, nunca inline neste arquivo.
+> Credenciais (quando o server exigir) vão por variável de ambiente, nunca
+> inline neste arquivo.
 
 **`.claude/hooks/`** — criar apenas se o projeto tiver um guardrail real
 (ex: bloquear escrita em `supabase/migrations/` sem review, rodar `tsc` após edit).

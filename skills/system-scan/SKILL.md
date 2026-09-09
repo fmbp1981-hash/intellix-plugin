@@ -170,6 +170,12 @@ npx lighthouse https://staging.seudominio.com.br --output=json --output-path=./l
 npx lighthouse https://staging.seudominio.com.br --output=json --output-path=./lighthouse-report-mobile.json
 ```
 
+> **Chrome DevTools MCP configurado em 2026-09-09** (`chrome-devtools-mcp`, Google,
+> escopo user — disponível em qualquer sessão Claude Code nesta máquina, Warp
+> incluído). Alternativa ao Lighthouse standalone: pedir pro agente medir LCP/INP/CLS
+> direto via `Skill("browser-testing-with-devtools")`, que passa a ter ferramenta
+> real por trás agora — antes disso ela existia só como instrução sem MCP conectado.
+
 **Thresholds reais de 2026** (75º percentil de usuário real Chrome, janela de 28
 dias — verificado via pesquisa nesta sessão, não assumido de memória):
 
