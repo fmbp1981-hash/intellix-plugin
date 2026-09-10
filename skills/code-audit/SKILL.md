@@ -77,6 +77,11 @@ grep -rn "@gmail\|@hotmail\|@empresa\|@seudominio" src/ app/ --include="*.ts" --
 grep -rn "createClient" src/ app/ --include="*.ts" | grep -v "^src/lib/supabase\|//\|test"
 ```
 
+> **Sugestão proativa (não automática):** se a arquitetura real for difícil de descrever em
+> prosa, ofereça gerar um diagrama real dela com `Skill("archify")` antes de escrever o
+> relatório da Dimensão 2 — acoplamento e camada pulada aparecem mais rápido num diagrama
+> que numa lista de achados. Pergunte, não gere sem confirmação.
+
 ---
 
 ### Fase 2 — Gap Analysis por Dimensão IntelliX

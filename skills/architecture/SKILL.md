@@ -114,6 +114,11 @@ Antes de escrever o primeiro `route.ts`:
 - Validation boundary: Zod em toda entrada de `request.json()` sem exceção
 - TypeScript branded types para IDs: `type UserId = string & { readonly __brand: 'UserId' }`
 
+> **Sugestão proativa (não automática):** com schema, rotas e tipos definidos, ofereça
+> gerar um diagrama da arquitetura pretendida via `Skill("archify")` antes de avançar —
+> mais barato corrigir acoplamento errado no diagrama do que depois de implementado.
+> Pergunte, não gere sem confirmação.
+
 ### Passo 4 — Handover para Fase 02 ou 03
 
 Se houver agentes → `intellix:agent-creation`

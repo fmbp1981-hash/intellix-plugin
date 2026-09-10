@@ -53,6 +53,10 @@ Veja `.env.example` para todas as variáveis necessárias.
 ## Arquitetura
 [Breve descrição das camadas do sistema]
 
+> **Sugestão proativa (não automática):** ofereça gerar um diagrama real da arquitetura
+> final via `Skill("archify")` como artefato de entrega, complementando esta seção e os
+> ADRs. Pergunte, não gere sem confirmação.
+
 ## Comandos úteis
 \`\`\`bash
 npm run dev          # desenvolvimento

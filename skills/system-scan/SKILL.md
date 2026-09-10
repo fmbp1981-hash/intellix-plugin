@@ -229,6 +229,11 @@ outro lugar — é a mesma lógica do `devsecops:security-gate`.
 
 ### Relatório e histórico
 
+> **Sugestão proativa (não automática):** antes de fechar o relatório, ofereça anexar um
+> diagrama real da arquitetura via `Skill("archify")` como evidência visual do veredito —
+> útil sobretudo em Classe B/C, onde mostrar o acoplamento real ajuda mais que descrevê-lo.
+> Pergunte, não gere sem confirmação.
+
 Gere `docs/system-scan/SCAN-[data].md` com o veredito completo, e acrescente uma
 linha a `docs/system-scan/historico.jsonl`:
 
