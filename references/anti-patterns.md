@@ -116,6 +116,72 @@ com juros altos.
 
 ---
 
+### 🔴 Diálogo Customizado Sempre Montado com `role="dialog"` Fixo
+
+```tsx
+// ❌ EXPÕE UM MODAL FANTASMA — painel "fechado" só é transladado via CSS,
+// continua no DOM com role="dialog" aria-modal="true" e aria-labelledby
+// apontando pra um <h2> vazio. Achado real: duas telas de um SaaS em produção
+// carregavam isso no estado PADRÃO (nada selecionado).
+<div
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby={titleId}
+  className={open ? 'translate-x-0' : 'translate-x-full'}
+>
+
+// ✅ Semântica de diálogo só existe quando o diálogo realmente está aberto
+<div
+  {...(open && { role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId })}
+  aria-hidden={!open}
+  className={open ? 'translate-x-0' : 'translate-x-full'}
+>
+```
+
+**Como auditar:** ver `references/accessibility-patterns.md` seção 5 (greps prontos).
+Ver também a seção 2 do mesmo arquivo para o padrão completo de diálogo customizado
+(focus trap, nome acessível, arbitragem entre diálogos aninhados).
+
+---
+
+### 🔴 Push para API Externa Não-Idempotente sem Claim Atômico
+
+```typescript
+// ❌ Cron roda 2x (retry, overlap de schedule) = cria a MESMA reserva 2x na API externa
+async function pushPendingBookings() {
+  const pending = await getPendingBookings()
+  for (const booking of pending) {
+    await externalApi.post('/bookings', booking)   // sem proteção contra duplicação
+    await markAsPushed(booking.id)
+  }
+}
+
+// ✅ Reivindica atomicamente ANTES do POST — quem perde a corrida não duplica
+// (ver references/operations.md seção "Idempotência ao empurrar dados...")
+```
+
+**Quando acontece:** integração com API de terceiro que não aceita chave de
+idempotência, cron que pode sobrepor (job lento + schedule curto, ou 2 instâncias).
+
+---
+
+### 🔴 Migration Não-Reproduzível (só funciona porque "já rodou uma vez")
+
+```
+❌ O que quebra silenciosamente por meses até alguém tentar reconstruir o banco:
+- Função/trigger criado direto no console do Supabase, nunca capturado em migration
+- Coluna adicionada em produção "pra resolver rápido", sem migration correspondente
+- Dois arquivos de migration com o mesmo prefixo numérico (colide na PK de schema_migrations)
+- Seed com FK fixa apontando pra um user_id que só existe no banco de produção
+```
+
+**Como auditar:** CI que roda `supabase db reset` (recria o banco do zero a partir só
+das migrations do repo) — ver `references/operations.md` seção "CI que aplica todas as
+migrations do zero". Se esse job não existir no projeto, drift entre migrations e
+produção pode ficar invisível indefinidamente.
+
+---
+
 ## Armadilhas — Lista de Verificação
 
 ```
@@ -133,6 +199,10 @@ com juros altos.
 ❌ Avançar para próxima issue sem testes na issue atual
 ❌ Instalar dependências não aprovadas no /plan
 ❌ Refatorar código fora do escopo da issue atual
+❌ role="dialog"/aria-modal fixo em painel que nunca desmonta (só CSS translate/opacity)
+❌ Botão só-ícone sem aria-label
+❌ POST para API externa sem idempotência em cron (usar claim atômico antes do POST)
+❌ Migration que só funciona porque "já rodou uma vez" (validar com supabase db reset no CI)
 ```
 
 ---

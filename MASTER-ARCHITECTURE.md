@@ -223,6 +223,7 @@ Critical/Important bloqueiam → agente corrige → revisor re-revisa. Minor →
 | Repository pattern, Service layer, Schema SQL, Behavior isolation | Ao criar acesso a dados | [`references/data-layer.md`](references/data-layer.md) |
 | API Response RFC 7807, Route Handler padrão, Paginação cursor-based | Ao criar Route Handlers | [`references/api-standards.md`](references/api-standards.md) |
 | TypeScript strict, Naming conventions, Estrutura de componentes | Ao criar `.tsx` ou hooks | [`references/frontend-patterns.md`](references/frontend-patterns.md) |
+| Focus trap, diálogo customizado (slide-over/modal), Select/listbox por teclado, nomes acessíveis | Ao criar painel, diálogo, dropdown ou botão só-ícone | [`references/accessibility-patterns.md`](references/accessibility-patterns.md) |
 
 ---
 
@@ -252,6 +253,7 @@ Dois conjuntos de referências disponíveis: arquivos do **plugin IntelliX** (di
 | [`references/data-layer.md`](references/data-layer.md) | Repository + Service pattern, Behavior isolation, Schema SQL + RBAC | Ao criar repositories, services, schemas ou behaviors |
 | [`references/api-standards.md`](references/api-standards.md) | apiResponse RFC 7807, Route Handler padrão, Paginação cursor | Ao criar Route Handlers ou APIs |
 | [`references/frontend-patterns.md`](references/frontend-patterns.md) | TypeScript strict, Naming conventions, Estrutura de componentes | Ao criar componentes `.tsx` ou hooks |
+| [`references/accessibility-patterns.md`](references/accessibility-patterns.md) | Hook `useFocusTrap` (com pilha p/ diálogos aninhados), padrão de diálogo customizado, Select/listbox por teclado, nomes acessíveis, greps de auditoria | Ao criar slide-over/modal/dropdown customizado, ou botão só-ícone |
 | [`references/security-rules.md`](references/security-rules.md) | Checklist BÁSICO/COMPLETO, headers CSP/HSTS, Regras DevSecOps 4-9, 5 Regras de Ouro | Ao implementar rotas, middleware, autenticação ou qualquer LLM |
 | [`references/operations.md`](references/operations.md) | Estratégia de testes, variáveis de ambiente, CLAUDE.md template, deploy | Ao configurar projeto ou preparar deploy |
 

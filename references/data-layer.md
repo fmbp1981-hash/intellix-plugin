@@ -214,3 +214,85 @@ export function hasPermission(role: Role, permission: Permission): boolean {
   return (PERMISSIONS[permission] as readonly string[]).includes(role)
 }
 ```
+
+---
+
+## Quando uma função vira `repository` vs. acesso direto — critério real
+
+Nem toda leitura de banco precisa passar por `src/repositories/`. Regra validada em
+produção (aprovada em auditoria de arquitetura real, não é relaxamento ad-hoc):
+
+> **Uma função vira `repository` quando é usada por ≥2 callers, ou quando roda fora do
+> ciclo HTTP (cron, script, job).** Uma página/rota pode acessar o Supabase diretamente
+> quando é o **único consumidor real** daquele dado — não é violação de camada, é
+> reconhecer que uma abstração com um único chamador não abstrai nada, só adiciona
+> indireção.
+
+Aplique com julgamento: se há qualquer sinal de que um segundo consumidor vem em
+breve (a feature está no roadmap), crie o repository desde já — o custo de errar para o
+lado de "abstrair cedo demais" é baixo; o custo de duplicar a mesma query em 3 lugares
+sem repository é alto.
+
+---
+
+## RLS com função `SECURITY DEFINER` para resolver tenant/role sem vazar acesso
+
+Quando uma policy RLS precisa saber o tenant ou papel do usuário autenticado, e essa
+informação vem de uma tabela que o próprio usuário não deveria poder `SELECT`
+diretamente (ex.: `user_settings` com dados de outros tenants), a solução é uma função
+`SECURITY DEFINER` — não relaxar o RLS da tabela de settings:
+
+```sql
+-- Função roda com o privilégio de quem a criou (não do usuário autenticado),
+-- então pode ler user_settings mesmo que o RLS dessa tabela bloqueie o usuário.
+CREATE OR REPLACE FUNCTION public.current_tenant_id()
+RETURNS UUID
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public  -- obrigatório: sem isso, SECURITY DEFINER é sequestrável
+                            -- por um search_path malicioso no papel de quem chama.
+AS $$
+  SELECT tenant_id FROM user_settings WHERE user_id = auth.uid() LIMIT 1;
+$$;
+
+-- Uso na policy: resolve o tenant sem dar SELECT direto na tabela de settings.
+CREATE POLICY "tenant_isolation" ON some_table
+  FOR ALL USING (user_id = current_tenant_id());
+```
+
+**Regra:** `SECURITY DEFINER` em função usada dentro de `USING`/`WITH CHECK` de policy
+não é descuido — é a forma correta de RLS multi-tenant quando o dado de tenant/role
+não pode ser lido diretamente pelo `auth.uid()` do chamador. O que **não** é opcional:
+`SET search_path` fixo na função (nunca deixar herdar o search_path do chamador).
+
+---
+
+## Tabelas operacionais/tenant-agnósticas: RLS habilitado, sem policy pública
+
+Nem toda tabela pertence a um tenant. Logs de cron, eventos brutos de webhook antes de
+qualquer resolução de tenant, e tabelas de auditoria são exemplos de dados que **nenhum
+usuário autenticado** deveria ler via `auth.uid()` — só o `service_role` (crons,
+webhooks, scripts administrativos) acessa.
+
+```sql
+CREATE TABLE cron_runs (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  job_name    TEXT NOT NULL,
+  started_at  TIMESTAMPTZ NOT NULL,
+  finished_at TIMESTAMPTZ,
+  ok          BOOLEAN,
+  result      JSONB,
+  error       TEXT
+);
+
+ALTER TABLE cron_runs ENABLE ROW LEVEL SECURITY;
+-- Sem CREATE POLICY nenhuma: RLS ligado bloqueia todo mundo exceto service_role
+-- (que ignora RLS por design). Isso é intencional, não um TODO esquecido —
+-- documente esse motivo no comentário da migration para o próximo dev não
+-- "corrigir" adicionando uma policy `auth.uid() = ...` que não faz sentido aqui.
+```
+
+**Regra:** "RLS em toda tabela" (security-rules.md) não significa "toda tabela tem uma
+policy de usuário". Significa: toda tabela decide explicitamente sua exposição — para
+dado tenant-agnóstico, a decisão correta é RLS ligado + zero policy (deny-all exceto
+service_role), não RLS desligado.
