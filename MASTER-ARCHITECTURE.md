@@ -284,7 +284,7 @@ Criadas durante o kickoff de cada projeto (lista normativa: `artefatos_projeto` 
 
 | Fase Plugin | Skills externas invocadas | Função |
 |---|---|---|
-| 02 Frontend (passo 1 e 3) | `impeccable` (`init`/`shape`/`new-work`) | Arquitetura de componentes, roteamento visual e implementação UI qualidade $50k+ (substitui `vibestack-architect`/`frontend-design-pro`, arquivadas em 2026-09-07) |
+| 02 Frontend (passo 1 e 3) | `impeccable:impeccable` (`init`/`shape`/`new-work`) | Arquitetura de componentes, roteamento visual e implementação UI qualidade $50k+ (substitui `vibestack-architect`/`frontend-design-pro`, arquivadas em 2026-09-07) |
 | 02 Frontend (passo 2) | `ui-ux-pro-max` | Design system: 50+ estilos, 161 paletas, 57 fontes |
 | 02 Frontend (passo 4) | `vercel:shadcn` | Shadcn/UI, acessibilidade, loading/error states |
 | 02 Frontend (passo 5) | `ui-design:visual-design-foundations` | Auditoria WCAG, UX, responsividade |

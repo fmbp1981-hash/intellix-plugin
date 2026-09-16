@@ -13,7 +13,7 @@ user-invocable: false
 # Fase 02 — Frontend Design
 
 Orquestrador de UI/UX. Garante que nenhum componente seja escrito sem design system
-definido. Executa 5 skills (`impeccable` cobrindo estrutura, implementação e polish em
+definido. Executa 5 skills (`impeccable:impeccable` cobrindo estrutura, implementação e polish em
 pontos diferentes do fluxo) em sequência obrigatória antes de qualquer implementação visual.
 
 > **PRÉ-REQUISITO:** A Fase 01 (architecture) deve estar concluída — rotas, tipos e
@@ -58,12 +58,12 @@ Anuncie cada fase para o usuário antes de executar:
 ---
 
 > **Nome da skill:** use sempre `impeccable:impeccable` (plugin v4, habilitado). Existe uma
-> cópia antiga solta chamada só `impeccable` que está sendo arquivada — não invoque pelo nome curto.
+> cópia antiga solta chamada só `impeccable` (legado) que está sendo arquivada — não invoque pelo nome curto.
 
-### Passo 1 — Contexto & Plano de UI `impeccable` (`init` → `shape`)
+### Passo 1 — Contexto & Plano de UI `impeccable:impeccable` (`init` → `shape`)
 
 > **Nota de manutenção (2026-09-07):** `vibestack-architect` foi consolidada dentro do
-> `impeccable` e arquivada (`skills-archived-2026-09-07/`). O `impeccable` cobre
+> `impeccable:impeccable` e arquivada (`skills-archived-2026-09-07/`). O `impeccable:impeccable` cobre
 > integralmente o que ela fazia — inclusive criação de superfície nova do zero, via
 > `init` → `shape`/`new-work` — não é só uma skill de polish. Ver `~/.claude/WORKFLOW-SPINE-VS-ORBIT.md (histórico)`
 > seção 4A.
@@ -79,7 +79,7 @@ Antes de qualquer pixel, defina a estrutura:
   superfície nova ou substituição de visual world, entra em `new-work` (decide o
   "mundo visual": minimalismo, glassmorphism, brutalism, dark luxury etc.)
 - Stack visual: Next.js 15 + Tailwind + Shadcn/UI (padrão IntelliX) — informar isso ao
-  `impeccable` via `PRODUCT.md`/contexto do projeto
+  `impeccable:impeccable` via `PRODUCT.md`/contexto do projeto
 - Estrutura de componentes: `src/components/ui/` (primitivos) + `src/components/[feature]/` (compostos)
 - Roteamento visual: grupos `(auth)`, `(dashboard)`, páginas públicas
 
@@ -125,9 +125,9 @@ Design system documentado no `DESIGN.md` da raiz do projeto — cores, fontes, t
 
 ---
 
-### Passo 2b — Tokens e Infraestrutura Tailwind `design-system-patterns`
+### Passo 2b — Tokens e Infraestrutura Tailwind `ui-design:design-system-patterns`
 
-**Invoke:** `Skill("design-system-patterns")`
+**Invoke:** `Skill("ui-design:design-system-patterns")`
 
 Converte o design system conceitual do Passo 2 em infraestrutura real de tokens e tema:
 
@@ -143,10 +143,10 @@ Converte o design system conceitual do Passo 2 em infraestrutura real de tokens 
 
 ---
 
-### Passo 3 — Implementação Visual `impeccable` (`new-work`)
+### Passo 3 — Implementação Visual `impeccable:impeccable` (`new-work`)
 
 > **Nota de manutenção (2026-09-07):** o plugin `frontend-design` (que fornecia
-> `frontend-design-pro`) foi **desabilitado** — consolidado no `impeccable`. Não invoque
+> `frontend-design-pro`) foi **desabilitado** — consolidado no `impeccable:impeccable`. Não invoque
 > `frontend-design-pro`, essa skill não está mais habilitada.
 
 **Invoke:** `Skill("impeccable:impeccable")` — sem sub-comando explícito, a implementação de uma
@@ -183,7 +183,7 @@ Componentes de página implementados, funcionais, com animações base e imagens
 
 ---
 
-### Passo 3b — Polish e Animações Avançadas `impeccable`
+### Passo 3b — Polish e Animações Avançadas `impeccable:impeccable`
 
 **Invoke:** `Skill("impeccable:impeccable")`
 
@@ -257,7 +257,7 @@ Revisão final obrigatória em 3 camadas — executar as 3 skills em sequência:
 **Entregável:** Lista de issues encontradas (separada por camada) e correções aplicadas.
 
 > **Fluxo completo Fase 02:**
-> `impeccable init/shape` → `ui-ux-pro-max` → `design-system-patterns` → `impeccable new-work` (implementação) → `impeccable polish/animate/colorize` → `vercel:shadcn` → `ui-design:visual-design-foundations` + `accessibility` + `seo`
+> `impeccable init/shape` → `ui-ux-pro-max` → `ui-design:design-system-patterns` → `impeccable new-work` (implementação) → `impeccable polish/animate/colorize` → `vercel:shadcn` → `ui-design:visual-design-foundations` + `accessibility` + `seo`
 
 ---
 
@@ -353,8 +353,8 @@ Atualize `.intellix-phase` para `dev`.
 
 | Quando usar | Skill |
 |-------------|-------|
-| Criação de superfície nova, plano de UX/UI, implementação e polish | `impeccable` (`init`/`shape`/`new-work`/`polish`/`animate`/...) |
-| Tokens CSS, tema Tailwind, design system em código | `design-system-patterns` |
+| Criação de superfície nova, plano de UX/UI, implementação e polish | `impeccable:impeccable` (`init`/`shape`/`new-work`/`polish`/`animate`/...) |
+| Tokens CSS, tema Tailwind, design system em código | `ui-design:design-system-patterns` |
 | Design system avançado com tokens e slide deck | `ckm-design-system` |
 | Banners, assets visuais para marketing | `ckm-banner-design` |
 | Auditoria completa WCAG AA/AAA | `accessibility` |

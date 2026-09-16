@@ -510,7 +510,7 @@ export function hasPermission(role: Role, permission: Permission): boolean {
 |-------------|-------|
 | Otimizar queries, índices e performance no Supabase | `supabase-postgres-best-practices` |
 | Escrever plano de arquitetura detalhado antes de implementar | `superpowers:writing-plans` |
-| Projeto é landing page / site de marketing | `impeccable` (`init`/`shape`) |
+| Projeto é landing page / site de marketing | `impeccable:impeccable` (`init`/`shape`) |
 | Performance de componentes React e Server Components | `vercel-react-best-practices` |
 
 ---

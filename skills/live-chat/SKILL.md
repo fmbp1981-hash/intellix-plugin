@@ -406,7 +406,7 @@ agent-creation → [live-chat] → dev-standards → test-e2e → deploy
 | Quando usar | Skill |
 |-------------|-------|
 | Sistema de chat standalone já existente que precisa de IA + handoff | `SKILL-chat-inteligente` |
-| UI do painel de atendimento com design profissional | `impeccable` (`new-work`/`polish`) |
+| UI do painel de atendimento com design profissional | `impeccable:impeccable` (`new-work`/`polish`) |
 | Styling dos componentes de chat com shadcn/ui | `ckm-ui-styling` |
 | Integração WhatsApp/n8n para roteamento de canais | `intellix:integration` |
 | Schema Supabase do chat com boas práticas de performance | `supabase-postgres-best-practices` |

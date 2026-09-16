@@ -200,7 +200,7 @@ Skill("intellix:frontend-design")
 
 Sequência de **8 steps** em ordem obrigatória (5 skills principais + auditoria 3 camadas —
 `vibestack-architect` e `frontend-design-pro` foram arquivadas/desabilitadas em 2026-09-07
-e consolidadas dentro do `impeccable`, ver `~/.claude/WORKFLOW-SPINE-VS-ORBIT.md (histórico)` seção 4A):
+e consolidadas dentro do `impeccable:impeccable`, ver `~/.claude/WORKFLOW-SPINE-VS-ORBIT.md (histórico)` seção 4A):
 
 ```
 1. impeccable (init → shape)  → PRODUCT.md + plano de UX/UI, estrutura e roteamento visual
@@ -448,10 +448,10 @@ Projeto existente (refatorar)?
 | **API de qualquer lib** | **Context7 MCP** (`resolve-library-id` + `query-docs`) | **Docs atuais de Next.js/Supabase/Tailwind — nunca assuma a API** |
 | Schema DB | `supabase-postgres-best-practices` | Índices, RLS, performance desde o início |
 | LGPD + dados pessoais | `devsecops:lgpd-compliance` | 10 bases legais, 9 direitos, Privacy by Design, ANPD |
-| UI estrutura + implementação | `impeccable` (`init`/`shape`/`new-work`) | Arquitetura de componentes antes de pixel + implementação de superfície nova (substitui `vibestack-architect`/`frontend-design-pro`, arquivadas em 2026-09-07) |
+| UI estrutura + implementação | `impeccable:impeccable` (`init`/`shape`/`new-work`) | Arquitetura de componentes antes de pixel + implementação de superfície nova (substitui `vibestack-architect`/`frontend-design-pro`, arquivadas em 2026-09-07) |
 | Design system conceitual | `ui-ux-pro-max` | 50+ estilos, 161 paletas, 57 font pairings |
-| **Design system em código** | **`design-system-patterns`** | **Tokens CSS + Tailwind theme + dark mode infra** |
-| **Polish + animações** | **`impeccable`** (`polish`/`animate`/`colorize`/...) | **Anti-AI-slop: craft, motion design, colorização** |
+| **Design system em código** | **`ui-design:design-system-patterns`** | **Tokens CSS + Tailwind theme + dark mode infra** |
+| **Polish + animações** | **`impeccable:impeccable`** (`polish`/`animate`/`colorize`/...) | **Anti-AI-slop: craft, motion design, colorização** |
 | Componentes | `vercel:shadcn` | Shadcn/UI, loading/error states, consistência |
 | Revisão UI | `ui-design:visual-design-foundations` | Guidelines HIG/Material, hierarquia, micro-interações |
 | **Acessibilidade** | **`accessibility`** | **WCAG 2.1 AA/AAA, aria, contraste, teclado, screen readers** |
