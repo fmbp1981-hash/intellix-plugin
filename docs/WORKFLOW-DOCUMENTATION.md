@@ -350,7 +350,7 @@ Sequência obrigatória de 9 steps em ordem:
 | 5b | `accessibility` | WCAG 2.1 AA/AAA: contraste, aria, teclado, screen readers |
 | 5c | `seo` | Meta tags, schema.org, Core Web Vitals, sitemap |
 
-**Entregáveis:** `docs/design-system.md` · `PRODUCT.md` · Componentes base implementados.
+**Entregáveis:** `DESIGN.md` · `PRODUCT.md` (raiz do projeto) · Componentes base implementados.
 
 **Milestone:** Design system em código. Primeiras telas implementadas e aprovadas.
 

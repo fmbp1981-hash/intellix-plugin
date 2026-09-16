@@ -18,7 +18,7 @@ dispensar explicitamente um pré-requisito.
 **Verificação de julgamento (o script não consegue checar estas):**
 ```
 [ ] issue tem plano aprovado com as 7 seções preenchidas
-[ ] references/architecture.md e references/DESIGN.md lidos
+[ ] references/architecture.md e DESIGN.md (raiz, se houver UI) lidos
 [ ] context window abaixo de 50%
 ```
 

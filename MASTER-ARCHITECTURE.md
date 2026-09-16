@@ -262,16 +262,18 @@ Dois conjuntos de referências disponíveis: arquivos do **plugin IntelliX** (di
 
 ### Referências por Projeto
 
-Criadas durante o kickoff de cada projeto em `references/` na raiz do projeto:
+Criadas durante o kickoff de cada projeto (lista normativa: `artefatos_projeto` em `~/.claude/metodologia.yaml`):
 
 | Arquivo | Conteúdo | Quando ler |
 |---------|----------|-----------|
 | `references/architecture.md` | Regras de isolamento, naming, estrutura específica do projeto | Sempre, antes de `/plan` |
-| `references/DESIGN.md` | Design tokens, paletas, tipografia, componentes base | Antes de qualquer componente UI |
-| `references/specification.md` | Template e exemplos de spec bem escritas | Ao escrever um `/spec` |
+| `DESIGN.md` (raiz, não em `references/`) | Design tokens, paletas, tipografia, componentes base — mantido pelo `impeccable:impeccable` | Antes de qualquer componente UI |
+| `PRODUCT.md` (raiz) | Contexto de produto para o Impeccable (público, tom, objetivos) | Antes de qualquer trabalho de UI |
+| `references/security.md` | Checklist de segurança do projeto (derivado da baseline DevSecOps) | Antes de rotas, auth e deploy |
+| `references/stack.md` | Versões e decisões de stack do projeto | Ao adicionar dependência |
 | `references/workflow.md` | Resumo compacto do workflow para o time | Onboarding de novos devs |
 
-> **Regra:** Sempre consulte `references/architecture.md` e `references/DESIGN.md` do projeto antes de implementar qualquer issue — são a memória de longo prazo do projeto.
+> **Regra:** Sempre consulte `references/architecture.md` e o `DESIGN.md` da raiz (se houver UI) do projeto antes de implementar qualquer issue — são a memória de longo prazo do projeto.
 
 ---
 

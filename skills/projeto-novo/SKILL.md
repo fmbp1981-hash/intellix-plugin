@@ -122,6 +122,7 @@ Criar a seguinte estrutura de pastas (apenas diretórios — arquivos vêm nos p
 │   ├── unit/
 │   ├── integration/
 │   └── e2e/
+├── DESIGN.md
 ├── references/
 ├── agentes/
 └── issues/
@@ -131,7 +132,7 @@ Criar a seguinte estrutura de pastas (apenas diretórios — arquivos vêm nos p
 
 ## PASSO 4 — Gerar `references/` com Placeholders Substituídos
 
-Criar os 5 arquivos abaixo com os placeholders já substituídos pelos valores do Passo 1.
+Criar os 4 arquivos de `references/` e o `DESIGN.md` semente na raiz, com os placeholders já substituídos pelos valores do Passo 1.
 
 ### `references/architecture.md`
 
@@ -178,7 +179,7 @@ nome-do-behavior/
 - **Supabase project:** {{SUPABASE_PROJECT_ID}}
 ```
 
-### `references/design_system.md`
+### `DESIGN.md` (raiz do projeto — semente; template em `intellix-templates/root-template/DESIGN.md`)
 
 ```markdown
 # Design System — {{PROJECT_NAME}}
@@ -474,7 +475,7 @@ Criar os 4 arquivos JSON em `agentes/` com `{{PROJECT_NAME}}` substituído:
   "scope": "ui-only",
   "reads_before_start": [
     "references/architecture.md",
-    "references/design_system.md"
+    "DESIGN.md"
   ],
   "forbidden_paths": [
     "lib/db/",
@@ -604,7 +605,7 @@ init → ver .intellix-phase
 
 ## References do projeto (ler antes de qualquer /plan)
 - `references/architecture.md` — regras de isolamento e estrutura
-- `references/design_system.md` — cores {{PRIMARY_COLOR}} / {{SECONDARY_COLOR}}, tipografia, componentes
+- `DESIGN.md` (raiz) — cores {{PRIMARY_COLOR}} / {{SECONDARY_COLOR}}, tipografia, componentes
 - `references/security.md` — checklist pré-PR
 - `references/stack.md` — versões fixas, não sugerir alternativas
 - `references/workflow.md` — regras operacionais para agentes
@@ -688,7 +689,8 @@ Exibir relatório:
 📁 Estrutura criada:
    {{PROJECT_SLUG}}/
    ├── .github/workflows/security.yml  ← DevSecOps CI/CD (Gitleaks + Semgrep + Trivy)
-   ├── references/    ← 5 arquivos customizados (architecture, design_system, workflow, stack, security)
+   ├── DESIGN.md      ← design system semente (mantido depois pelo impeccable:impeccable)
+   ├── references/    ← 4 arquivos customizados (architecture, workflow, stack, security)
    ├── agentes/       ← 4 agentes compilados (model_writer, action_writer, component_writer, test_writer)
    ├── src/           ← estrutura SDD pronta
    ├── .env.local     ← secrets configurados

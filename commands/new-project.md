@@ -10,7 +10,7 @@ Use a skill `intellix:projeto-novo` agora para inicializar o projeto.
 
 O comando `/projeto novo` faz o seguinte automaticamente:
 1. Coleta até 5 inputs (nome, descrição, cliente, cor, infra opcional)
-2. Gera `references/` com 5 arquivos customizados (architecture, design_system, workflow, stack, security)
+2. Gera `references/` com 4 arquivos customizados (architecture, workflow, stack, security) e o `DESIGN.md` semente na raiz
 3. Compila 4 agentes especializados em `agentes/` (model_writer, action_writer, component_writer, test_writer)
 4. Cria estrutura SDD completa com pastas canônicas
 5. Gera `.env.local` com secrets e `.env.example` commitável

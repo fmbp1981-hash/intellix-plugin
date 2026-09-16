@@ -4,7 +4,7 @@
   "scope": "ui-only",
   "reads_before_start": [
     "references/architecture.md",
-    "references/design_system.md"
+    "DESIGN.md"
   ],
   "forbidden_paths": [
     "lib/db/",

@@ -121,7 +121,7 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<tipo> <industria>" --de
 - Se não existe: extrair design system do visual atual, depois propor melhorias
 
 **Entregável obrigatório antes do Passo 2b:**
-Design system documentado em `docs/design-system.md` — cores, fontes, tokens, anti-patterns visuais.
+Design system documentado no `DESIGN.md` da raiz do projeto — cores, fontes, tokens, anti-patterns visuais (o `impeccable:impeccable document` gera/atualiza a partir do código).
 
 ---
 

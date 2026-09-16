@@ -119,7 +119,7 @@ Apresente ao usuário e aguarde confirmação da ordem antes de continuar.
    - **Frente 1 — Codebase interna:** buscar com glob/grep por componentes, hooks, actions e utilities já existentes. Nunca duplicar o que já existe.
    - **Frente 2 — Documentação oficial:** consultar docs de Next.js, Supabase, Shadcn etc. para padrões comprovados — não inventar o que já está documentado.
    - **Frente 3 — Repos de referência (hack poderoso):** se a issue envolve padrão complexo (auth, pagamentos, realtime), clonar repo aberto com solução similar para `.temp/`, ler, absorver padrões, deletar `.temp/` depois.
-3. Consultar `MASTER-ARCHITECTURE.md` e `references/DESIGN.md`
+3. Consultar `MASTER-ARCHITECTURE.md` e `DESIGN.md` (raiz do projeto, se houver UI)
 4. Preencher as 7 seções obrigatórias na issue
 5. Apresentar ao usuário e aguardar aprovação explícita
 6. **NÃO escrever código ainda**
@@ -206,7 +206,7 @@ Cada arquivo da seção "Files" do plano passa pelos **3 estágios obrigatórios
 #### Pré-execução (uma vez por issue)
 
 1. Ler a issue com plano aprovado
-2. Consultar `MASTER-ARCHITECTURE.md` e `references/DESIGN.md`
+2. Consultar `MASTER-ARCHITECTURE.md` e `DESIGN.md` (raiz do projeto, se houver UI)
 3. Extrair todos os arquivos das seções "Files to Create" e "Files to Modify"
 4. Para cada arquivo, identificar o agente correto (ver tabela em `MASTER-ARCHITECTURE.md §4`)
 5. Criar lista de tasks no TodoWrite: um item por arquivo
@@ -225,7 +225,7 @@ Para cada arquivo na lista "Files":
     - Spec completa da issue (seção Functional Specification)
     - Caminho exato do arquivo e o que deve conter
     - references/architecture.md do projeto
-    - references/DESIGN.md (se .tsx)
+    - DESIGN.md na raiz do projeto (se .tsx)
     - forbidden_paths do agente (não herdar contexto da sessão)
   O agente: implementa → roda testes → faz self-review → reporta
 
@@ -385,7 +385,7 @@ Se algum item estiver desmarcado, **não execute**. Volte e ajuste.
 [ ] /plan rodou e gerou PRD / plano completo
 [ ] /clear executado depois do plano aprovado
 [ ] Plano tático com paths absolutos pronto
-[ ] references/architecture.md e references/DESIGN.md lidos
+[ ] references/architecture.md e DESIGN.md (raiz, se houver UI) lidos
 [ ] Agente correto identificado para cada tipo de arquivo
 [ ] Context window abaixo de 50% antes de iniciar execução
 ```

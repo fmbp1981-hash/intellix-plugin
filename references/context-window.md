@@ -45,7 +45,7 @@ O plano aprovado substitui tudo isso com 1/10 dos tokens e carrega apenas o que 
 Após gerar o PRD / plano da issue:
 - O plano aprovado = resumo destilado da pesquisa
 - Delete o histórico de navegação/pesquisa da sessão
-- Carregue apenas: plano + `references/architecture.md` + `references/DESIGN.md`
+- Carregue apenas: plano + `references/architecture.md` + `DESIGN.md` (raiz do projeto, se houver UI)
 
 ### 3. Agentes em contextos separados
 

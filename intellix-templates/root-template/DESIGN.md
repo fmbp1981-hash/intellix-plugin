@@ -1,6 +1,10 @@
 # Design System — {{PROJECT_NAME}}
 
 > Gerado em: {{CREATED_AT}}
+> **Semente.** Este arquivo vive na RAIZ do projeto (`DESIGN.md`) — é o mesmo arquivo
+> que o `impeccable:impeccable` grava e mantém (sub-comando `document`). Depois que a
+> UI existir, deixe o Impeccable reescrevê-lo a partir do código real. Não crie outra
+> cópia em `references/` ou `docs/`: uma única fonte de design por projeto.
 
 ## Tokens de Cor
 

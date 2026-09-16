@@ -214,7 +214,7 @@ e consolidadas dentro do `impeccable`, ver `WORKFLOW-SPINE-VS-ORBIT.md` seção 
 5c. seo                       → meta tags, schema.org, Core Web Vitals, sitemap
 ```
 
-Entregável obrigatório: `docs/design-system.md` + `PRODUCT.md` (para impeccable).
+Entregável obrigatório: `DESIGN.md` + `PRODUCT.md` na raiz do projeto (ambos mantidos pelo `impeccable:impeccable`).
 
 ---
 
