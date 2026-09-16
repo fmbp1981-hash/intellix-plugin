@@ -131,6 +131,12 @@ Se não houver → `intellix:dev-standards`
 
 Atualize `.intellix-phase` para `dev`.
 
+Com a fase em `dev`, crie o scaffolding de segurança que o kickoff deixou pendente
+(o gate não permitia código em `src/` antes):
+- `src/lib/lgpd/pii-redactor.ts` — se o projeto trata dado pessoal;
+- `src/lib/ai/guardrails.ts` — se o projeto chama LLMs;
+usando os blocos de código de `references/security.md`, e remova a pendência do `CLAUDE.md`.
+
 ---
 
 ## Passo 5 — Data Layer (Repository + Service Pattern)

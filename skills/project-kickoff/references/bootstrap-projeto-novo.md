@@ -69,8 +69,12 @@ Crie também `issues/` (vazio, com `.gitkeep`).
 | Arquivo | Quando | Fonte |
 |---|---|---|
 | `.github/workflows/security.yml` | sempre | bloco YAML (Gitleaks + Semgrep + Trivy) em `references/security.md` |
-| `src/lib/lgpd/pii-redactor.ts` | `HAS_PERSONAL_DATA = S` | bloco de código em `references/security.md` |
-| `src/lib/ai/guardrails.ts` | `HAS_LLM = S` | bloco de código (Camadas 1 e 4) em `references/security.md` |
+
+O kickoff **não escreve código em `src/`**: o gate de fase bloqueia código de produção
+enquanto `.intellix-phase` for `init` ou `arch`. `src/lib/lgpd/pii-redactor.ts`
+(`HAS_PERSONAL_DATA = S`) e `src/lib/ai/guardrails.ts` (`HAS_LLM = S`) são criados no fim
+da Fase 01, depois que a fase avança para `dev` — registre essa pendência no `CLAUDE.md`
+do projeto (seção "Pendências do kickoff").
 
 Tabelas LGPD (consentimento, requisições de titular, log de tratamento) **não** são criadas
 aqui: entram nas primeiras migrations da Fase 01, conforme `devsecops:lgpd-compliance`

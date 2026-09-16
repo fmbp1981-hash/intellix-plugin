@@ -32,8 +32,8 @@ exigir_arquitetura_definida() {
 
 exigir_dir_nao_vazio() {
   local caminho="$1" motivo="$2"
-  # Ignora arquivos ocultos: o kickoff cria issues/.gitkeep, que não é uma issue.
-  if [[ ! -d "$caminho" ]] || [[ -z "$(find "$caminho" -mindepth 1 ! -name '.*' -print -quit 2>/dev/null)" ]]; then
+  # Conta só ARQUIVOS não ocultos: issues/.gitkeep não é issue e tests/unit/ vazio não é teste.
+  if [[ ! -d "$caminho" ]] || [[ -z "$(find "$caminho" -type f ! -name '.*' -print -quit 2>/dev/null)" ]]; then
     FALHAS+=("FALTA: $caminho/ vazio ou inexistente — $motivo")
   fi
 }
@@ -61,12 +61,15 @@ case "$FASE" in
     exigir_arquivo ".intellix-phase" "projeto nao inicializado"
     exigir_arquivo "references/security.md" \
       "Fase 06 (security-observability) nao concluida — deploy sem checklist de seguranca"
+    exigir_arquitetura_definida
     exigir_dir_nao_vazio "tests" \
       "Fase 07 (test-e2e) nao concluida — sem testes nao ha deploy"
     ;;
   handoff)
     exigir_arquivo ".intellix-phase" "projeto nao inicializado"
     exigir_arquivo "README.md" "handoff exige README tecnico"
+    exigir_arquivo "docs/deploys.jsonl" \
+      "Fase 08 (deploy) nao registrou nenhum deploy — handoff exige sistema publicado"
     ;;
   *)
     echo "phase-gate: fase desconhecida '${FASE}'. Use: plan|execute|deploy|handoff" >&2
