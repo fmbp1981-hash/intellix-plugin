@@ -63,7 +63,7 @@ Anuncie cada fase para o usuário antes de executar:
 ### Passo 1 — Contexto & Plano de UI `impeccable:impeccable` (`init` → `shape`)
 
 > **Nota de manutenção (2026-09-07):** `vibestack-architect` foi consolidada dentro do
-> `impeccable:impeccable` e arquivada (`skills-archived-2026-09-07/`). O `impeccable:impeccable` cobre
+> `impeccable:impeccable` e arquivada (`~/.claude/skills-archive/2026-09-07/`). O `impeccable:impeccable` cobre
 > integralmente o que ela fazia — inclusive criação de superfície nova do zero, via
 > `init` → `shape`/`new-work` — não é só uma skill de polish. Ver `~/.claude/WORKFLOW-SPINE-VS-ORBIT.md (histórico)`
 > seção 4A.
