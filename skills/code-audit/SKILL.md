@@ -8,7 +8,8 @@ description: >
   "está mal organizado", "quero limpar o código", "adaptar ao padrão IntelliX",
   "enquadrar no padrão", code review do projeto, dívida técnica, technical debt,
   ou qualquer indicação de que o sistema já existe e precisa de melhoria estrutural.
-  Esta skill substitui o project-kickoff quando o projeto já existe.
+  É a auditoria de entrada (Fase 00b) de projeto existente; a estrutura IntelliX que
+  faltar é criada depois pelo project-kickoff no modo adaptação.
 user-invocable: true
 ---
 
@@ -26,10 +27,12 @@ refatoração executável fase a fase.
 ## Quando usar esta skill vs project-kickoff
 
 ```
-Sistema já existe com código? → code-audit (esta skill)
-Sistema novo a ser criado?    → project-kickoff (Fase 00)
-Sistema existente mas sem estrutura IntelliX alguma?     → code-audit primeiro
-Sistema com estrutura parcial IntelliX e precisa avançar? → code-audit primeiro
+Sistema novo a ser criado?                                → project-kickoff (modo projeto novo)
+Sistema já existe com código?                             → code-audit (esta skill)
+Existente sem estrutura IntelliX alguma?                  → code-audit, depois project-kickoff (modo adaptação)
+Existente com estrutura parcial e precisa avançar?        → code-audit primeiro
+Véspera de handoff/demo, quer veredito de maturidade?     → intellix:system-scan (auditoria de saída)
+Vai para produção?                                        → devsecops:security-gate (gate de segurança)
 ```
 
 ---

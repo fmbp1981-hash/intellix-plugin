@@ -2,6 +2,12 @@
 
 > Extraído de MASTER-ARCHITECTURE.md — índice em [§13–17](../MASTER-ARCHITECTURE.md).
 > Consulte ao implementar autenticação, autorização, middleware, headers de segurança ou qualquer rota pública.
+>
+> **Hierarquia de segurança (decisão D8, 2026-09-16):** baseline, gate e LGPD têm autoridade
+> própria no plugin DevSecOps — `devsecops:security-baseline`, `devsecops:security-gate` e
+> `devsecops:lgpd-compliance`. Este arquivo cobre só regras de **implementação** IntelliX
+> (middleware, Zod, headers, guardrails de LLM). Em caso de conflito de severidade, prazo ou
+> controle, vale o DevSecOps.
 
 ## 13. Segurança — Checklist por Nível
 

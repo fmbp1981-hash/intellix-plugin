@@ -1,7 +1,13 @@
 # Segurança & DevSecOps — {{PROJECT_NAME}}
 
 > Validar ANTES de cada PR/merge. Zero exceções.
-> Gerado em: {{CREATED_AT}} | Framework: IntelliX DevSecOps v2.0
+> Gerado em: {{CREATED_AT}}
+>
+> **Hierarquia de segurança (decisão D8, 2026-09-16):** baseline, gate e LGPD têm autoridade
+> própria no plugin DevSecOps — `devsecops:security-baseline`, `devsecops:security-gate` e
+> `devsecops:lgpd-compliance`. Este arquivo cobre só regras de **implementação** IntelliX
+> (middleware, Zod, headers, guardrails de LLM). Em caso de conflito de severidade, prazo ou
+> controle, vale o DevSecOps.
 
 ## As 5 Regras de Ouro IntelliX (inegociáveis)
 
@@ -11,7 +17,7 @@
 | 2 | Credencial no código é infração interna — zero tolerância |
 | 3 | Dado de produção jamais entra em ambiente de desenvolvimento |
 | 4 | Nenhum agente vai a produção sem validador de output implementado |
-| 5 | Incidente: 2h interno · 24h cliente · 3 dias úteis ANPD (Res. CD/ANPD nº 15/2024) |
+| 5 | Incidente: 2h interno · 24h cliente · prazo ANPD conforme norma vigente (Res. CD/ANPD nº 15/2024 na data do template — confirmar em `devsecops:lgpd-compliance`) |
 
 ---
 
