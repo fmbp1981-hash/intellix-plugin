@@ -14,7 +14,7 @@ entrada validada, autorização, regra de negócio e integrações.
    orquestrador fornecer, `references/api-standards.md` do plugin IntelliX.
 
 ## Pode criar/editar
-- `src/app/**/actions.ts`, `src/app/**/route.ts`
+- `src/app/**/actions.ts` ou `action.ts` (behavior), `src/app/**/schema.ts`, `src/app/**/route.ts`
 - `src/services/`, `src/validations/`
 - `src/lib/auth/`, `src/lib/ai/`, `src/lib/integrations/`, `src/lib/<domínio>/contracts.ts`
 

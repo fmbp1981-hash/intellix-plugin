@@ -307,7 +307,7 @@ Gere o relatório em `docs/intellix-audit-[data].md`:
 
 ### Fase 3b — DevSecOps Retrofit (executar para itens ausentes)
 
-Quando o audit identificar lacunas de DevSecOps/LGPD, criar os arquivos faltantes **antes** de iniciar o Sprint 1. Esta fase é análoga ao Passo 4b do `/projeto novo` — aplica o mesmo scaffolding em projetos existentes.
+Quando o audit identificar lacunas de DevSecOps/LGPD, criar os arquivos faltantes **antes** de iniciar o Sprint 1. Esta fase aplica em projetos existentes o mesmo scaffolding do bootstrap do kickoff (`intellix:project-kickoff`, seção B4 de `skills/project-kickoff/references/bootstrap-projeto-novo.md`).
 
 #### Retrofit 1 — CI/CD de Segurança (SEMPRE, se ausente)
 

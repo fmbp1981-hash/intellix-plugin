@@ -3,6 +3,8 @@
 > Gerado em: {{CREATED_AT}} | Template: IntelliX SDD v{{TEMPLATE_VERSION}}
 > Regras inegociáveis do projeto. Consulte ANTES de qualquer /plan.
 
+<!-- intellix-rascunho-kickoff — a Fase 01 (intellix:architecture) apaga esta linha ao preencher a seção 6. O phase gate de /plan e /execute bloqueia enquanto ela existir. -->
+
 ## 1. Compartimentação de Behaviors
 
 - Cada comportamento tem sua própria pasta dentro da rota
@@ -38,3 +40,9 @@ nome-do-behavior/
 - **Stack preset:** {{STACK_PRESET}}
 - **Criado em:** {{CREATED_AT}}
 - **Supabase project:** {{SUPABASE_PROJECT_ID}}
+
+## 6. Decisões da Fase 01
+
+> Preenchido por `intellix:architecture`: entidades e tabelas (com RLS), rotas principais,
+> camadas (repository/service), integrações e decisões que restringem opções futuras
+> (cada uma com ADR em `docs/adr/`).

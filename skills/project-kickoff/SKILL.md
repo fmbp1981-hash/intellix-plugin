@@ -4,9 +4,10 @@ description: >
   Use esta skill SEMPRE que o usuário mencionar: criar um novo projeto, iniciar
   um sistema, novo cliente, scaffolding, estrutura inicial, "quero criar um...",
   "preciso de um sistema...", ou qualquer início de desenvolvimento.
-  Esta é a PRIMEIRA skill do fluxo IntelliX — nunca pule para implementação
-  sem executá-la. Também ativa quando o usuário quer entender a fase atual
-  de um projeto existente.
+  Esta é a PRIMEIRA skill do fluxo IntelliX e o ponto de entrada único para
+  projeto novo (/intellix:new-project) — nunca pule para implementação sem
+  executá-la. Também adapta projeto existente sem estrutura IntelliX e diagnostica
+  a fase atual de um projeto.
 ---
 
 # Fase 00 — Project Kickoff
@@ -28,16 +29,17 @@ define o tipo de sistema e inicializa a estrutura canônica antes de qualquer c�
 ## Quando NÃO usar
 - Projeto já inicializado e com fase definida em `.intellix-phase`
 
-## Caminho Automático vs Manual
+## Modos (entrada única — decisão D7 de 2026-09-16)
 
-| Situação | Usar |
-|----------|------|
-| Projeto 100% novo, do zero | **`/projeto novo`** (zero-touch) — gera references/, agentes/, estrutura SDD, .env, npm install em ~2min |
-| Projeto existente sem estrutura IntelliX | Este workflow manual (Passos 1-5 abaixo) |
-| Precisa apenas de diagnóstico de fase | Passo 1 abaixo |
+| Situação | Modo | O que roda |
+|----------|------|-----------|
+| Projeto 100% novo (`/intellix:new-project`) | **Projeto novo** | Passos 1–5 + bootstrap técnico de `references/bootstrap-projeto-novo.md` (B1–B7) |
+| Projeto existente sem estrutura IntelliX | **Adaptação** | Passos 1–5, sem `package.json`/`npm install`; o DevSecOps faltante segue o B4 do bootstrap (o `intellix:code-audit` chama isso de retrofit) |
+| Só saber em que fase o projeto está | **Diagnóstico** | Passo 1 e leitura de `.intellix-phase` |
 
-> **Recomendado para projetos novos:** usar `/projeto novo` via `intellix:projeto-novo`.
-> Ele executa tudo abaixo automaticamente + gera os agentes + instala dependências.
+O antigo `intellix:projeto-novo` / "/projeto novo" (legado) foi absorvido aqui e arquivado.
+Lista normativa dos arquivos que o projeto precisa ter: `artefatos_projeto` em
+`~/.claude/metodologia.yaml` — o `scaffold-check.py` confere.
 
 ---
 
@@ -90,6 +92,8 @@ projeto/
 │   └── hooks/                  # Guardrails deste repositório
 │       └── validate-migration.sh
 ├── .mcp.json                   # MCP servers deste cliente (versionado, time inteiro usa)
+├── .github/workflows/
+│   └── security.yml            # DevSecOps CI (bootstrap B4)
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (auth)/
@@ -99,12 +103,16 @@ projeto/
 │   │   ├── ui/                 # Shadcn/UI components
 │   │   └── [feature]/          # Componentes por feature
 │   ├── lib/
-│   │   ├── supabase/           # Client + Server + types
-│   │   ├── utils/
-│   │   └── validations/        # Zod schemas
+│   │   ├── supabase/           # Client + Server
+│   │   ├── ai/                 # guardrails.ts (se houver LLM)
+│   │   ├── lgpd/               # pii-redactor.ts (se houver dado pessoal)
+│   │   └── utils/
+│   ├── repositories/           # acesso a dados (só Supabase)
+│   ├── services/               # regra de negócio
+│   ├── validations/            # Zod schemas
 │   ├── hooks/
 │   ├── types/
-│   └── agents/                 # Se houver agentes
+│   └── agents/                 # Se houver agentes de IA do produto
 ├── supabase/
 │   ├── migrations/
 │   ├── functions/              # Edge Functions
@@ -113,6 +121,9 @@ projeto/
 │   ├── unit/
 │   ├── integration/
 │   └── e2e/                    # Playwright
+├── references/                 # architecture.md, security.md, stack.md, workflow.md (dos templates)
+├── issues/                     # criado vazio; /break preenche
+├── DESIGN.md                   # semente do design (se houver UI) — o impeccable:impeccable mantém
 ├── .intellix-phase             # Fase atual: init|arch|dev|test|deploy|done
 ├── AGENTS.md                   # Contexto operacional para QUALQUER agente (Cursor, Codex, Copilot...)
 ├── CLAUDE.md                   # Contexto Claude-específico (versionado — aponta para a metodologia global)
@@ -153,7 +164,11 @@ ela não é global.
 
 Crie os seguintes arquivos:
 
-**`.intellix-phase`**: conteúdo `arch` (próxima fase após kickoff)
+**`.intellix-phase`**: conteúdo `arch` (próxima fase após kickoff) — valor único para os dois modos.
+
+**Modo projeto novo:** execute agora o bootstrap técnico (B1–B6) de
+`${CLAUDE_PLUGIN_ROOT}/skills/project-kickoff/references/bootstrap-projeto-novo.md` —
+`references/`, `DESIGN.md`, DevSecOps scaffold, `.env.*` e `package.json`.
 
 **`AGENTS.md`** (template — adaptar nome e integrações do projeto):
 ```markdown
@@ -352,7 +367,13 @@ Após criar `CLAUDE.md` e `AGENTS.md`, valide a qualidade do contexto entregue a
 
 ---
 
-### Passo 5 — Handover para Fase 01
+### Passo 5 — Verificação e handover para Fase 01
+
+Rode a verificação mecânica (B7 do bootstrap) e só prossiga com exit 0:
+
+```bash
+python3 ~/.claude/scripts/scaffold-check.py . --fase kickoff
+```
 
 Ao concluir, informe:
 > "Kickoff concluído. Estrutura inicializada. Próxima fase: **intellix:architecture** para definir o schema de banco, rotas e componentes principais."
@@ -360,7 +381,7 @@ Ao concluir, informe:
 Se `HAS_PERSONAL_DATA = S`, adicionar ao handover:
 > "⚠️ Projeto com dados pessoais detectado. Na Fase 01 (Architecture): incluir tabelas LGPD no schema (`consent_records`, `titular_requests`, `data_processing_log`). Na Fase 06: executar `devsecops:lgpd-compliance` em paralelo com `security-observability`."
 
-Atualize `.intellix-phase` para `arch`.
+Confirme que `.intellix-phase` contém `arch`.
 
 ---
 
@@ -370,7 +391,7 @@ Atualize `.intellix-phase` para `arch`.
 |-------------|-------|
 | Brainstorm de produto antes de definir escopo | `superpowers:brainstorming` |
 | PRD completo com features, personas e arquitetura | `ai-project-brainstorm` |
-| Projeto é landing page ou site simples | `impeccable` (`init`/`shape`) |
+| Projeto é landing page ou site simples | `impeccable:impeccable` (`init`/`shape`) |
 | Planejar implementação em etapas antes de codar | `superpowers:writing-plans` |
 
 ---

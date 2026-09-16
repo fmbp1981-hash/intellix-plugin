@@ -21,9 +21,19 @@ exigir_arquivo() {
   [[ -f "$caminho" ]] || FALHAS+=("FALTA: $caminho — $motivo")
 }
 
+# A Fase 01 remove este marcador de references/architecture.md ao registrar as
+# decisões do projeto. Enquanto ele existir, o arquivo é só o rascunho do kickoff.
+exigir_arquitetura_definida() {
+  local caminho="references/architecture.md"
+  if [[ -f "$caminho" ]] && grep -q "intellix-rascunho-kickoff" "$caminho"; then
+    FALHAS+=("PENDENTE: $caminho ainda é o rascunho do kickoff — rode intellix:architecture (Fase 01)")
+  fi
+}
+
 exigir_dir_nao_vazio() {
   local caminho="$1" motivo="$2"
-  if [[ ! -d "$caminho" ]] || [[ -z "$(ls -A "$caminho" 2>/dev/null)" ]]; then
+  # Ignora arquivos ocultos: o kickoff cria issues/.gitkeep, que não é uma issue.
+  if [[ ! -d "$caminho" ]] || [[ -z "$(find "$caminho" -mindepth 1 ! -name '.*' -print -quit 2>/dev/null)" ]]; then
     FALHAS+=("FALTA: $caminho/ vazio ou inexistente — $motivo")
   fi
 }
@@ -34,6 +44,7 @@ case "$FASE" in
       "projeto nao inicializado — rode intellix:project-kickoff (Fase 00)"
     exigir_arquivo "references/architecture.md" \
       "Fase 01 (architecture) nao concluida — /plan sem isso ignora as regras do projeto"
+    exigir_arquitetura_definida
     exigir_dir_nao_vazio "issues" \
       "nenhuma issue para planejar — rode /break antes"
     ;;
@@ -42,6 +53,7 @@ case "$FASE" in
       "projeto nao inicializado — rode intellix:project-kickoff (Fase 00)"
     exigir_arquivo "references/architecture.md" \
       "Fase 01 (architecture) nao concluida"
+    exigir_arquitetura_definida
     exigir_dir_nao_vazio "issues" \
       "nenhuma issue planejada — rode /plan antes"
     ;;

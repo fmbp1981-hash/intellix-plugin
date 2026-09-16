@@ -53,8 +53,8 @@ Incluir a migration LGPD junto às primeiras migrations do projeto — não como
 
 ```sql
 -- supabase/migrations/00001_lgpd_tables.sql
--- Gerado automaticamente pelo /projeto novo; criar manualmente se ausente
--- Skill de referência: lgpd-compliance
+-- Criar junto às primeiras migrations do projeto (Fase 01)
+-- Autoridade do domínio: devsecops:lgpd-compliance (schema completo e prazos legais vigentes)
 CREATE TABLE consent_records ( ... );   -- consentimentos por finalidade
 CREATE TABLE titular_requests ( ... );  -- direitos dos titulares (prazo: 15 dias)
 CREATE TABLE data_processing_log ( ... ); -- log de operações + decisões por IA (Art. 20)
@@ -119,7 +119,12 @@ Antes de escrever o primeiro `route.ts`:
 > mais barato corrigir acoplamento errado no diagrama do que depois de implementado.
 > Pergunte, não gere sem confirmação.
 
-### Passo 4 — Handover para Fase 02 ou 03
+### Passo 4 — Registrar decisões e handover para Fase 02 ou 03
+
+Registre as decisões desta fase na seção 6 de `references/architecture.md` (entidades,
+rotas, camadas, integrações; ADR em `docs/adr/` para o que restringe opções futuras) e
+**apague a linha `intellix-rascunho-kickoff`** do topo do arquivo — é ela que libera o
+phase gate de `/plan` e `/execute`.
 
 Se houver agentes → `intellix:agent-creation`
 Se não houver → `intellix:dev-standards`

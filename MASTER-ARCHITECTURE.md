@@ -66,8 +66,8 @@ Estas regras se aplicam a 100% das decisões. Nunca negocie com elas.
 ### Visão Macro — Fases do Projeto
 
 ```
-[FASE 00]  /projeto novo    →  zero-touch: references/ + agentes/ + estrutura SDD + npm install
-[FASE 00]  Kickoff manual   →  (projetos existentes) diagnóstico, tipo, stack
+[FASE 00]  Project Kickoff  →  /intellix:new-project — diagnóstico, estrutura, references/, DESIGN.md, DevSecOps, .env
+                               (modo adaptação para projeto existente sem estrutura IntelliX)
 [FASE 00b] Code Audit       →  (projetos existentes) auditoria antes de refatorar
 [FASE 00c] System Scan      →  (opcional) veredito Classe A/B/C — pré-handoff, demo, manutenção trimestral
 [FASE 01]  Architecture     →  schema DB, rotas, tipos, repository/service pattern
@@ -95,9 +95,9 @@ Estas regras se aplicam a 100% das decisões. Nunca negocie com elas.
 
 **Arquivo de controle:** `.intellix-phase` na raiz (valores: `init|arch|dev|test|deploy|done`)
 
-> **Projetos novos:** use `/projeto novo` (`intellix:projeto-novo`) para automação zero-touch.
-> Entrega estrutura pronta para `/spec` em ~2 minutos sem setup manual.
-> **Skill:** [`skills/projeto-novo/SKILL.md`](skills/projeto-novo/SKILL.md)
+> **Projetos novos:** `/intellix:new-project` → `intellix:project-kickoff` (entrada única).
+> **Skill:** [`skills/project-kickoff/SKILL.md`](skills/project-kickoff/SKILL.md) — bootstrap técnico em
+> `skills/project-kickoff/references/bootstrap-projeto-novo.md`
 > **Templates:** [`intellix-templates/`](intellix-templates/)
 
 ---
@@ -226,8 +226,8 @@ Dois conjuntos de referências disponíveis: arquivos do **plugin IntelliX** (di
 | Arquivo | O que contém | Quando consultar |
 |---------|-------------|-----------------|
 | `devsecops:lgpd-compliance` (plugin `devsecops`) | Compliance LGPD: bases legais, direitos dos titulares, schema de tabelas, Privacy by Design, incidentes | Ao implementar qualquer feature com dados pessoais de brasileiros |
-| [`skills/projeto-novo/SKILL.md`](skills/projeto-novo/SKILL.md) | Automação zero-touch: /projeto novo — 9 passos de setup com templates e agentes | Ao iniciar projeto novo do zero |
-| [`intellix-templates/`](intellix-templates/) | Boilerplate com references-template/, root-template/ (DESIGN.md semente), delivery-templates/, version.json | Consultado automaticamente pelo /projeto novo |
+| [`skills/project-kickoff/SKILL.md`](skills/project-kickoff/SKILL.md) | Fase 00 — entrada única de projeto novo (`/intellix:new-project`) e adaptação de projeto existente | Ao iniciar ou adaptar um projeto |
+| [`intellix-templates/`](intellix-templates/) | Boilerplate com references-template/, root-template/ (DESIGN.md semente), delivery-templates/, version.json | Copiado pelo bootstrap do `intellix:project-kickoff` |
 | [`references/four-commands.md`](references/four-commands.md) | Templates completos de /spec, /break, /plan, /execute + Checklist Fatal | Ao executar qualquer um dos 4 comandos |
 | [`references/context-window.md`](references/context-window.md) | Gerenciamento de context window: sintomas, diagnóstico, práticas operacionais | Ao iniciar `/execute` ou ao notar comportamento estranho da IA |
 | [`references/anti-patterns.md`](references/anti-patterns.md) | 5 anti-patterns críticos de SaaS + checklist de armadilhas | Antes de escrever qualquer acesso a dados ou auth |
@@ -265,8 +265,8 @@ Criadas durante o kickoff de cada projeto (lista normativa: `artefatos_projeto` 
 | 2 | PRD completo (personas, roadmap, stack) | `ai-project-brainstorm` | Externa |
 | 3 | Plano de implementação executável | `superpowers:writing-plans` | Externa |
 | 4 | **GATE: aprovação do plano** | — | — |
-| 5 | **Setup zero-touch (projetos novos)** | `intellix:projeto-novo` | Plugin |
-| 5m | Kickoff manual (projetos existentes) | `intellix:project-kickoff` | Plugin |
+| 5 | **Kickoff (entrada única: `/intellix:new-project`)** | `intellix:project-kickoff` | Plugin |
+| 5m | Adaptação de projeto existente sem estrutura | `intellix:project-kickoff` (modo adaptação) | Plugin |
 | 5b | Auditoria (projetos existentes) | `intellix:code-audit` | Plugin |
 | 6 | Schema DB + routes + repository/service | `intellix:architecture` | Plugin |
 | 7 | UI: estrutura → design → implementação → audit | `intellix:frontend-design` | Plugin (5 skills) |

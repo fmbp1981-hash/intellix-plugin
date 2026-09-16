@@ -15,12 +15,12 @@ capturar intenção do usuário e exibir o resultado vindo do servidor (Thin Cli
    fornecer, `references/frontend-patterns.md` e `references/accessibility-patterns.md`.
 
 ## Pode criar/editar
-- `src/app/**/page.tsx`, `src/app/**/layout.tsx`, demais `.tsx` de rota
+- `src/app/**/page.tsx`, `src/app/**/layout.tsx`, `src/app/**/form.tsx` e demais `.tsx` de rota
 - `src/components/` (exceto `src/components/ui/`, gerado pelo shadcn)
 - `src/hooks/use-*.ts`
 
 ## Nunca toque
-- `supabase/`, `src/repositories/`, `src/services/`, `actions.ts`, `route.ts`
+- `supabase/`, `src/repositories/`, `src/services/`, `action.ts`/`actions.ts`, `schema.ts`, `route.ts`
 - qualquer arquivo fora da lista "Files to Create/Modify" da issue, ou listado em "Files to NOT Touch"
 
 ## Regras obrigatórias

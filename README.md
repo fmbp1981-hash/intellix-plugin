@@ -165,34 +165,34 @@ Adicione ao `.claude/settings.json` do projeto:
 
 ```
 intellix-plugin/
-├── .claude-plugin/
-│   └── plugin.json
+├── .claude-plugin/               # plugin.json + marketplace.json (versão)
 ├── skills/
-│   ├── master-workflow/          # Orquestrador principal do fluxo IntelliX
-│   ├── project-kickoff/          # Scaffolding inicial
-│   ├── code-audit/               # ★ Auditoria de sistemas existentes
-│   ├── architecture/             # Data layer, API design, RBAC
-│   ├── frontend-design/          # ★ Design system + UI/UX
-│   ├── agent-creation/           # Blueprints de agentes
-│   ├── dev-standards/            # TS, Server Actions, TanStack Query
-│   ├── integration/              # Native-first, n8n opcional
-│   ├── security-observability/   # ★ OWASP + Sentry + rate limit
-│   ├── test-e2e/                 # Playwright + Vitest
-│   ├── deploy/                   # Cloudflare Workers + CI/CD + DevOps
-│   ├── project-handoff/          # Documentação + entrega
-│   └── live-chat/                # Omnichannel (opcional)
-├── commands/
-│   ├── new-project.md
-│   ├── audit.md                  # ★ NOVO
-│   └── deploy.md
+│   ├── master-workflow/          # Orquestrador do fluxo IntelliX
+│   ├── project-kickoff/          # Fase 00 — entrada única (/intellix:new-project) + bootstrap
+│   ├── code-audit/               # Fase 00b — auditoria de entrada (sistema existente)
+│   ├── system-scan/              # Fase 00c — veredito de maturidade (pré-handoff)
+│   ├── architecture/             # Fase 01 — schema, rotas, camadas, RBAC
+│   ├── frontend-design/          # Fase 02 — roteiro de UI (motor: impeccable:impeccable)
+│   ├── dev-standards/            # Fase 03 — TS, Server Actions, TanStack Query
+│   ├── agent-creation/           # Fase 03b — delega para intellix-agent-creation (global)
+│   ├── integration/              # Fase 05 — SDKs, webhooks, n8n
+│   ├── security-observability/   # Fase 06 — rate limit, CSP, Sentry (+ devsecops:security-gate)
+│   ├── test-e2e/                 # Fase 07 — Playwright + Vitest
+│   ├── deploy/                   # Fase 08 — Cloudflare Workers/Pages (manual)
+│   ├── project-handoff/          # Fase 09 — documentação + entrega
+│   └── live-chat/                # Módulo opcional (omnichannel)
+├── agents/                       # 4 implementadores + 2 revisores do /execute
+├── commands/                     # new-project, audit, spec, break, plan, opus-plan, execute
+├── references/                   # padrões técnicos do plugin
+├── intellix-templates/           # references-template/, root-template/, delivery-templates/
 └── hooks/
     ├── hooks.json
     └── scripts/
-        ├── session-start.sh      # Injeta contexto Senior Dev
-        └── skill-router.sh       # Sugere skills por palavras-chave
+        ├── session-start.sh      # Contexto de sessão (fases espelham metodologia.yaml)
+        ├── skill-router.sh       # Sugere skills por palavras-chave
+        ├── phase-gate.sh         # Pré-requisitos de plan/execute/deploy/handoff
+        └── validate-hooks.sh     # Valida a fiação dos hooks
 ```
-
-★ = Novo na v2.0
 
 ---
 
