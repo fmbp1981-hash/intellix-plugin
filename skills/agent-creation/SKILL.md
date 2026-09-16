@@ -37,6 +37,13 @@ Sistema é UI-only sem IA? → PULAR (ir para Fase 04)
 Skill("intellix-agent-creation")
 ```
 
+> **Dependência global (D9):** a implementação e todos os recursos (schema v2, templates,
+> exemplos, referências) vivem só em `~/.claude/skills/intellix-agent-creation/` — este
+> plugin não guarda cópia. Se a skill não aparecer na lista de skills disponíveis, PARE e
+> avise o usuário: "a skill global `intellix-agent-creation` não está instalada em
+> `~/.claude/skills/`". Não improvise um blueprint sem ela. (O `doctor.py` confere a
+> existência via `dependencias_globais` do `metodologia.yaml`.)
+
 A skill `intellix-agent-creation` irá:
 1. Perguntar qual plataforma: **GPT Maker** | **n8n** | **IntelliX Blueprint**
 2. Executar o módulo correto para a plataforma escolhida
