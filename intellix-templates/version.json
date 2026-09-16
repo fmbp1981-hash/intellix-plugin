@@ -1,10 +1,13 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "created_at": "2026-04-29",
   "stack_preset": "nextjs15-supabase",
-  "description": "IntelliX SDD boilerplate — Next.js 15 + Supabase + TypeScript strict + Shadcn/UI",
+  "description": "Templates de projeto IntelliX — references/ (architecture, security, stack, workflow) e DESIGN.md semente. Versão própria dos templates; a compatibilidade com o plugin fica em compativel_com_plugin.",
   "changelog": {
+    "2.1.0": "DESIGN.md na raiz (root-template/); agents-template removido (agentes vêm do plugin); marcador de rascunho em architecture.md; tabela de versões com verificação obrigatória",
     "2.0.0": "Estrutura SDD com compartimentação de behaviors, agentes especializados, references/ customizáveis",
     "1.0.0": "Estrutura inicial IntelliX"
-  }
+  },
+  "updated_at": "2026-09-16",
+  "compativel_com_plugin": ">=3.0.0"
 }

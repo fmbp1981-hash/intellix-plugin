@@ -14,22 +14,28 @@
 - **Forms:** react-hook-form
 - **Preset:** {{STACK_PRESET}}
 
-## Versões Canônicas (IntelliX v{{TEMPLATE_VERSION}})
+## Versões de referência
 
-| Pacote | Versão |
-|--------|--------|
-| next | 15.0.0 |
-| react | ^19.0.0 |
-| typescript | ^5.3.3 |
-| tailwindcss | ^3.3.5 |
-| @supabase/supabase-js | ^2.38.0 |
-| @supabase/ssr | ^0.1.0 |
-| @anthropic-ai/sdk | ^0.9.0 |
-| zod | ^3.22.0 |
-| react-hook-form | ^7.48.0 |
-| @hookform/resolvers | ^3.3.2 |
-| class-variance-authority | ^0.7.0 |
-| lucide-react | ^0.294.0 |
+> ⚠️ **Verifique antes de fixar.** Confirme a major/minor atual de cada pacote via Context7
+> (`resolve-library-id` + `query-docs`) ou Perplexity antes do primeiro `npm install`. A
+> tabela é ponto de partida (referência de 2026-08-25), não verdade. Se a major de um pacote
+> divergir da stack em `~/.claude/metodologia.yaml`, pergunte ao responsável qual vale.
 
-`package.json` é a fonte da verdade para versões.
-Não sugerir upgrades ou libs alternativas sem aprovação explícita do usuário.
+| Pacote | Major/minor de referência |
+|--------|---------------------------|
+| next, eslint-config-next | major conforme `stack.framework` em `~/.claude/metodologia.yaml` |
+| react / react-dom | 19.2.x |
+| typescript | 5.x (checar minor atual) |
+| tailwindcss | 4.3.x (prefixing já incluso — sem `autoprefixer`) |
+| @supabase/supabase-js | 2.112.x |
+| @supabase/ssr | checar versão atual |
+| @anthropic-ai/sdk | 0.120.x |
+| zod | 4.4.x |
+| react-hook-form | 7.86.x |
+| motion (ex-framer-motion) | 13.1.x — importar de `motion/react` |
+| vitest | 4.1.x |
+| @playwright/test | 1.62.x |
+| eslint | 10.x (flat config) |
+
+Depois de gerado e verificado, o `package.json` do projeto é a fonte da verdade para versões.
+Não sugerir upgrades ou libs alternativas sem aprovação explícita do responsável.
