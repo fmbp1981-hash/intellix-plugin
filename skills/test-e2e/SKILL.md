@@ -49,7 +49,7 @@ problemas de segurança e gargalos de performance.
 > testes padrão?"
 
 - Se houver critérios **concretos e verificáveis** (não "deve funcionar bem"): ofereça
-  o Gauntlet Loop no formato exato de `modules/new-skills-triggers.md` seção "Gauntlet
+  o Gauntlet Loop no formato exato de `~/.claude/modules/new-skills-triggers.md` seção "Gauntlet
   Loop" — builder+critic binário via `Workflow`, custo ~15x, **exige confirmação
   explícita** antes de rodar. Isso é complementar à bateria abaixo, não substitui.
 - Se não houver critério concreto, ou o usuário preferir seguir sem: prossiga a

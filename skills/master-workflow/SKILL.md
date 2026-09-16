@@ -180,7 +180,7 @@ Antes de qualquer código:
 - Schema Supabase com RLS obrigatório
 - Rotas Next.js App Router
 - Tipos TypeScript centralizados em `src/types/`
-- Repository + Service pattern (ver [`references/data-layer.md`](../references/data-layer.md))
+- Repository + Service pattern (ver [`references/data-layer.md`](../../references/data-layer.md))
 - API Response padronizado RFC 7807
 - RBAC (se SaaS multi-tenant)
 
@@ -200,7 +200,7 @@ Skill("intellix:frontend-design")
 
 Sequência de **8 steps** em ordem obrigatória (5 skills principais + auditoria 3 camadas —
 `vibestack-architect` e `frontend-design-pro` foram arquivadas/desabilitadas em 2026-09-07
-e consolidadas dentro do `impeccable`, ver `WORKFLOW-SPINE-VS-ORBIT.md` seção 4A):
+e consolidadas dentro do `impeccable`, ver `~/.claude/WORKFLOW-SPINE-VS-ORBIT.md (histórico)` seção 4A):
 
 ```
 1. impeccable (init → shape)  → PRODUCT.md + plano de UX/UI, estrutura e roteamento visual

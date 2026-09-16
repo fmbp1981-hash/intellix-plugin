@@ -40,7 +40,7 @@ Projeto existente com UI já implementada sendo melhorada? → executar a partir
 
 - Se a resposta for uma **referência concreta e nomeada** (um app/tela real, coletável —
   não "bonito"/"moderno"/"profissional"): ofereça o Gauntlet Loop no formato exato de
-  `modules/new-skills-triggers.md` seção "Gauntlet Loop" — builder+critic binário via
+  `~/.claude/modules/new-skills-triggers.md` seção "Gauntlet Loop" — builder+critic binário via
   `Workflow`, custo ~15x, **exige confirmação explícita** antes de rodar.
 - Se não houver referência, ou o usuário preferir seguir sem: prossiga o Passo 1
   normalmente, sem insistir de novo nesta mesma tarefa.
@@ -65,7 +65,7 @@ Anuncie cada fase para o usuário antes de executar:
 > **Nota de manutenção (2026-09-07):** `vibestack-architect` foi consolidada dentro do
 > `impeccable` e arquivada (`skills-archived-2026-09-07/`). O `impeccable` cobre
 > integralmente o que ela fazia — inclusive criação de superfície nova do zero, via
-> `init` → `shape`/`new-work` — não é só uma skill de polish. Ver `WORKFLOW-SPINE-VS-ORBIT.md`
+> `init` → `shape`/`new-work` — não é só uma skill de polish. Ver `~/.claude/WORKFLOW-SPINE-VS-ORBIT.md (histórico)`
 > seção 4A.
 
 **Invoke:** `Skill("impeccable:impeccable")` com sub-comando `init`, depois `shape [feature]`

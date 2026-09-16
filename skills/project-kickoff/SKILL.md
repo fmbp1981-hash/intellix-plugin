@@ -134,7 +134,7 @@ Não crie `.claude/skills/`, `.claude/agents/` nem `.claude/commands/` no projet
 **Por quê:** tudo que é copiado para dentro de um repositório vira um *fork congelado* da
 metodologia na data do scaffolding. Corrigir um bug na skill global não corrige as cópias
 espalhadas em N repositórios de cliente. Esse é exatamente o modo de falha que a auditoria
-de 2026-09-07 documentou em `WORKFLOW-SPINE-VS-ORBIT.md` — skills arquivadas continuaram
+de 2026-09-07 documentou em `~/.claude/WORKFLOW-SPINE-VS-ORBIT.md (histórico)` — skills arquivadas continuaram
 sendo invocadas por meses em arquivos que ninguém atualizou.
 
 | Fica no projeto (config e contexto — não existe cópia canônica em outro lugar) | Fica global, invocado por referência |

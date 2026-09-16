@@ -19,7 +19,7 @@ Execute agora, nesta ordem obrigatória:
 1. Leia a issue especificada em `issues/`.
 2. **Pesquisa em 3 frentes (nunca pule):**
    - Frente 1 — Codebase interna: glob/grep por componentes, hooks, actions e utilities já existentes. Nunca duplicar o que já existe.
-   - Frente 2 — Documentação oficial (Context7 / Perplexity conforme `modules/context7.md` e `modules/perplexity.md`): confirmar API/versão atual antes de planejar.
+   - Frente 2 — Documentação oficial (Context7 / Perplexity conforme `~/.claude/modules/context7.md` e `~/.claude/modules/perplexity.md`): confirmar API/versão atual antes de planejar.
    - Frente 3 — Repos de referência: se a issue envolve padrão complexo (auth, pagamentos, realtime), considerar clonar repo aberto similar para `.temp/`, absorver o padrão, deletar `.temp/` depois.
 3. Consulte `MASTER-ARCHITECTURE.md` e `DESIGN.md` (raiz do projeto, se houver UI).
 4. Preencha as 7 seções obrigatórias na issue (Functional Specification, Database Schema, Files to Create/Modify/NOT Touch, External Dependencies, Notes, Tasks) — template completo em `references/four-commands.md`.

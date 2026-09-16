@@ -282,7 +282,6 @@ da lista — não pare o restante da execução por causa de um único bloqueio.
 > Fundamentação teórica: este ciclo é uma implementação dos padrões
 > *evaluator-optimizer* e *orchestrator-workers* documentados pela Anthropic em
 > [Building Effective Agents](https://www.anthropic.com/research/building-effective-agents).
-> Detalhes e trade-offs completos: [`references/verification-loop.md`](verification-loop.md).
 
 ---
 

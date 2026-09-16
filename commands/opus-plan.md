@@ -15,9 +15,9 @@ Este comando existe para o nível de planejamento **acima** do `/plan` (que é t
 Execute agora:
 1. Se ainda não há PRD/plano aprovado para este escopo, use `superpowers:writing-plans` como base metodológica.
 2. Consulte `MASTER-ARCHITECTURE.md` (fonte única de verdade de arquitetura) e, se o projeto já existe, rode gap analysis equivalente ao `intellix:code-audit` antes de propor mudanças.
-3. Para qualquer versão de lib, preço de API ou comportamento de serviço externo citado no plano, verifique com Perplexity (`modules/perplexity.md`) — nunca assuma.
-4. Para qualquer API de biblioteca usada no plano, verifique com Context7 (`modules/context7.md`) antes de recomendar uma abordagem.
+3. Para qualquer versão de lib, preço de API ou comportamento de serviço externo citado no plano, verifique com Perplexity (`~/.claude/modules/perplexity.md`) — nunca assuma.
+4. Para qualquer API de biblioteca usada no plano, verifique com Context7 (`~/.claude/modules/context7.md`) antes de recomendar uma abordagem.
 5. Produza o plano com trade-offs explícitos (não só a opção escolhida — também a rejeitada e por quê).
 6. Apresente ao usuário e **aguarde aprovação explícita** antes de descer para `/spec` → `/break` → `/plan` → `/execute`.
 
-> `model: opus` é fixo neste comando — é o ponto de maior alavancagem do fluxo inteiro (o handoff pós-`writing-plans` documentado em `modules/claude-md-rules.md` depende da qualidade dessa decisão). Depois que o plano estratégico está aprovado, todo o resto do Epic Workflow já roteia sozinho para modelos mais baratos: `/break` herda o padrão da sessão, os agentes de `/execute` (`agents/*.md` do plugin) já fixam Sonnet/Haiku no próprio frontmatter.
+> `model: opus` é fixo neste comando — é o ponto de maior alavancagem do fluxo inteiro (o handoff pós-`writing-plans` documentado em `~/.claude/modules/claude-md-rules.md` depende da qualidade dessa decisão). Depois que o plano estratégico está aprovado, todo o resto do Epic Workflow já roteia sozinho para modelos mais baratos: `/break` herda o padrão da sessão, os agentes de `/execute` (`agents/*.md` do plugin) já fixam Sonnet/Haiku no próprio frontmatter.
