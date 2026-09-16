@@ -25,6 +25,14 @@ Se sair com código 1, PARE e mostre ao usuário os itens faltantes. Só prossig
 usuário dispensar explicitamente um pré-requisito. Confirme também que a Fase 07
 (test-e2e) terminou com sucesso.
 
+## Plataforma — Cloudflare por padrão (política de 2026-09-07)
+
+Todo projeto IntelliX publica em **Cloudflare Workers/Pages**. Vercel só é aceita como
+**exceção explícita do projeto**, declarada no `CLAUDE.md` e em `references/stack.md`
+daquele repositório. Nesse caso, e só nele, use as skills de deploy do plugin `vercel`
+(`vercel:deployments-cicd`, `vercel:env-vars`, `vercel:vercel-cli`) no lugar dos passos
+Cloudflare abaixo. Sem essa declaração, trate qualquer pedido de deploy como Cloudflare.
+
 ## Passo 0 — Pipeline CI/CD `ci-cd-and-automation` (obrigatório, uma vez por projeto)
 
 **Invoke:** `Skill("ci-cd-and-automation")`
@@ -34,6 +42,9 @@ Antes do primeiro deploy em produção, garantir que o pipeline está configurad
 - Branch protection em `main` (PRs obrigatórios, status checks bloqueadores)
 - Preview deploy automático por PR (Cloudflare Workers Preview URLs)
 - Dependabot/Renovate para atualizações de dependências
+
+> A skill `ci-cd-and-automation` é genérica (de terceiros); não use os exemplos dela com `npx vercel` e `VERCEL_TOKEN`.
+> Em projetos IntelliX o job de deploy usa `wrangler` (`CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`), conforme a seção CI/CD desta skill.
 
 > Este passo é executado **uma vez** no início do projeto ou ao detectar que não existe `.github/workflows/`. Em deploys subsequentes, verificar apenas se o pipeline está passando.
 
@@ -155,7 +166,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -259,9 +270,12 @@ Configurar em: GitHub → Settings → Branches → Add rule → main
 ### Estratégia de Ambientes
 
 ```
-develop branch → preview via `wrangler versions upload` (Preview URL, não recebe tráfego de produção)
-main branch    → produção via `wrangler deploy` (ou opennextjs-cloudflare deploy)
-feature/*      → preview por PR, mesma mecânica de versions upload
+feature/* (PR)  → preview via `wrangler versions upload` (Preview URL, sem tráfego de produção)
+main (merge)    → `wrangler versions upload --env staging` (staging automático)
+produção        → `/intellix:deploy` promove para produção (`wrangler deploy` / opennextjs-cloudflare deploy),
+                  só com autorização explícita
+
+Trunk-based: não existe branch `develop` de longa duração — o staging é alimentado pela `main`.
 ```
 
 Ambientes nomeados ficam declarados em `wrangler.jsonc` (`env.staging`, `env.production`)
@@ -298,15 +312,15 @@ O deploy é apenas o começo. Um sistema de produção profissional requer:
 ### Estratégia de Ambientes
 
 ```
-develop branch  → wrangler versions upload (staging automático, Preview URL)
-feature/*       → wrangler versions upload por PR
-main branch     → wrangler deploy / opennextjs-cloudflare deploy (produção)
+feature/* (PR)  → wrangler versions upload (Preview URL)
+main (merge)    → wrangler versions upload --env staging (staging automático)
+produção        → /intellix:deploy (wrangler deploy / opennextjs-cloudflare deploy), com autorização
 ```
 
 ```
 .env.local          → desenvolvimento local (não commitar)
-.env.staging        → staging (secrets do env.staging em wrangler.jsonc)
-.env.production     → produção (secrets do env.production em wrangler.jsonc)
+staging / produção  → `wrangler secret put <NOME> --env <staging|production>`
+                      (nunca em arquivo .env commitado nem na máquina de dev)
 ```
 
 **Regra de ouro:** staging deve ser idêntico a produção em configuração.

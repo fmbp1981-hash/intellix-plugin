@@ -92,7 +92,7 @@ export async function getUser(id: string) {
 }
 ```
 
-**Em Vercel serverless:** O módulo é inicializado uma vez por cold start e
+**Em runtimes serverless/edge (Cloudflare Workers, funções serverless):** O módulo é inicializado uma vez por cold start e
 reutilizado em warm requests. Colocar o client no módulo = 1 conexão por
 instância de função. Colocar dentro da função = 1 conexão por request.
 

@@ -50,7 +50,7 @@ Projeto é dashboard interno sem dados sensíveis? → Nível MÉDIO
 - [ ] Sem variáveis de ambiente expostas no client (`NEXT_PUBLIC_` com valores sensíveis)
 - [ ] `next.config.ts` com headers de segurança básicos
 - [ ] Sem `console.log` com dados em produção
-- [ ] HTTPS ativo (Vercel garante automaticamente)
+- [ ] HTTPS ativo (Custom Domain do Cloudflare emite o certificado automaticamente)
 
 ```typescript
 // next.config.ts — headers de segurança básicos
@@ -164,7 +164,7 @@ log, CSP, Sentry e Core Web Vitals — itens 2 a 10 abaixo.
 
 ```typescript
 // src/lib/rate-limit.ts
-// Opção A: Usando Upstash Redis (recomendado para Vercel)
+// Opção A: Usando Upstash Redis via HTTP (funciona em runtimes serverless/edge)
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
@@ -347,7 +347,7 @@ export type CreateContactInput = z.infer<typeof createContactSchema>
 // next.config.ts — CSP completo
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' *.vercel.app *.sentry.io;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' *.sentry.io;
   style-src 'self' 'unsafe-inline';
   img-src * blob: data:;
   media-src 'none';
@@ -509,7 +509,7 @@ HIGH exige dispensa documentada com justificativa no PR.
 |----------|-------------|-------------|
 | Local | `.env.local` (no .gitignore) | Commitar qualquer `.env` |
 | CI/CD | GitHub Encrypted Secrets | Printar secrets em logs |
-| Produção (Vercel) | Vercel Environment Variables | Prefixar com `NEXT_PUBLIC_` |
+| Produção (Cloudflare Workers) | `wrangler secret put` (secrets) / `vars` no `wrangler.jsonc` (não sensível) | Prefixar segredo com `NEXT_PUBLIC_` |
 | n8n self-hosted | n8n Credentials (criptografadas) | Deixar `N8N_ENCRYPTION_KEY` vazio |
 | Dados sensíveis por tenant | Supabase Vault (pgcrypto) | Armazenar em tabela sem criptografia |
 
@@ -591,6 +591,6 @@ Atualize `.intellix-phase` para `test`.
 ## Armadilhas comuns
 - ❌ `SUPABASE_SERVICE_ROLE_KEY` em variável `NEXT_PUBLIC_` → exposição total do banco
 - ❌ RLS desabilitado em "tabelas internas" → toda tabela precisa de RLS
-- ❌ `console.log(user)` em produção → vazar email/CPF nos logs do Vercel
+- ❌ `console.log(user)` em produção → vazar email/CPF nos logs da plataforma (Workers Logs, Sentry)
 - ❌ Rate limiting apenas no frontend → bypassável via curl/Postman
 - ❌ Sentry sem `beforeSend` → capturar senhas e tokens nos logs de erro

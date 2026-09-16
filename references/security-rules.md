@@ -127,7 +127,7 @@ OUTPUT (usuário)
 |----------|-------------|-------------------|
 | Local | `.env.local` (no .gitignore) | Commitar qualquer `.env` |
 | CI/CD | GitHub Encrypted Secrets | Printar secrets em logs |
-| Produção (Vercel) | Vercel Environment Variables | Prefixar com `NEXT_PUBLIC_` |
+| Produção (Cloudflare Workers) | `wrangler secret put` (secrets) / `vars` no `wrangler.jsonc` (não sensível) | Prefixar segredo com `NEXT_PUBLIC_` |
 | n8n self-hosted | n8n Credentials (criptografadas) | Deixar `N8N_ENCRYPTION_KEY` vazio |
 | Dados sensíveis por tenant | Supabase Vault (pgcrypto) | Armazenar em tabela sem criptografia |
 

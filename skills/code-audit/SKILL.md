@@ -219,7 +219,7 @@ grep -rn "console\.\(log\|info\|warn\)" src/ app/ --include="*.ts" --include="*.
 **Código:**
 - [ ] `src/lib/lgpd/pii-redactor.ts` ou equivalente existe
 - [ ] **[CRÍTICO se LLM + dados pessoais]** `redactPII()` invocado antes de toda chamada LLM
-- [ ] PII não aparece em logs de produção (Sentry, Vercel, console)
+- [ ] PII não aparece em logs de produção (Sentry, Workers Logs, console)
 - [ ] Soft delete implementado (sem exclusão física imediata de dados regulados)
 
 **Compliance:**
@@ -427,7 +427,7 @@ Estimativa: [N] dias
 ### CI/CD
 - [ ] Criar .github/workflows/ci.yml
 - [ ] Configurar branch protection em main
-- [ ] Configurar Preview Deployments no Vercel
+- [ ] Configurar preview por PR (`wrangler versions upload`) — ver `intellix:deploy`
 
 ## Sprint 4 — Evolução (melhorias de UX e performance)
 Estimativa: [N] dias

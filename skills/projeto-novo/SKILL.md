@@ -28,7 +28,7 @@ Pergunta 1: Qual o nome do projeto? (ex: "NossoCRM", "LeadBot Pro")
 Pergunta 2: Descreva o problema que resolve em 1-2 frases.
 Pergunta 3: Nome do cliente ou "IntelliX Interno".
 Pergunta 4: Cor primária em hex? (ex: #007AFF) — ou pressione Enter para usar #6366F1
-Pergunta 5: Tem Supabase project ID ou Vercel project ID já criados?
+Pergunta 5: Tem Supabase project ID ou Cloudflare account ID já criados?
            (opcional — pressione Enter para gerar placeholders)
 Pergunta 6: O projeto processará dados pessoais de pessoas físicas?
            (nome, email, CPF, telefone, endereço, comportamento de uso, etc.)
@@ -41,7 +41,7 @@ Pergunta 7: O projeto terá chamadas a LLMs (OpenAI, Anthropic, etc.) ou agentes
 
 **Inputs opcionais** (se não informados, geram placeholders em `.env.example`):
 - `supabaseProjectId` — conecta a projeto Supabase existente
-- `vercelProjectId` — conecta a Vercel existente
+- `cloudflareAccountId` — conta Cloudflare onde o Worker será publicado
 - `anthropicApiKey` — salvo em `.env.local`, nunca commitado
 
 Ao receber todas as respostas, derive os valores calculados:
@@ -270,7 +270,7 @@ Execute /clear nos seguintes momentos:
 - **Linguagem:** TypeScript strict (`strict: true`, zero `any`)
 - **Estilo:** Tailwind CSS + Shadcn/UI
 - **Banco de dados:** Supabase (PostgreSQL + RLS + Auth)
-- **Hospedagem:** Vercel
+- **Hospedagem:** Cloudflare Workers/Pages (`@opennextjs/cloudflare` + `wrangler`)
 - **IA:** Anthropic SDK
 - **Validação:** Zod
 - **Forms:** react-hook-form
@@ -483,7 +483,7 @@ init
 {{CLIENT_NAME}}
 
 ## Stack
-Next.js 15 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Vercel | Anthropic SDK
+Next.js 15 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Cloudflare Workers | Anthropic SDK
 
 ## Fase atual
 init → ver .intellix-phase

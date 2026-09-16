@@ -26,7 +26,7 @@ Gere o `README.md` seguindo o template IntelliX:
 ## Stack
 - **Frontend**: Next.js 15 App Router + TypeScript + Tailwind + Shadcn/UI
 - **Backend**: Supabase (PostgreSQL + Auth + Edge Functions)
-- **Deploy**: Vercel
+- **Deploy**: Cloudflare Workers/Pages (ou a exceção declarada no `CLAUDE.md` do projeto)
 - **Integrações**: [listar: n8n, Evolution API, etc]
 
 ## Setup local
@@ -95,7 +95,7 @@ IntelliX.AI — [contato]
 - [ ] Deploy de produção funcionando
 - [ ] Credenciais de produção transferidas ao cliente
 - [ ] Acesso ao repositório configurado para o cliente
-- [ ] Acesso ao Vercel/Supabase configurado para o cliente
+- [ ] Acesso ao Cloudflare/Supabase configurado para o cliente
 
 ### Passo 3 — Documento de decisões (ADR resumido)
 

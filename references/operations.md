@@ -157,7 +157,7 @@ CRON_SECRET=
 [Descrição em 2-3 linhas do que o sistema faz]
 
 ## Stack
-Next.js 15 App Router | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Vercel
+Next.js 15 App Router | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Cloudflare Workers
 
 ## Fase atual
 [FASE] — ver .intellix-phase
@@ -197,22 +197,21 @@ Ler MASTER-ARCHITECTURE.md para todas as regras de arquitetura, padrões e workf
 - [ ] `.env.example` atualizado
 - [ ] `.intellix-phase` = `deploy`
 
-### Variáveis Vercel (mínimo obrigatório)
+### Variáveis de ambiente (mínimo obrigatório)
 ```
+# não sensíveis → "vars" no wrangler.jsonc
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
 NEXT_PUBLIC_APP_URL
+
+# sensíveis → wrangler secret put <NOME>
+SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### DNS Cloudflare
-```
-Tipo   Nome   Valor                    Proxy
-A      @      76.76.21.21              ON
-CNAME  www    cname.vercel-dns.com     ON
-```
-
-**Configuração Cloudflare SSL:** modo "Full (strict)"
+### Domínio (Cloudflare Custom Domain)
+Configurar `routes: [{ "pattern": "seu-dominio.com.br", "custom_domain": true }]` no
+`wrangler.jsonc` (ou Dashboard → Worker → Domains & Routes). O certificado é emitido
+automaticamente — não há registro A/CNAME manual. Passo a passo: skill `intellix:deploy`.
 
 ### Health check pós-deploy
 ```bash

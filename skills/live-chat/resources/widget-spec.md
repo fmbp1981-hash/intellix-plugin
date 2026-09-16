@@ -163,7 +163,7 @@ const SYSTEM_MESSAGES = {
 ### Via iframe (site externo)
 ```html
 <iframe 
-  src="https://seu-app.vercel.app/chat-widget?config=base64encodedconfig"
+  src="https://seu-dominio.com.br/chat-widget?config=base64encodedconfig"
   style="position:fixed;bottom:20px;right:20px;width:380px;height:550px;border:none;z-index:9999;"
 />
 ```
@@ -171,7 +171,7 @@ const SYSTEM_MESSAGES = {
 ### Via script tag (site externo)
 ```html
 <script 
-  src="https://seu-app.vercel.app/widget.js"
+  src="https://seu-dominio.com.br/widget.js"
   data-supabase-url="..."
   data-supabase-key="..."
   data-primary-color="#6366f1"

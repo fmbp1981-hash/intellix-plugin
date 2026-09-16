@@ -200,7 +200,7 @@ flowchart TD
 
     subgraph DELIVERY["ENTREGA"]
         subgraph F08["FASE 08 — Deploy"]
-            DEP["intellix:deploy\nVercel · Cloudflare DNS\nSSL Full Strict · Health check"]
+            DEP["intellix:deploy\nCloudflare Workers · Custom Domain\nSSL Full Strict · Health check"]
         end
 
         subgraph F09["FASE 09 — Handoff"]
@@ -488,9 +488,8 @@ Executadas **em paralelo**:
 #### FASE 08 — Deploy (`intellix:deploy`)
 
 Checklist completo:
-- Variáveis de ambiente configuradas no Vercel (produção)
-- DNS apontado para Cloudflare
-- SSL "Full (strict)" no Cloudflare
+- Secrets de produção via `wrangler secret put`; variáveis não sensíveis em `vars` do `wrangler.jsonc`
+- Custom Domain do Worker configurado (certificado emitido automaticamente)
 - Preview deploy validado antes de promover para produção
 - Health check automatizado pós-deploy
 - Monitoramento ativo (Sentry / logs)
@@ -505,7 +504,7 @@ Documentação final entregue ao cliente:
 - `README.md` com setup local completo
 - ADRs (Architecture Decision Records) — por que cada decisão foi tomada
 - Runbook de operações — como resolver problemas comuns
-- Acesso ao cliente configurado (Vercel, Supabase, domínio)
+- Acesso ao cliente configurado (Cloudflare, Supabase, domínio)
 - `.intellix-phase = done`
 
 **Milestone:** Cliente recebe documentação completa. Projeto encerrado formalmente.

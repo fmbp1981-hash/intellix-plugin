@@ -8,7 +8,7 @@
 - **Linguagem:** TypeScript strict (`strict: true`, zero `any`)
 - **Estilo:** Tailwind CSS + Shadcn/UI
 - **Banco de dados:** Supabase (PostgreSQL + RLS + Auth)
-- **Hospedagem:** Vercel
+- **Hospedagem:** Cloudflare Workers/Pages (`@opennextjs/cloudflare` + `wrangler`)
 - **IA:** Anthropic SDK
 - **Validação:** Zod
 - **Forms:** react-hook-form

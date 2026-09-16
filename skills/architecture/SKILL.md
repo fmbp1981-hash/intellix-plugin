@@ -563,7 +563,7 @@ export const leadsRepository = {
 ### Singleton de DB Client (padrão obrigatório)
 
 O cliente de banco de dados deve ser instanciado **no nível do módulo**, não
-dentro de funções. Em ambientes serverless (Vercel), o módulo é inicializado
+dentro de funções. Em ambientes serverless/edge (Cloudflare Workers), o módulo é inicializado
 uma vez por cold start e reutilizado em warm requests.
 
 ```typescript
