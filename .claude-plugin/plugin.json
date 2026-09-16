@@ -1,6 +1,6 @@
 {
   "name": "intellix",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "description": "IntelliX Engineering Plugin — Senior Developer de 15+ anos em SaaS. Cria sistemas do zero com Clean Architecture e audita/refatora sistemas existentes, seguindo as fases definidas em ~/.claude/metodologia.yaml (kickoff, architecture, frontend-design, dev-standards, agent-creation, implementação, integration, security, testing, deploy Cloudflare, handoff).",
   "author": {
     "name": "IntelliX.AI",
