@@ -189,7 +189,6 @@ intellix-plugin/
     ├── hooks.json
     └── scripts/
         ├── session-start.sh      # Contexto de sessão (fases espelham metodologia.yaml)
-        ├── skill-router.sh       # Sugere skills por palavras-chave
         ├── phase-gate.sh         # Pré-requisitos de plan/execute/deploy/handoff
         └── validate-hooks.sh     # Valida a fiação dos hooks
 ```

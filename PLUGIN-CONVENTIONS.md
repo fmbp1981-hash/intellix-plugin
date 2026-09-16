@@ -10,7 +10,7 @@ Leia antes de criar qualquer arquivo novo.
 | | `commands/` | `skills/` |
 |--|------------|-----------|
 | **Invocado por** | Usuário via `/comando` no Claude Code | Claude internamente via `Skill("intellix:nome")` |
-| **Gatilho** | Explícito (usuário digita o comando) | Implícito (skill-router.sh detecta intenção) ou por chamada direta |
+| **Gatilho** | Explícito (usuário digita o comando) | Implícito (o router global `~/.claude/scripts/intellix-skill-router.py` sugere por intenção) ou por chamada direta |
 | **Responsabilidade** | Thin wrapper — apenas diz "use a skill X" | Contém o conhecimento e as instruções reais |
 | **Exemplo** | `commands/audit.md` → chama `intellix:code-audit` | `skills/code-audit/SKILL.md` → executa o audit |
 
@@ -61,12 +61,11 @@ user-invocable: false  # true se o usuário pode chamar diretamente
 [conteúdo]
 ```
 
-3. **Adicionar ao skill-router.sh** se precisar de detecção automática:
-
-```bash
-# Adicionar ao final de hooks/scripts/skill-router.sh antes do exit 0:
-echo "$PROMPT" | grep -qiE "palavra1|palavra2|frase gatilho" && suggest "nome-da-skill"
-```
+3. **Adicionar ao router global** (`~/.claude/scripts/intellix-skill-router.py`, lista `RULES`)
+   se precisar de detecção automática — é o único router que injeta contexto de forma
+   confiável (roda síncrono). O plugin não tem mais router próprio: hooks `async` de
+   `UserPromptSubmit` não entregavam a saída ao modelo (contrato em
+   `~/.claude/metodologia.yaml → hooks`).
 
 4. **Adicionar ao session-start.sh** na lista `<intellix-phases>` se for uma fase do workflow.
 
@@ -104,15 +103,16 @@ O plugin usa semver informal: `major.minor.patch`.
 - `minor` — novos princípios, novas skills, reorganização de estrutura (como esta refatoração)
 - `major` — mudanças que quebram nomes de skills existentes
 
-Atualizar `version` em `.claude-plugin/plugin.json` a cada mudança.
+Atualizar a versão em `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` e
+`versoes.intellix` de `~/.claude/metodologia.yaml` a cada mudança — o doctor compara os três.
 
 ---
 
 ## Validação de integridade
 
 O ID de uma skill no runtime é o **nome da pasta** (`skills/<id>/`), e o `name:` do
-frontmatter deve ser igual a ele. Após renomear pasta/`name:`, mexer em `hooks/hooks.json`
-ou em `suggest "..."` do skill-router.sh, rodar a partir da raiz do plugin:
+frontmatter deve ser igual a ele. Após renomear pasta/`name:`, mexer em `hooks/hooks.json`,
+rodar a partir da raiz do plugin:
 
 ```bash
 bash hooks/scripts/validate-hooks.sh
