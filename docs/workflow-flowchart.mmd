@@ -1,0 +1,49 @@
+%% Fonte única do diagrama do workflow IntelliX (2026-09-16).
+%% Fases e IDs espelham ~/.claude/metodologia.yaml — o doctor confere os IDs.
+%% Derivado publicado: docs/generated/workflow-flowchart.png (ver WORKFLOW-DOCUMENTATION.md §8).
+flowchart TD
+    START([Ideia do cliente]) --> DIAG
+
+    subgraph PRE["Pré-desenvolvimento"]
+        DIAG["Diagnóstico\nCLIENTE-DIAGNOSTICO.md"] --> GRILL["mattpocock-skills:grilling\n(pedido vago ou de alto impacto)"]
+        GRILL --> BRAIN["superpowers:brainstorming\nValidação da ideia"]
+        BRAIN --> PRD["ai-project-brainstorm\nPRD"]
+        PRD --> PLAN["superpowers:writing-plans\nPlano de implementação"]
+    end
+
+    PLAN --> GATE1{{"GATE\nCliente aprova PRD e plano"}}
+    GATE1 -- ajustar --> PRD
+    GATE1 -- aprovado --> F00
+
+    subgraph FASES["Fases IntelliX (metodologia.yaml)"]
+        F00["00 intellix:project-kickoff\n/intellix:new-project\nestrutura · references/ · DESIGN.md · CI"]
+        F00 --> F01["01 intellix:architecture\nschema RLS · rotas · tipos · ADRs"]
+        F01 --> UI{"Tem interface?"}
+        UI -- sim --> F02["02 intellix:frontend-design\nmotor: impeccable:impeccable"]
+        UI -- não --> F03
+        F02 --> F03["03 intellix:dev-standards"]
+        F03 --> AG{"Tem agentes de IA?"}
+        AG -- sim --> F03B["03b intellix:agent-creation"]
+        AG -- não --> F04
+        F03B --> F04
+
+        subgraph F04["04 Implementação por issue"]
+            SPEC["/intellix:spec"] --> BREAK["/intellix:break"] --> PLANI["/intellix:plan"] --> EXEC
+            subgraph EXEC["/intellix:execute — por arquivo"]
+                E1["intellix:model-writer · action-writer\ncomponent-writer · test-writer"] --> E2["intellix:spec-reviewer"] --> E3["intellix:code-quality-reviewer"]
+            end
+        end
+
+        F04 --> F05["05 intellix:integration"]
+        F05 --> F06["06 intellix:security-observability\n+ devsecops:lgpd-compliance"]
+        F06 --> GSEC{{"devsecops:security-gate = PASS"}}
+        GSEC --> F07["07 intellix:test-e2e"]
+        F07 --> GTEST{{"100% dos testes"}}
+        GTEST --> F08["08 /intellix:deploy (manual)\nCloudflare Workers · Custom Domain · runbook"]
+        F08 --> F09["09 intellix:project-handoff\nREADME · ADRs · acessos"]
+    end
+
+    F09 --> END([Entregue])
+
+    EXIST([Sistema existente]) --> A00B["00b intellix:code-audit"] --> PLANR["superpowers:writing-plans"] --> ADAPT["00 intellix:project-kickoff\nmodo adaptação"] --> F01
+    F09 -. antes do handoff .-> A00C["00c intellix:system-scan"]
