@@ -1,5 +1,8 @@
 #!/bin/bash
-# IntelliX Session Start Hook — v2.0
+# IntelliX Session Start Hook
+# Fases e IDs espelham ~/.claude/metodologia.yaml (fonte normativa) — o doctor
+# (checks 13 e 19) acusa divergência. Sem número de versão aqui: a versão vive
+# só em .claude-plugin/plugin.json.
 # Injeta contexto completo IntelliX antes da primeira resposta.
 # async: false garante execução antes do modelo responder.
 
@@ -12,7 +15,8 @@ fi
 
 cat <<EOF
 <intellix-session-context>
-  <plugin>IntelliX Engineering Plugin v2.0</plugin>
+  <plugin>IntelliX Engineering Plugin</plugin>
+  <normative-source>~/.claude/metodologia.yaml (fases, IDs, stack, artefatos)</normative-source>
   <current-phase>${PHASE}</current-phase>
 
   <identity>
@@ -69,29 +73,33 @@ cat <<EOF
     CRIAÇÃO (sistemas novos):
     - intellix:project-kickoff          → fase 00: diagnóstico, scaffolding, estrutura canônica
     - intellix:architecture             → fase 01: schema, data layer, API design, RBAC
-    - intellix:frontend-design-workflow → fase 02: design system, UI/UX, componentes
-    - intellix:agent-creation           → fase 03: blueprints agentes GPT Maker/n8n/nativo (opcional)
-    - intellix:dev-standards            → fase 04: TS strict, Server Actions, TanStack Query, caching
-    - intellix:integration              → fase 05: SDKs nativos, WhatsApp, n8n opcional
-    - intellix:security-observability   → fase 06: OWASP, rate limit, Sentry, logging (auto-nivel)
-    - intellix:test-e2e                 → fase 07: Playwright, Vitest, TDD
-    - intellix:deploy                   → fase 08: Cloudflare Workers (wrangler), CI/CD, DevOps, runbook
-    - intellix:handoff                  → fase 09: README, ADRs, entrega ao cliente
-    - intellix:live-chat                → fase 10: omnichannel IA + humano (opcional)
+    - intellix:frontend-design          → fase 02: roteiro de UI (motor de design: impeccable:impeccable) — se houver interface
+    - intellix:dev-standards            → fase 03: TS strict, Server Actions, TanStack Query, caching
+    - intellix:agent-creation           → fase 03b: blueprints de agentes GPT Maker/n8n/nativo — se houver agentes
+    - /spec → /break → /plan → /execute →   fase 04: implementação por issue, com review em dois estágios
+    - intellix:integration              → fase 05: SDKs nativos, WhatsApp, n8n
+    - intellix:security-observability   → fase 06: OWASP, rate limit, Sentry, logging + devsecops:security-gate
+    - intellix:test-e2e                 → fase 07: Playwright, Vitest, smoke → stress
+    - intellix:deploy                   → fase 08: Cloudflare Workers/Pages (wrangler), CI/CD, runbook — só manual (/intellix:deploy)
+    - intellix:project-handoff          → fase 09: README, ADRs, entrega ao cliente
+
+    MÓDULO OPCIONAL (não é fase):
+    - intellix:live-chat                → omnichannel IA + humano
 
     REVISÃO/REFATORAÇÃO (sistemas existentes):
     - intellix:code-audit               → fase 00b: gap analysis, score, roadmap priorizado
+    - intellix:system-scan              → fase 00c: veredito de maturidade Classe A/B/C (pré-handoff)
   </intellix-phases>
 
   <complementary-skills>
     DESIGN E UI:
-    - impeccable                  → init/shape/new-work (estrutura+implementação) + polish/animate/colorize
-    - ckm-ui-styling              → shadcn/ui avançado e tokens de design
+    - impeccable:impeccable       → init/shape/new-work (estrutura+implementação) + polish/animate/colorize
     - ui-ux-pro-max               → 50+ estilos, 161 paletas, análise UX
+    - vercel:shadcn               → shadcn/ui e tokens de componentes
 
-    BANCO DE DADOS:
-    - supabase-postgres-best-practices  → índices, RLS avançado, queries otimizadas
-    - vercel-react-best-practices       → Server Components, caching, bundle optimization
+    BANCO DE DADOS E REACT:
+    - supabase:supabase-postgres-best-practices  → índices, RLS avançado, queries otimizadas
+    - vercel:react-best-practices                → Server Components, caching, bundle optimization
 
     INTEGRAÇÕES N8N:
     - n8n-workflow-patterns       → padrões arquiteturais de workflows n8n
@@ -102,9 +110,6 @@ cat <<EOF
 
     AGENTES DE IA:
     - intellix-agent-creation     → blueprints multi-plataforma (GPT Maker/n8n/nativo)
-    - SKILL_AI Agent Creator      → agentes nativos humanizados e multicanal
-    - SKILL-chat-inteligente      → chat omnichannel standalone
-    - gptmaker-agent-creator      → criação e configuração no GPT Maker via MCP
 
     PROCESSO E QUALIDADE:
     - superpowers:test-driven-development         → TDD obrigatório

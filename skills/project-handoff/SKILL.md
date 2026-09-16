@@ -1,5 +1,5 @@
 ---
-name: handoff
+name: project-handoff
 description: >
   Use esta skill sempre que o usuário mencionar: documentação final,
   README, entregar projeto, handoff, cliente, "projeto concluído",

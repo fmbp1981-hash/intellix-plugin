@@ -1,5 +1,5 @@
 ---
-name: intellix-projeto-novo
+name: projeto-novo
 description: >
   Automação zero-touch para inicialização de projetos IntelliX via comando /projeto novo.
   Ativa quando o usuário digita "/projeto novo" ou menciona "iniciar projeto do zero com template",

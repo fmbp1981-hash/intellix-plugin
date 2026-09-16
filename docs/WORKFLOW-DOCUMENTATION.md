@@ -204,7 +204,7 @@ flowchart TD
         end
 
         subgraph F09["FASE 09 — Handoff"]
-            HO["intellix:handoff\nREADME · ADRs · Runbook\nAcesso cliente · .intellix-phase=done"]
+            HO["intellix:project-handoff\nREADME · ADRs · Runbook\nAcesso cliente · .intellix-phase=done"]
         end
 
         F08 --> F09
@@ -499,7 +499,7 @@ Checklist completo:
 
 ---
 
-#### FASE 09 — Handoff (`intellix:handoff`)
+#### FASE 09 — Handoff (`intellix:project-handoff`)
 
 Documentação final entregue ao cliente:
 - `README.md` com setup local completo

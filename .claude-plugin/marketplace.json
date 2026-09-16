@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "intellix-plugin",
   "metadata": {
-    "description": "Método oficial IntelliX.AI para criar, auditar, refatorar e fazer deploy de sistemas — 15 skills cobrindo as 11 fases do workflow."
+    "description": "Método oficial IntelliX.AI para criar, auditar, refatorar e fazer deploy de sistemas — skills, comandos e hooks das fases definidas em ~/.claude/metodologia.yaml."
   },
   "owner": {
     "name": "IntelliX.AI",
@@ -12,8 +12,8 @@
     {
       "name": "intellix",
       "source": "./",
-      "description": "IntelliX Engineering Plugin — Senior Developer de 15+ anos em SaaS. Cria sistemas do zero com Clean Architecture e audita/refatora sistemas existentes. 11 fases: kickoff, architecture, frontend-design, agents, dev-standards, integration, security, testing, deploy+DevOps, handoff.",
-      "version": "2.3.0",
+      "description": "IntelliX Engineering Plugin — Senior Developer de 15+ anos em SaaS. Cria sistemas do zero com Clean Architecture e audita/refatora sistemas existentes, seguindo as fases definidas em ~/.claude/metodologia.yaml (kickoff, architecture, frontend-design, dev-standards, agent-creation, implementação, integration, security, testing, deploy Cloudflare, handoff).",
+      "version": "2.4.0",
       "author": {
         "name": "IntelliX.AI",
         "url": "https://intellixai.com.br"

@@ -1,7 +1,7 @@
 #!/bin/bash
 # IntelliX Skill Router Hook (UserPromptSubmit)
 # Lê o prompt do usuário via stdin e sugere skills relevantes.
-# IntelliX Engineering Plugin v2.0 — 11 fases
+# IDs = nome da pasta em skills/ (validado por hooks/scripts/validate-hooks.sh)
 
 PROMPT=$(cat)
 

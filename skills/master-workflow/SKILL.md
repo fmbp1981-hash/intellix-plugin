@@ -1,5 +1,5 @@
 ---
-name: intellix-master-workflow
+name: master-workflow
 description: >
   Orquestrador do workflow completo IntelliX — da concepção ao deploy.
   Use esta skill SEMPRE que o usuário mencionar: criar um sistema, desenvolver uma aplicação,
@@ -90,7 +90,7 @@ Gera documento estruturado com:
 **Passo 1.3 — Stress-test do PRD (opcional mas recomendado):**
 
 ```
-Skill("grill-me")
+Skill("mattpocock-skills:grilling")
 ```
 
 Questiona implacavelmente cada decisão do PRD — features, arquitetura, personas, roadmap — até que não restem ambiguidades. Use antes de commitar o plano ao time.
@@ -113,8 +113,8 @@ Quando já há contexto suficiente na conversa e no codebase, `mattpocock-skills
 |---|---|
 | `superpowers:brainstorming` | Ideia bruta — explorar ângulos antes de qualquer estrutura |
 | `ai-project-brainstorm` | PRD completo guiado por perguntas interativas |
-| `mattpocock-skills:to-spec` | PRD rápido quando o contexto já está claro na conversa |
-| `grill-me` | Stress-test de PRD/plano aprovado antes de commitar |
+| `mattpocock-skills:to-spec` | PRD rápido quando o contexto já está claro na conversa (só a pedido explícito do usuário) |
+| `mattpocock-skills:grilling` | Stress-test de PRD/plano aprovado antes de commitar |
 
 ---
 
@@ -392,7 +392,7 @@ Checklist Cloudflare Workers (`wrangler` + `@opennextjs/cloudflare`):
 ### FASE 09 — Handoff
 
 ```
-Skill("intellix:handoff")
+Skill("intellix:project-handoff")
 ```
 
 Documentação final:

@@ -13,6 +13,17 @@ disable-model-invocation: true
 
 Checklist completo de deploy IntelliX. Esta skill é de invocação manual apenas
 (`disable-model-invocation: true`) — você controla quando fazer o deploy.
+Invocação: `/intellix:deploy`.
+
+## Phase gate (bloqueante) — rode antes de qualquer passo
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/phase-gate.sh deploy
+```
+
+Se sair com código 1, PARE e mostre ao usuário os itens faltantes. Só prossiga se o
+usuário dispensar explicitamente um pré-requisito. Confirme também que a Fase 07
+(test-e2e) terminou com sucesso.
 
 ## Passo 0 — Pipeline CI/CD `ci-cd-and-automation` (obrigatório, uma vez por projeto)
 
@@ -559,6 +570,6 @@ não documentadas encontradas na auditoria de 2026-09-07.
 ---
 
 ## Handover para Fase 09
-> "Deploy concluído. Sistema em produção. Próxima fase: **intellix:handoff** para documentação final."
+> "Deploy concluído. Sistema em produção. Próxima fase: **intellix:project-handoff** para documentação final."
 
 Atualize `.intellix-phase` para `done`.

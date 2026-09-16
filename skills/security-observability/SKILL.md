@@ -4,8 +4,8 @@ description: >
   Use esta skill antes do deploy em qualquer projeto com autenticação, dados de usuário,
   APIs públicas ou sistema em produção. Auto-detecta a natureza do projeto e aplica
   apenas o checklist relevante — landing page simples recebe verificação básica, SaaS/CRM
-  recebe auditoria completa. Esta é a Fase 06 do fluxo IntelliX — executada após testes
-  (Fase 07) e antes do deploy (Fase 08). Também ativa quando o usuário mencionar:
+  recebe auditoria completa. Esta é a Fase 06 do fluxo IntelliX — executada depois da integração
+  (Fase 05) e antes dos testes E2E (Fase 07) e do deploy (Fase 08). Também ativa quando o usuário mencionar:
   segurança, vulnerabilidade, rate limiting, logs, monitoramento, Sentry, auditoria,
   LGPD, OWASP, auth token, secrets, observabilidade.
 user-invocable: true

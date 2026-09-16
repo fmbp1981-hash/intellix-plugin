@@ -1,5 +1,5 @@
 ---
-name: frontend-design-workflow
+name: frontend-design
 description: >
   Use esta skill sempre que o projeto envolver criação ou melhoria de qualquer interface
   de usuário — dashboard, landing page, SaaS, módulos de UI, componentes, redesign ou
@@ -57,6 +57,9 @@ Anuncie cada fase para o usuário antes de executar:
 
 ---
 
+> **Nome da skill:** use sempre `impeccable:impeccable` (plugin v4, habilitado). Existe uma
+> cópia antiga solta chamada só `impeccable` que está sendo arquivada — não invoque pelo nome curto.
+
 ### Passo 1 — Contexto & Plano de UI `impeccable` (`init` → `shape`)
 
 > **Nota de manutenção (2026-09-07):** `vibestack-architect` foi consolidada dentro do
@@ -65,7 +68,7 @@ Anuncie cada fase para o usuário antes de executar:
 > `init` → `shape`/`new-work` — não é só uma skill de polish. Ver `WORKFLOW-SPINE-VS-ORBIT.md`
 > seção 4A.
 
-**Invoke:** `Skill("impeccable")` com sub-comando `init`, depois `shape [feature]`
+**Invoke:** `Skill("impeccable:impeccable")` com sub-comando `init`, depois `shape [feature]`
 
 Antes de qualquer pixel, defina a estrutura:
 
@@ -146,7 +149,7 @@ Converte o design system conceitual do Passo 2 em infraestrutura real de tokens 
 > `frontend-design-pro`) foi **desabilitado** — consolidado no `impeccable`. Não invoque
 > `frontend-design-pro`, essa skill não está mais habilitada.
 
-**Invoke:** `Skill("impeccable")` — sem sub-comando explícito, a implementação de uma
+**Invoke:** `Skill("impeccable:impeccable")` — sem sub-comando explícito, a implementação de uma
 superfície nova cai na rotina padrão `new-work` definida no Passo 1 (`shape`)
 
 Implementa a UI com qualidade de $50k+ agency, **respeitando rigorosamente** os Passos 1 e 2.
@@ -182,24 +185,22 @@ Componentes de página implementados, funcionais, com animações base e imagens
 
 ### Passo 3b — Polish e Animações Avançadas `impeccable`
 
-**Invoke:** `Skill("impeccable")`
+**Invoke:** `Skill("impeccable:impeccable")`
 
 Eleva o visual para nível production-grade com craft e detalhe excepcionais:
 
-**Pré-requisito:** criar `PRODUCT.md` na raiz do projeto antes de invocar (se não existir):
-```bash
-node .claude/skills/impeccable/scripts/load-context.mjs
-```
-Se PRODUCT.md não existir, rode `/impeccable teach` para gerá-lo a partir de perguntas guiadas.
+**Pré-requisito:** `PRODUCT.md` na raiz do projeto (gerado no Passo 1 pelo sub-comando
+`init`, alias `teach`). O próprio `impeccable:impeccable` carrega o contexto do projeto
+ao ser invocado — não há script para rodar à mão.
 
 **Sub-comandos disponíveis (invocar conforme necessidade):**
-- `/impeccable polish [componente]` — refinamento visual geral, hierarquia, espaçamento
-- `/impeccable animate [componente]` — motion design, micro-interações, transições de página
-- `/impeccable colorize [componente]` — sistema de cores, contraste, hierarquia cromática
-- `/impeccable typeset [componente]` — tipografia, ritmo vertical, escalas de texto
-- `/impeccable audit [página]` — análise completa de UI: cognitive load, UX copy, edge cases
-- `/impeccable bolder [componente]` — design muito discreto? tornar mais assertivo
-- `/impeccable quieter [componente]` — design muito lotado? simplificar
+- `/impeccable:impeccable polish [componente]` — refinamento visual geral, hierarquia, espaçamento
+- `/impeccable:impeccable animate [componente]` — motion design, micro-interações, transições de página
+- `/impeccable:impeccable colorize [componente]` — sistema de cores, contraste, hierarquia cromática
+- `/impeccable:impeccable typeset [componente]` — tipografia, ritmo vertical, escalas de texto
+- `/impeccable:impeccable audit [página]` — análise completa de UI: cognitive load, UX copy, edge cases
+- `/impeccable:impeccable bolder [componente]` — design muito discreto? tornar mais assertivo
+- `/impeccable:impeccable quieter [componente]` — design muito lotado? simplificar
 
 **Regras de aplicação:**
 - Respeitar RIGOROSAMENTE os tokens e design system dos Passos 2/2b

@@ -27,7 +27,7 @@ Pré-execução (uma vez por issue):
 2. Para cada arquivo, identifique o agente correto pela tabela de `MASTER-ARCHITECTURE.md §4`.
 3. Registre uma task no TodoWrite por arquivo.
 
-Ciclo por arquivo (3 estágios, nunca pule etapas):
+Ciclo por arquivo (3 estágios obrigatórios, nunca pule etapas; Estágio 4 condicional em `references/four-commands.md`):
 1. **Implementação** — despache o agente tipado correto (`component-writer`, `action-writer`, `hook-writer`, `route-writer`, `model-writer`, `integration-writer`, `test-writer`) com a spec da issue + `forbidden_paths`. Ele implementa, testa, faz self-review.
 2. **Spec review** — subagente `spec-reviewer` valida Happy Path + Edge Cases + Error Cases contra o diff. ❌ GAPS → agente corrige → repete.
 3. **Quality review** — subagente `code-quality-reviewer` valida TypeScript strict, zero `any`, Zod, naming, forbidden_paths. Critical/Important bloqueiam → agente corrige → repete. Minor → nota, não bloqueia.

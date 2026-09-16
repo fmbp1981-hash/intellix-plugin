@@ -1,8 +1,11 @@
-# IntelliX Master Architecture — Fonte Única de Verdade
+# IntelliX Master Architecture — Princípios e Visão do Sistema
 
-> **Este é o documento central do ecossistema IntelliX.**
-> Todo projeto, toda skill, todo agente deve referenciar e obedecer este documento.
-> Em caso de conflito entre qualquer skill e este documento, **este documento vence**.
+> **Este documento explica os princípios e a visão do sistema IntelliX.**
+> Os fatos normativos — IDs de skills, fases e ordem, gates, stack, artefatos
+> obrigatórios de projeto e versões — vivem em `~/.claude/metodologia.yaml`.
+> Em caso de conflito entre este documento e o YAML, **o YAML vence** e a
+> divergência é bug aqui (`python3 ~/.claude/scripts/doctor.py --strict` aponta).
+> Os princípios invioláveis da seção 0b continuam valendo para toda skill e agente.
 
 ---
 
@@ -83,9 +86,9 @@ Estas regras se aplicam a 100% das decisões. Nunca negocie com elas.
                               inclui inbox/handoff humano. Depende de 01, 02 e 03b.
 ```
 
-> **Numeração é normativa.** Esta tabela é a única fonte da numeração de fases. O
-> front-matter e os títulos de cada `skills/*/SKILL.md` devem bater exatamente com ela.
-> Divergência entre um SKILL.md e esta tabela é bug — corrigir o SKILL.md, não a tabela.
+> **Numeração:** a fonte normativa é `~/.claude/metodologia.yaml` (`fases`). Esta tabela,
+> o front-matter e os títulos de cada `skills/*/SKILL.md` devem bater com ela — o doctor
+> compara. Divergência é bug no markdown, não no YAML.
 > (Exceção: `test-e2e` usa "FASE 1..7" internamente para os *tipos* de teste — smoke,
 > funcional, negativo, edge, segurança, UI/UX, stress. Essa numeração interna é local
 > à skill e não conflita com a numeração de fases do projeto.)
@@ -150,7 +153,7 @@ projeto/
 
 ## 4. Agentes Especializados por Tipo de Arquivo
 
-Durante o `/execute`, cada arquivo passa por **3 estágios**: agente tipado → spec review → quality review.
+Durante o `/execute`, cada arquivo passa por **3 estágios obrigatórios**: agente tipado → spec review → quality review. Um **Estágio 4** (quality critic contra referência externa) roda só quando a issue ou o `DESIGN.md` define `quality_reference`.
 Os agentes vivem em `.claude/agents/`. Os reviewers são subagentes despachados inline.
 
 > **Referência completa do ciclo de execução:** [`references/four-commands.md §/execute`](references/four-commands.md)
@@ -295,7 +298,7 @@ Criadas durante o kickoff de cada projeto em `references/` na raiz do projeto:
 | 12b | LGPD + Privacy by Design (dados pessoais) | `devsecops:lgpd-compliance` | Plugin |
 | 13 | Testes E2E smoke → stress | `intellix:test-e2e` | Plugin → Externa |
 | 14 | Deploy Cloudflare (Workers/Pages) | `intellix:deploy` | Plugin |
-| 15 | README + ADRs + documentação final | `intellix:handoff` | Plugin |
+| 15 | README + ADRs + documentação final | `intellix:project-handoff` | Plugin |
 
 ### Skills Externas por Fase (invocadas pelos módulos do plugin)
 

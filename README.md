@@ -1,9 +1,11 @@
-# IntelliX Engineering Plugin v3.0
+# IntelliX Engineering Plugin
+
+> Versão: ver `.claude-plugin/plugin.json`. Fases, IDs e stack: `~/.claude/metodologia.yaml` (fonte normativa).
 
 > **Orquestrador principal:** [`skills/master-workflow/SKILL.md`](./skills/master-workflow/SKILL.md)
 > Define o fluxo completo da ideia ao deploy — brainstorm → PRD → plano → 10 fases de execução.
 >
-> **Fonte única de verdade de arquitetura:** [`MASTER-ARCHITECTURE.md`](./MASTER-ARCHITECTURE.md)
+> **Princípios e explicação da arquitetura:** [`MASTER-ARCHITECTURE.md`](./MASTER-ARCHITECTURE.md)
 > Estrutura de pastas, behavior isolation, repository/service, API standards, naming, segurança.
 > **Leia antes de qualquer implementação.**
 
@@ -70,7 +72,7 @@ especializadas externas em cada fase para máxima qualidade e eficiência.
 | 00b | `code-audit` | **Auditoria de sistemas existentes** — 10 dimensões, score, roadmap |
 | 00 | `project-kickoff` | Diagnóstico, scaffolding, estrutura canônica |
 | 01 | `architecture` | Schema Supabase, data layer, repository/service, API design, RBAC |
-| 02 | `frontend-design-workflow` | Design system, UI/UX, implementação visual (impeccable → ui-ux-pro-max) |
+| 02 | `frontend-design` | Design system, UI/UX, implementação visual (impeccable → ui-ux-pro-max) |
 | 03 | `agent-creation` | Blueprints de agentes: GPT Maker / n8n / nativo *(opcional)* |
 | 04 | `dev-standards` | TypeScript strict, Server Actions, TanStack Query, caching, formulários |
 | 05 | `integration` | SDKs nativos (Anthropic/OpenAI), WhatsApp, Supabase Realtime, n8n opcional |

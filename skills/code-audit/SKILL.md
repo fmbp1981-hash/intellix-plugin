@@ -457,7 +457,7 @@ Após validar o roadmap com o usuário, execute sprint por sprint usando as skil
 | Sprint 2 — Migração de Tech Debt (se aplicável) | `deprecation-and-migration` |
 | Sprint 4 — Testes | `intellix:test-e2e` |
 | Sprint 4 — CI/CD | `intellix:deploy` (seção GitHub Actions) |
-| Final — Deploy & Handoff | `intellix:deploy` + `intellix:handoff` |
+| Final — Deploy & Handoff | `intellix:deploy` + `intellix:project-handoff` |
 
 ---
 

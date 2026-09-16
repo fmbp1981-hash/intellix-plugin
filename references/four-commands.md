@@ -194,12 +194,12 @@ File: `app/(pages)/[rota]/behaviors/[nome-do-behavior]/`
 
 ---
 
-### /execute [issue] — Execução com Review em Dois Estágios
+### /execute [issue] — Execução: agente tipado + dois reviews (+ crítico condicional)
 
 **Quando:** Somente após aprovação explícita do `/plan`.
 
 O `/execute` usa um ciclo de **agente especializado → spec review → quality review** por arquivo/task.
-Cada arquivo da seção "Files" do plano passa por 3 estágios antes de ser marcado como concluído.
+Cada arquivo da seção "Files" do plano passa pelos **3 estágios obrigatórios** (implementação → spec review → quality review) antes de ser marcado como concluído. O **Estágio 4** (quality critic) só roda quando há `quality_reference` definida.
 
 ---
 
@@ -368,7 +368,7 @@ Nunca force retry sem mudança. Nunca pule spec review mesmo que pareça óbvio.
 
 ---
 
-**Regra de ouro:** Um arquivo só está "feito" quando passou pelos 3 estágios.
+**Regra de ouro:** Um arquivo só está "feito" quando passou pelos 3 estágios obrigatórios (e pelo Estágio 4, se ele se aplica).
 Spec review antes de quality review — sempre nessa ordem.
 
 ---
