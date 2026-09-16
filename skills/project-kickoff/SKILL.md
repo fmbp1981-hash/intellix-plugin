@@ -65,7 +65,7 @@ Com base no diagnóstico, confirme:
 
 ```
 Stack padrão IntelliX (imutável):
-- Frontend: Next.js 15 App Router + TypeScript strict + Tailwind + Shadcn/UI
+- Frontend: Next.js 16 App Router + TypeScript strict + Tailwind + Shadcn/UI
 - Backend: Supabase (DB + Auth + Edge Functions) + Cloudflare (Workers/Pages)
 - Agentes: SDK Anthropic / n8n + Evolution API (conforme necessidade)
 - Testes: Vitest (unit) + Playwright (E2E)
@@ -197,7 +197,7 @@ npm run test:watch   # Vitest em watch mode
 Rodar testes antes de qualquer commit. PRs bloqueados se testes falharem.
 
 ## Stack
-- **Framework:** Next.js 15 App Router + TypeScript strict
+- **Framework:** Next.js 16 App Router + TypeScript strict
 - **Estilo:** Tailwind CSS + Shadcn/UI
 - **Banco:** Supabase (PostgreSQL + Auth + RLS)
 - **Deploy:** Cloudflare Workers/Pages (`wrangler` + `@opennextjs/cloudflare`)
@@ -249,7 +249,7 @@ Nunca commitar `.env.local` ou `.env`.
 [Descrição em 2-3 linhas do que o sistema faz e para quem]
 
 ## Stack
-Next.js 15 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Cloudflare (Workers/Pages)
+Next.js 16 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Cloudflare (Workers/Pages)
 
 ## Fase atual
 [FASE] — ver .intellix-phase

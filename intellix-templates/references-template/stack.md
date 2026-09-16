@@ -4,7 +4,7 @@
 
 ## Stack Fixa
 
-- **Framework:** Next.js 15 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Linguagem:** TypeScript strict (`strict: true`, zero `any`)
 - **Estilo:** Tailwind CSS + Shadcn/UI
 - **Banco de dados:** Supabase (PostgreSQL + RLS + Auth)

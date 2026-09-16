@@ -157,7 +157,7 @@ CRON_SECRET=
 [Descrição em 2-3 linhas do que o sistema faz]
 
 ## Stack
-Next.js 15 App Router | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Cloudflare Workers
+Next.js 16 App Router | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Cloudflare Workers
 
 ## Fase atual
 [FASE] — ver .intellix-phase

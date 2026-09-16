@@ -118,7 +118,7 @@ src/
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Framework | Next.js 15 App Router |
+| Framework | Next.js 16 App Router |
 | Linguagem | TypeScript strict |
 | Estilo | Tailwind CSS + Shadcn/UI |
 | Banco | Supabase (PostgreSQL + Auth + RLS + Edge Functions) |

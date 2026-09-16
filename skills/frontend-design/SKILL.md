@@ -78,7 +78,7 @@ Antes de qualquer pixel, defina a estrutura:
 - `shape [feature]` planeja UX/UI antes de escrever código — task discovery e, para
   superfície nova ou substituição de visual world, entra em `new-work` (decide o
   "mundo visual": minimalismo, glassmorphism, brutalism, dark luxury etc.)
-- Stack visual: Next.js 15 + Tailwind + Shadcn/UI (padrão IntelliX) — informar isso ao
+- Stack visual: Next.js 16 + Tailwind + Shadcn/UI (padrão IntelliX) — informar isso ao
   `impeccable:impeccable` via `PRODUCT.md`/contexto do projeto
 - Estrutura de componentes: `src/components/ui/` (primitivos) + `src/components/[feature]/` (compostos)
 - Roteamento visual: grupos `(auth)`, `(dashboard)`, páginas públicas

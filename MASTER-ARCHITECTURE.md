@@ -134,7 +134,7 @@ Estrutura padrão para todo projeto IntelliX: App Router, behaviors isolados, ca
 
 ```
 projeto/
-├── src/app/           # Next.js 15 App Router — rotas, pages, layouts, api/
+├── src/app/           # Next.js 16 App Router — rotas, pages, layouts, api/
 ├── src/components/    # ui/ (Shadcn) | layout/ | shared/
 ├── src/lib/           # supabase/ | ai/ | [domain]/contracts.ts | api-response.ts
 ├── src/repositories/  # Data Access Layer — apenas Supabase

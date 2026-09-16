@@ -24,7 +24,7 @@ Gere o `README.md` seguindo o template IntelliX:
 > [Descrição em uma linha]
 
 ## Stack
-- **Frontend**: Next.js 15 App Router + TypeScript + Tailwind + Shadcn/UI
+- **Frontend**: Next.js 16 App Router + TypeScript + Tailwind + Shadcn/UI
 - **Backend**: Supabase (PostgreSQL + Auth + Edge Functions)
 - **Deploy**: Cloudflare Workers/Pages (ou a exceção declarada no `CLAUDE.md` do projeto)
 - **Integrações**: [listar: n8n, Evolution API, etc]

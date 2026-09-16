@@ -147,7 +147,7 @@ refactor(utils): extrai lógica de formatação de telefone
 ## Server Actions vs Route Handlers
 
 ```typescript
-// QUANDO usar Server Action (mutations de formulário, Next.js 15 padrão)
+// QUANDO usar Server Action (mutations de formulário, Next.js 16 padrão)
 // src/app/(dashboard)/contacts/actions.ts
 'use server'
 import { revalidatePath } from 'next/cache'
@@ -268,41 +268,51 @@ export function useCreateContact() {
 
 ---
 
-## Caching Strategy (Next.js 15)
+## Caching Strategy (Next.js 16 — Cache Components)
+
+Next.js 16 estabiliza o modelo **Cache Components** (`'use cache'` + `cacheLife` +
+`cacheTag`), que substitui `unstable_cache`. Habilitar em `next.config.ts`:
 
 ```typescript
-// Nível 1 — fetch() com cache (Server Components)
-// Cacheado até revalidar manualmente ou por tempo
-const data = await fetch('https://api.example.com/data', {
-  next: { revalidate: 3600 }  // revalida a cada 1h
-})
+const nextConfig: NextConfig = {
+  cacheComponents: true,
+}
+```
 
-// Nível 2 — unstable_cache (funções server-side)
-import { unstable_cache } from 'next/cache'
+```typescript
+// Nível 1 — 'use cache' em função server-side (substitui unstable_cache)
+import { cacheLife, cacheTag } from 'next/cache'
+import { contactsRepository } from '@/repositories/contacts'
 
-const getCachedContacts = unstable_cache(
-  async (userId: string) => contactsRepository.findAll(userId),
-  ['contacts'],
-  { revalidate: 60, tags: ['contacts'] }   // cache por 60s, tag para invalidação
-)
-
-// Nível 3 — revalidateTag (invalidar cache por tag)
-import { revalidateTag } from 'next/cache'
-
-export async function createContactAction(formData: FormData) {
-  // ... criar contato
-  revalidateTag('contacts')   // invalida tudo com a tag 'contacts'
+async function getCachedContacts(userId: string) {
+  'use cache'
+  cacheLife('minutes')          // perfil de expiração ('seconds' | 'minutes' | 'hours' | 'days' | 'max' | custom)
+  cacheTag(`contacts:${userId}`)
+  return contactsRepository.findAll(userId)
 }
 
-// Nível 4 — TanStack Query (Client Components)
+// Nível 2 — revalidateTag (invalidar cache por tag)
+// Desde o 16, um perfil de cache é obrigatório como 2º argumento
+import { revalidateTag } from 'next/cache'
+
+export async function createContactAction(userId: string, formData: FormData) {
+  // ... criar contato
+  revalidateTag(`contacts:${userId}`, 'max')
+}
+
+// Nível 3 — TanStack Query (Client Components)
 // Ver seção anterior
 ```
 
+**Migração:** `fetch()` com `{ next: { revalidate } }` e `unstable_cache` ainda funcionam
+sem `cacheComponents`, mas são o modelo antigo — não usar em código novo. Guia oficial de
+migração: `nextjs.org/docs/app/guides/migrating-to-cache-components` (consultar via Context7
+antes de implementar, pois a API pode mudar entre patches do 16).
+
 | Nível | Onde | Quando usar |
 |-------|------|-------------|
-| `fetch` cache | Server Component | Dados públicos, CDN-friendly |
-| `unstable_cache` | Server functions | Dados privados por usuário |
-| `revalidateTag` | Server Actions | Após mutations |
+| `'use cache'` + `cacheTag` | Server functions/components | Dados públicos ou por usuário, CDN-friendly |
+| `revalidateTag(tag, profile)` | Server Actions | Após mutations, invalidação por tag |
 | TanStack Query | Client Components | Dados interativos, realtime |
 
 ---

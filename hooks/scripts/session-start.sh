@@ -50,7 +50,7 @@ cat <<EOF
     - npm audit zerado antes de qualquer deploy para produção
 
     STACK IMUTÁVEL:
-    Next.js 15 App Router | TypeScript strict | Tailwind + Shadcn/UI
+    Next.js 16 App Router | TypeScript strict | Tailwind + Shadcn/UI
     Supabase (DB + Auth + Edge Functions) | Cloudflare (Workers/Pages) | Vitest + Playwright
   </mandatory-standards>
 
