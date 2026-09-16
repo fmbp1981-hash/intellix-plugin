@@ -158,7 +158,7 @@ flowchart TD
         end
 
         subgraph CYCLE["Ciclo /execute por arquivo"]
-            E1["Agente tipado implementa\ncomponent-writer · action-writer\nhook-writer · route-writer"]
+            E1["Agente tipado implementa\ncomponent-writer · action-writer\nmodel-writer · test-writer"]
             E2["spec-reviewer subagent\nHappy Path + Edge + Error Cases"]
             E3["code-quality-reviewer subagent\nTypeScript strict · Zod · Naming"]
             E1 --> E2
@@ -406,7 +406,7 @@ write-product-spec → PRODUCT.md com comportamentos, invariantes e edge cases
 
 ```
 1. Agente tipado implementa
-   (component-writer · action-writer · hook-writer · route-writer)
+   (intellix:component-writer · action-writer · model-writer · test-writer)
    └─ implementa → testa → self-review → reporta
 
 2. spec-reviewer subagent

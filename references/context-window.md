@@ -49,7 +49,7 @@ Após gerar o PRD / plano da issue:
 
 ### 3. Agentes em contextos separados
 
-`model_writer` e `component_writer` **não compartilham contexto**.
+`intellix:model-writer` e `intellix:component-writer` **não compartilham contexto**.
 Cada agente (subagente) recebe apenas o necessário para sua tarefa:
 - O plano da issue específica
 - Os arquivos do seu escopo

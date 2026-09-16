@@ -154,68 +154,46 @@ projeto/
 ## 4. Agentes Especializados por Tipo de Arquivo
 
 Durante o `/execute`, cada arquivo passa por **3 estágios obrigatórios**: agente tipado → spec review → quality review. Um **Estágio 4** (quality critic contra referência externa) roda só quando a issue ou o `DESIGN.md` define `quality_reference`.
-Os agentes vivem em `.claude/agents/`. Os reviewers são subagentes despachados inline.
+Os agentes vêm do **próprio plugin** (`agents/`), com o namespace `intellix:` — nunca são
+copiados para o projeto (fronteira global × projeto, `~/.claude/metodologia.yaml`). O que é
+específico do projeto fica em `CLAUDE.md`, `references/` e `DESIGN.md`, que os agentes leem.
 
 > **Referência completa do ciclo de execução:** [`references/four-commands.md §/execute`](references/four-commands.md)
 
 ### Tabela Agente → Tipo de Arquivo (Estágio 1)
 
-| Tipo de arquivo | Agente em `.claude/agents/` | Contexto obrigatório |
+| Tipo de arquivo | Agente (plugin IntelliX) | Contexto obrigatório |
 |---|---|---|
-| Componente de UI (`.tsx`) | `component-writer.md` | architecture.md + DESIGN.md |
-| Server Action (`actions.ts`) | `action-writer.md` | architecture.md |
-| Hook customizado (`use-*.ts`) | `hook-writer.md` | architecture.md |
-| Route Handler (`route.ts`) | `route-writer.md` | architecture.md + api-standards.md |
-| Modal / Dialog (`.tsx`) | `modal-writer.md` | architecture.md + DESIGN.md |
-| Integração externa (SDK, webhook) | `integration-writer.md` | architecture.md |
-| Schema / Tipos (`.sql`, `types.ts`) | `model-writer.md` | architecture.md + data-layer.md |
-| Testes de behavior (`.test.ts`) | `test-writer.md` | architecture.md + spec da issue |
+| Página, layout, componente, modal/diálogo (`.tsx`) e hook de UI (`use-*.ts`) | `intellix:component-writer` | architecture.md + DESIGN.md (raiz) |
+| Server Action (`actions.ts`), Route Handler (`route.ts`), service, schema Zod | `intellix:action-writer` | architecture.md + security.md (+ api-standards.md do plugin) |
+| Integração externa (SDK, webhook) | `intellix:action-writer` | architecture.md + security.md |
+| Migration (`.sql`), tipos (`src/types/`), repository | `intellix:model-writer` | architecture.md + stack.md (+ data-layer.md do plugin) |
+| Testes (`*.test.ts(x)`, `tests/`) | `intellix:test-writer` | architecture.md + spec da issue |
 
-### Estágio 2 — Spec Review (subagente)
+### Estágio 2 — Spec Review (`intellix:spec-reviewer`)
 
-Após o agente implementar: despachar subagente spec-reviewer com a spec da issue + diff.
+Após o agente implementar: despachar `intellix:spec-reviewer` com a spec da issue + diff.
 Verifica conformidade com Happy Path, Edge Cases e Error Cases.
 Bloqueia o Estágio 3 até ✅. Loop: agente corrige → revisor re-revisa.
 
-### Estágio 3 — Quality Review (subagente)
+### Estágio 3 — Quality Review (`intellix:code-quality-reviewer`)
 
-Após spec aprovada: despachar subagente code-quality-reviewer com o diff.
-Verifica: TypeScript strict, zero `any`, Zod em inputs, forbidden_paths, naming IntelliX.
+Após spec aprovada: despachar `intellix:code-quality-reviewer` com o diff.
+Verifica: TypeScript strict, zero `any`, Zod em inputs, limites de paths, naming IntelliX.
 Critical/Important bloqueiam → agente corrige → revisor re-revisa. Minor → nota, não bloqueia.
 
-> **Prompts padrão dos reviewers:** [`references/four-commands.md §Prompt padrão`](references/four-commands.md)
-
-### Skills que os Agentes Usam
-
-| Skill | O que faz |
-|---|---|
-| `write-component` | Gera componentes React seguindo estrutura obrigatória |
-| `write-action` | Gera Server Actions com validação Zod + auth check |
-| `write-hook` | Gera custom hooks com TanStack Query ou estado local |
-| `write-route` | Gera Route Handlers com apiResponse padronizado |
-| `write-model` | Gera tipos TypeScript + Zod schemas + SQL migration |
-| `write-integration` | Gera integrações com SDKs externos (Anthropic, Evolution, etc.) |
-| `write-behavior-test` | Gera testes de behavior (happy path + edge + error) |
-| `write-unit-test` | Gera testes unitários para funções puras e utils |
-| `write-issue` | Gera template de issue com as 7 seções obrigatórias |
-| `frontend-design` | Aplica design system, tokens e padrões visuais |
-| `epic-cli` | Comandos do workflow (/spec, /break, /plan, /execute) |
+> Os critérios completos de cada revisor estão no próprio arquivo do agente (`agents/*.md`).
 
 ### Estrutura `.claude/` por Projeto
 
 ```
 .claude/
-├── CLAUDE.md                 # Contexto do projeto
-├── settings.json             # Plugin IntelliX habilitado
-└── agents/
-    ├── action-writer.md      # Server Actions
-    ├── component-writer.md   # Componentes React
-    ├── hook-writer.md        # Custom hooks
-    ├── integration-writer.md # SDKs externos
-    ├── modal-writer.md       # Modais e dialogs
-    ├── route-writer.md       # Route Handlers
-    └── test-writer.md        # Testes
+└── settings.json             # plugin IntelliX habilitado
+CLAUDE.md                     # contexto do projeto (raiz)
+AGENTS.md                     # contexto neutro para qualquer agente (raiz)
 ```
+
+Não crie `.claude/agents/`, `.claude/skills/` nem `.claude/commands/` no projeto.
 
 ---
 
@@ -249,7 +227,7 @@ Dois conjuntos de referências disponíveis: arquivos do **plugin IntelliX** (di
 |---------|-------------|-----------------|
 | `devsecops:lgpd-compliance` (plugin `devsecops`) | Compliance LGPD: bases legais, direitos dos titulares, schema de tabelas, Privacy by Design, incidentes | Ao implementar qualquer feature com dados pessoais de brasileiros |
 | [`skills/projeto-novo/SKILL.md`](skills/projeto-novo/SKILL.md) | Automação zero-touch: /projeto novo — 9 passos de setup com templates e agentes | Ao iniciar projeto novo do zero |
-| [`intellix-templates/`](intellix-templates/) | Boilerplate com references/, agents-template/, version.json | Consultado automaticamente pelo /projeto novo |
+| [`intellix-templates/`](intellix-templates/) | Boilerplate com references-template/, root-template/ (DESIGN.md semente), delivery-templates/, version.json | Consultado automaticamente pelo /projeto novo |
 | [`references/four-commands.md`](references/four-commands.md) | Templates completos de /spec, /break, /plan, /execute + Checklist Fatal | Ao executar qualquer um dos 4 comandos |
 | [`references/context-window.md`](references/context-window.md) | Gerenciamento de context window: sintomas, diagnóstico, práticas operacionais | Ao iniciar `/execute` ou ao notar comportamento estranho da IA |
 | [`references/anti-patterns.md`](references/anti-patterns.md) | 5 anti-patterns críticos de SaaS + checklist de armadilhas | Antes de escrever qualquer acesso a dados ou auth |

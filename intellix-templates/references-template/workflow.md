@@ -34,9 +34,12 @@ Execute /clear nos seguintes momentos:
 
 ## Agentes por tipo de arquivo
 
-| Tipo | Agente | Arquivo |
-|------|--------|---------|
-| Schema DB + RLS | `model_writer` | `agentes/model_writer.json` |
-| Server Actions | `action_writer` | `agentes/action_writer.json` |
-| Componentes React | `component_writer` | `agentes/component_writer.json` |
-| Testes | `test_writer` | `agentes/test_writer.json` |
+Os agentes vêm do plugin IntelliX (não ficam neste repositório):
+
+| Tipo | Agente |
+|------|--------|
+| Migrations + RLS, tipos, repositories | `intellix:model-writer` |
+| Server Actions, route handlers, services, integrações | `intellix:action-writer` |
+| Páginas, componentes, modais, hooks de UI | `intellix:component-writer` |
+| Testes | `intellix:test-writer` |
+| Reviews (estágios 2 e 3 do /execute) | `intellix:spec-reviewer`, `intellix:code-quality-reviewer` |

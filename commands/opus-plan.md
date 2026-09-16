@@ -20,4 +20,4 @@ Execute agora:
 5. Produza o plano com trade-offs explícitos (não só a opção escolhida — também a rejeitada e por quê).
 6. Apresente ao usuário e **aguarde aprovação explícita** antes de descer para `/spec` → `/break` → `/plan` → `/execute`.
 
-> `model: opus` é fixo neste comando — é o ponto de maior alavancagem do fluxo inteiro (o handoff pós-`writing-plans` documentado em `modules/claude-md-rules.md` depende da qualidade dessa decisão). Depois que o plano estratégico está aprovado, todo o resto do Epic Workflow já roteia sozinho para modelos mais baratos: `/break` herda o padrão da sessão, os agentes de `/execute` já saem fixados em Sonnet/Haiku nos templates de `intellix-templates/agents-template/`.
+> `model: opus` é fixo neste comando — é o ponto de maior alavancagem do fluxo inteiro (o handoff pós-`writing-plans` documentado em `modules/claude-md-rules.md` depende da qualidade dessa decisão). Depois que o plano estratégico está aprovado, todo o resto do Epic Workflow já roteia sozinho para modelos mais baratos: `/break` herda o padrão da sessão, os agentes de `/execute` (`agents/*.md` do plugin) já fixam Sonnet/Haiku no próprio frontmatter.

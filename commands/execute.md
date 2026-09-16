@@ -28,9 +28,9 @@ Pré-execução (uma vez por issue):
 3. Registre uma task no TodoWrite por arquivo.
 
 Ciclo por arquivo (3 estágios obrigatórios, nunca pule etapas; Estágio 4 condicional em `references/four-commands.md`):
-1. **Implementação** — despache o agente tipado correto (`component-writer`, `action-writer`, `hook-writer`, `route-writer`, `model-writer`, `integration-writer`, `test-writer`) com a spec da issue + `forbidden_paths`. Ele implementa, testa, faz self-review.
-2. **Spec review** — subagente `spec-reviewer` valida Happy Path + Edge Cases + Error Cases contra o diff. ❌ GAPS → agente corrige → repete.
-3. **Quality review** — subagente `code-quality-reviewer` valida TypeScript strict, zero `any`, Zod, naming, forbidden_paths. Critical/Important bloqueiam → agente corrige → repete. Minor → nota, não bloqueia.
+1. **Implementação** — despache o agente tipado correto (`intellix:component-writer`, `intellix:action-writer`, `intellix:model-writer` ou `intellix:test-writer`) com a spec da issue + as listas "Files". Ele implementa, testa e faz self-review.
+2. **Spec review** — `intellix:spec-reviewer` valida Happy Path + Edge Cases + Error Cases contra o diff. ❌ GAPS → agente corrige → repete.
+3. **Quality review** — `intellix:code-quality-reviewer` valida TypeScript strict, zero `any`, Zod, naming e limites de paths. Critical/Important bloqueiam → agente corrige → repete. Minor → nota, não bloqueia.
 
 Pós-execução (checklist de conclusão da issue):
 ```
@@ -41,4 +41,4 @@ Pós-execução (checklist de conclusão da issue):
 [ ] Issue marcada como concluída no TodoWrite
 ```
 
-> Este comando herda o modelo padrão da sessão para a orquestração (dispatch + leitura de reviews). Os agentes tipados despachados em cada estágio já carregam seu próprio tier fixo nos templates de `intellix-templates/agents-template/*.json` — Sonnet para escrita de código sensível (components, actions, schema), Haiku para trabalho mecânico (testes). Isso é o roteamento planejamento-caro / execução-barata pedido: `/spec` e `/plan` em Opus, execução em Sonnet/Haiku.
+> Este comando herda o modelo padrão da sessão para a orquestração (dispatch + leitura de reviews). Os agentes do plugin fixam o próprio modelo no frontmatter de `agents/*.md` — Sonnet para escrita de código sensível (component, action, model) e para os revisores, Haiku para testes. Isso é o roteamento planejamento-caro / execução-barata: `/spec` e `/plan` em Opus, execução em Sonnet/Haiku.

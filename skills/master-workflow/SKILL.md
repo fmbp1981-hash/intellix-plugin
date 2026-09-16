@@ -288,23 +288,21 @@ Skill("mattpocock-skills:to-tickets")  → converte plano/PRD em issues independ
 Para cada arquivo da issue:
   1. Agente tipado implementa (component-writer, action-writer, etc.)
        ↓ implementa → testa → self-review → reporta
-  2. Spec-reviewer subagent — verifica Happy Path + Edge + Error Cases
+  2. intellix:spec-reviewer — verifica Happy Path + Edge + Error Cases
        ↓ ✅ aprovado ou ❌ gaps → agente corrige → repete
-  3. Code-quality-reviewer subagent — verifica TypeScript strict, Zod, naming
+  3. intellix:code-quality-reviewer — verifica TypeScript strict, Zod, naming
        ↓ ✅ aprovado ou ❌ Critical/Important → agente corrige → repete
   ✅ Arquivo concluído → próximo arquivo
 ```
 
 **Agentes por tipo de arquivo (Estágio 1):**
-- `component-writer.md` → componentes React + modais (`.tsx`)
-- `action-writer.md` → Server Actions (`actions.ts`)
-- `hook-writer.md` → custom hooks (`use-*.ts`)
-- `route-writer.md` → Route Handlers (`route.ts`)
-- `integration-writer.md` → SDKs externos / webhooks
-- `model-writer.md` → tipos TypeScript + SQL migrations
-- `test-writer.md` → testes (`.test.ts`)
+- `intellix:component-writer` → páginas, componentes, modais e hooks de UI (`.tsx`, `use-*.ts`)
+- `intellix:action-writer` → Server Actions, Route Handlers, services e integrações
+- `intellix:model-writer` → SQL migrations + RLS, tipos TypeScript, repositories
+- `intellix:test-writer` → testes (`.test.ts`)
+- Reviews: `intellix:spec-reviewer` (estágio 2) e `intellix:code-quality-reviewer` (estágio 3)
 
-> **Prompts dos reviewers e ciclo completo:** `references/four-commands.md §/execute`
+> Os agentes vêm do plugin (`agents/`). Ciclo completo: `references/four-commands.md §/execute`
 
 ---
 

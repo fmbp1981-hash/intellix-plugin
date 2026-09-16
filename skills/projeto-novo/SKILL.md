@@ -5,13 +5,13 @@ description: >
   Ativa quando o usuário digita "/projeto novo" ou menciona "iniciar projeto do zero com template",
   "setup automático de projeto", "boilerplate IntelliX", "criar projeto com estrutura SDD".
   Elimina setup manual: coleta inputs interativos, substitui placeholders nos templates,
-  compila agentes especializados, instala dependências e entrega estrutura pronta para /spec.
+  instala dependências e entrega estrutura pronta para /spec.
 user-invocable: true
 ---
 
 # /projeto novo — Setup Zero-Touch IntelliX
 
-Automatiza 100% do setup inicial: `references/` customizadas, agentes compilados,
+Automatiza 100% do setup inicial: `references/` customizadas,
 estrutura SDD, `.env.local` com secrets e `npm install` — tudo em ~2 minutos.
 
 > **Referência:** Parte 8 do roteiro SDD IntelliX. Ver também `MASTER-ARCHITECTURE.md §FASE-00`.
@@ -124,7 +124,6 @@ Criar a seguinte estrutura de pastas (apenas diretórios — arquivos vêm nos p
 │   └── e2e/
 ├── DESIGN.md
 ├── references/
-├── agentes/
 └── issues/
 ```
 
@@ -405,122 +404,14 @@ CREATE POLICY "admin_read_log" ON data_processing_log FOR SELECT USING (
 
 ---
 
-## PASSO 5 — Compilar Agentes Especializados
+## PASSO 5 — Agentes Especializados (nada a gerar)
 
-Criar os 4 arquivos JSON em `agentes/` com `{{PROJECT_NAME}}` substituído:
-
-### `agentes/model_writer.json`
-
-```json
-{
-  "name": "model_writer",
-  "project": "{{PROJECT_NAME}}",
-  "scope": "database-only",
-  "reads_before_start": [
-    "references/architecture.md",
-    "references/stack.md"
-  ],
-  "forbidden_paths": [
-    "app/",
-    "components/",
-    "lib/auth/",
-    "lib/ai/"
-  ],
-  "allowed_paths": [
-    "lib/db/",
-    "supabase/migrations/",
-    "supabase/seed.sql",
-    "src/types/index.ts"
-  ],
-  "max_context_percent": 45,
-  "skill": "write_db_models",
-  "system_prompt_prefix": "Você é o model_writer do projeto {{PROJECT_NAME}}. Sua única responsabilidade é schema de banco de dados e RLS policies. Antes de qualquer ação, leia references/architecture.md. Nunca toque em arquivos fora de lib/db/ ou supabase/. Toda tabela precisa de RLS ativo."
-}
-```
-
-### `agentes/action_writer.json`
-
-```json
-{
-  "name": "action_writer",
-  "project": "{{PROJECT_NAME}}",
-  "scope": "server-actions-only",
-  "reads_before_start": [
-    "references/architecture.md",
-    "references/security.md"
-  ],
-  "forbidden_paths": [
-    "components/",
-    "lib/db/",
-    "supabase/"
-  ],
-  "allowed_paths": [
-    "app/**/action.ts",
-    "app/**/schema.ts",
-    "lib/auth/",
-    "src/validations/"
-  ],
-  "max_context_percent": 45,
-  "skill": "write_server_actions",
-  "system_prompt_prefix": "Você é o action_writer do projeto {{PROJECT_NAME}}. Sua única responsabilidade são server actions e seus schemas Zod. Toda action DEVE: (1) validar sessão no início, (2) validar input com Zod, (3) re-validar permissões consultando DB. Nunca coloque lógica de negócio em componentes client."
-}
-```
-
-### `agentes/component_writer.json`
-
-```json
-{
-  "name": "component_writer",
-  "project": "{{PROJECT_NAME}}",
-  "scope": "ui-only",
-  "reads_before_start": [
-    "references/architecture.md",
-    "DESIGN.md"
-  ],
-  "forbidden_paths": [
-    "lib/db/",
-    "supabase/",
-    "app/**/action.ts",
-    "app/**/schema.ts"
-  ],
-  "allowed_paths": [
-    "app/**/form.tsx",
-    "app/**/page.tsx",
-    "app/**/layout.tsx",
-    "components/shared/"
-  ],
-  "max_context_percent": 45,
-  "skill": "write_components",
-  "system_prompt_prefix": "Você é o component_writer do projeto {{PROJECT_NAME}}. Sua única responsabilidade são componentes React client. Use apenas Shadcn/UI de @/components/ui — nunca crie Button, Input ou Dialog do zero. Nunca escreva lógica de negócio: apenas capture inputs e renderize outputs recebidos de server actions. Cor primária do projeto: {{PRIMARY_COLOR}}."
-}
-```
-
-### `agentes/test_writer.json`
-
-```json
-{
-  "name": "test_writer",
-  "project": "{{PROJECT_NAME}}",
-  "scope": "tests-only",
-  "reads_before_start": [
-    "references/architecture.md"
-  ],
-  "forbidden_paths": [
-    "lib/",
-    "components/ui/",
-    "supabase/"
-  ],
-  "allowed_paths": [
-    "app/**/*.test.tsx",
-    "tests/unit/",
-    "tests/integration/",
-    "tests/e2e/"
-  ],
-  "max_context_percent": 40,
-  "skill": "write_e2e_tests",
-  "system_prompt_prefix": "Você é o test_writer do projeto {{PROJECT_NAME}}. Sua única responsabilidade são testes. Para cada behavior, valide: (1) caminho feliz, (2) ao menos 1 edge case, (3) o erro mais provável. Nunca modifique arquivos de produção."
-}
-```
+Os agentes do `/execute` — `intellix:model-writer`, `intellix:action-writer`,
+`intellix:component-writer`, `intellix:test-writer`, `intellix:spec-reviewer` e
+`intellix:code-quality-reviewer` — são distribuídos pelo próprio plugin
+(`agents/`). **Não copie agentes para o projeto** (fronteira global × projeto em
+`~/.claude/metodologia.yaml`). O que é específico do projeto (cores, estrutura,
+regras) fica em `CLAUDE.md`, `references/` e `DESIGN.md`, que os agentes leem.
 
 ---
 
@@ -610,11 +501,12 @@ init → ver .intellix-phase
 - `references/stack.md` — versões fixas, não sugerir alternativas
 - `references/workflow.md` — regras operacionais para agentes
 
-## Agentes disponíveis
-- `agentes/model_writer.json` — schema DB + RLS (lib/db/ + supabase/)
-- `agentes/action_writer.json` — server actions (app/**/action.ts)
-- `agentes/component_writer.json` — componentes React (app/**/form.tsx)
-- `agentes/test_writer.json` — testes (tests/ + *.test.tsx)
+## Agentes do /execute (vêm do plugin IntelliX)
+- `intellix:model-writer` — migrations + RLS, tipos, repositories
+- `intellix:action-writer` — server actions, route handlers, services, integrações
+- `intellix:component-writer` — páginas, componentes, modais, hooks de UI
+- `intellix:test-writer` — testes
+- `intellix:spec-reviewer` / `intellix:code-quality-reviewer` — reviews dos estágios 2 e 3
 ```
 
 ---
@@ -691,7 +583,6 @@ Exibir relatório:
    ├── .github/workflows/security.yml  ← DevSecOps CI/CD (Gitleaks + Semgrep + Trivy)
    ├── DESIGN.md      ← design system semente (mantido depois pelo impeccable:impeccable)
    ├── references/    ← 4 arquivos customizados (architecture, workflow, stack, security)
-   ├── agentes/       ← 4 agentes compilados (model_writer, action_writer, component_writer, test_writer)
    ├── src/           ← estrutura SDD pronta
    ├── .env.local     ← secrets configurados
    ├── .env.example   ← template commitável
@@ -708,11 +599,8 @@ Exibir relatório:
    [se HAS_PERSONAL_DATA=S] ✓ supabase/migrations/00001_lgpd_tables.sql — consent_records + titular_requests + data_processing_log
    [se HAS_LLM=S] ✓ src/lib/ai/guardrails.ts — prePromptFilter + postOutputValidator
 
-🤖 Agentes prontos:
-   ✓ model_writer    → lib/db/ + supabase/migrations/
-   ✓ action_writer   → app/**/action.ts + schema.ts
-   ✓ component_writer → app/**/form.tsx + components/shared/
-   ✓ test_writer     → tests/ + *.test.tsx
+🤖 Agentes do /execute: fornecidos pelo plugin (intellix:model-writer, action-writer,
+   component-writer, test-writer, spec-reviewer, code-quality-reviewer)
 
 📋 Próximos passos:
    1. /spec — mapear páginas e comportamentos
@@ -734,8 +622,8 @@ Handover para `intellix:architecture` para definir schema de banco, rotas e tipo
 | R1 | **Atomicidade** | Se qualquer passo falhar → rollback completo da pasta criada + reportar erro com instrução |
 | R2 | **Idempotência** | Projeto existente detectado → menu [Atualizar references / Resetar / Cancelar] |
 | R3 | **Secrets isolados** | Variáveis com `_KEY`, `_SECRET`, `_TOKEN` → apenas em `.env.local` (gitignored), nunca em template commitável |
-| R4 | **Contexto isolado** | Cada agente JSON é invocado em instância separada — output de um vira arquivo, o próximo lê o arquivo |
-| R5 | **References primeiro** | `reads_before_start` em todo agente é a primeira ação antes de qualquer escrita |
+| R4 | **Contexto isolado** | Cada agente do plugin é despachado em instância separada — output de um vira arquivo, o próximo lê o arquivo |
+| R5 | **References primeiro** | Todo agente lê `CLAUDE.md`, `references/` e `DESIGN.md` antes de qualquer escrita |
 | R6 | **Versionamento** | Registrar versão do template em `references/stack.md` do projeto |
 
 ---
@@ -745,10 +633,10 @@ Handover para `intellix:architecture` para definir schema de banco, rotas e tipo
 Dentro de cada issue, os agentes são invocados nesta ordem:
 
 ```
-1. model_writer    → cria/atualiza tabelas + RLS migrations
-2. action_writer   → cria server actions + schemas Zod
-3. component_writer → cria UI consumindo as actions
-4. test_writer     → valida o fluxo completo
+1. intellix:model-writer     → cria/atualiza tabelas + RLS migrations, tipos, repositories
+2. intellix:action-writer    → cria server actions, services e schemas Zod
+3. intellix:component-writer → cria UI consumindo as actions
+4. intellix:test-writer      → valida o fluxo completo
 ```
 
 Cada agente recebe contexto isolado. O output de cada um vira arquivo em disco —

@@ -231,7 +231,7 @@ Para cada arquivo na lista "Files":
 
   ESTÁGIO 2 — Spec Review (subagente revisor)
   ─────────────────────────────────────────────
-  Dispatch: subagente spec-reviewer com:
+  Dispatch: `intellix:spec-reviewer` com:
     - A spec da issue (Happy Path + Edge Cases + Error Cases)
     - O diff do arquivo implementado
   O revisor responde: ✅ APROVADO ou ❌ GAPS com lista exata
@@ -240,7 +240,7 @@ Para cada arquivo na lista "Files":
 
   ESTÁGIO 3 — Quality Review (subagente revisor)
   ─────────────────────────────────────────────────
-  Dispatch: subagente code-quality-reviewer com:
+  Dispatch: `intellix:code-quality-reviewer` com:
     - O diff do arquivo
     - Padrões IntelliX: TypeScript strict, zero any, Zod, naming conventions
   O revisor responde: ✅ APROVADO ou ❌ ISSUES com prioridade (Critical/Important/Minor)
@@ -288,57 +288,24 @@ da lista — não pare o restante da execução por causa de um único bloqueio.
 
 #### Tabela: Agente por Tipo de Arquivo
 
-| Arquivo | Agente | Contexto obrigatório |
-|---------|--------|---------------------|
-| `.tsx` (componente/página) | `component-writer` | architecture.md + DESIGN.md |
-| `actions.ts` (Server Action) | `action-writer` | architecture.md |
-| `use-*.ts` (hook) | `hook-writer` | architecture.md |
-| `route.ts` (Route Handler) | `route-writer` | architecture.md + api-standards.md |
-| `*.sql` / tipos (schema) | `model-writer` | architecture.md + data-layer.md |
-| SDK / webhook / integração | `integration-writer` | architecture.md |
-| `*.test.ts` | `test-writer` | architecture.md + spec da issue |
+| Tipo de arquivo | Agente (plugin IntelliX) | Contexto obrigatório |
+|---|---|---|
+| Página, layout, componente, modal/diálogo (`.tsx`) e hook de UI (`use-*.ts`) | `intellix:component-writer` | architecture.md + DESIGN.md (raiz) |
+| Server Action (`actions.ts`), Route Handler (`route.ts`), service, schema Zod | `intellix:action-writer` | architecture.md + security.md (+ api-standards.md do plugin) |
+| Integração externa (SDK, webhook) | `intellix:action-writer` | architecture.md + security.md |
+| Migration (`.sql`), tipos (`src/types/`), repository | `intellix:model-writer` | architecture.md + stack.md (+ data-layer.md do plugin) |
+| Testes (`*.test.ts(x)`, `tests/`) | `intellix:test-writer` | architecture.md + spec da issue |
 
 ---
 
-#### Prompt padrão — Spec Reviewer
+#### Revisores
 
-```
-Você é um spec-reviewer. Sua única tarefa é verificar se o código implementado
-atende à spec fornecida. Não avalie qualidade de código, apenas conformidade com spec.
+- Estágio 2: `intellix:spec-reviewer` — recebe Happy Path, Edge Cases e Error Cases da issue + o diff.
+- Estágio 3: `intellix:code-quality-reviewer` — recebe o diff + as listas "Files" da issue.
 
-SPEC:
-[colar seções: Happy Path, Edge Cases, Error Cases da issue]
-
-CÓDIGO IMPLEMENTADO:
-[colar diff ou conteúdo do arquivo]
-
-Responda com uma das duas opções:
-✅ APROVADO — o código atende todos os requisitos da spec.
-❌ GAPS — liste exatamente o que está faltando ou errado, um item por linha.
-Não adicione sugestões além do que a spec pede.
-```
-
----
-
-#### Prompt padrão — Code Quality Reviewer
-
-```
-Você é um code-quality-reviewer IntelliX. Avalie o código implementado
-contra os padrões IntelliX (TypeScript strict, zero any, Zod em inputs,
-forbidden_paths respeitados, naming conventions, sem lógica no frontend).
-
-CÓDIGO IMPLEMENTADO:
-[colar diff ou conteúdo do arquivo]
-
-Responda com:
-✅ APROVADO
-ou
-❌ ISSUES — para cada problema, classifique:
-  - Critical: viola segurança, expõe secret, any explícito, lógica no frontend
-  - Important: naming errado, Zod ausente em input, import fora do escopo
-  - Minor: comentário desnecessário, arquivo grande demais
-Não invente issues que não existem no código.
-```
+Os critérios e o formato de resposta (✅ APROVADO / ❌ GAPS / ❌ ISSUES com
+Critical/Important/Minor) estão nos próprios agentes (`agents/*.md` do plugin) —
+não repita o prompt aqui.
 
 ---
 
