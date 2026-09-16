@@ -110,11 +110,14 @@ Atualizar `version` em `.claude-plugin/plugin.json` a cada mudança.
 
 ## Validação de integridade
 
-Após qualquer alteração em `name:` de um SKILL.md ou em `suggest "..."` do skill-router.sh, rodar:
+O ID de uma skill no runtime é o **nome da pasta** (`skills/<id>/`), e o `name:` do
+frontmatter deve ser igual a ele. Após renomear pasta/`name:`, mexer em `hooks/hooks.json`
+ou em `suggest "..."` do skill-router.sh, rodar a partir da raiz do plugin:
 
 ```bash
-cd /c/Users/Dell/.claude/plugins/marketplaces/intellix-plugin
 bash hooks/scripts/validate-hooks.sh
+python3 ~/.claude/scripts/doctor.py --strict
 ```
 
-Exit 0 = tudo ok. Exit 1 = referência quebrada — o hook vai sugerir uma skill que não existe.
+Exit 0 = tudo ok. Exit 1 = referência quebrada. Exit 2 = erro interno do validador
+(nunca é tratado como sucesso).
