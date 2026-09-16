@@ -1,5 +1,11 @@
 # Plugin Hook Validator Implementation Plan
 
+> **HISTÓRICO — não é regra vigente.** Documento superado pela remediação de 2026-09-16
+> (`INTELLIX_PLANO_EXECUCAO_REMEDIACAO.md` e `INTELLIX_MANIFESTO_REMEDIACAO.md`, em
+> `~/Documents/Codex/2026-09-16/leia-toda-x20/outputs/`). Regras atuais:
+> `~/.claude/metodologia.yaml`. Mantido apenas como registro de decisões e contexto.
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Criar `validate-hooks.sh` — script que detecta automaticamente quando um nome de skill referenciado no `skill-router.sh` não tem `SKILL.md` correspondente com aquele `name:` no frontmatter.

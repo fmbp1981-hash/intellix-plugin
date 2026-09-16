@@ -1,5 +1,11 @@
 # IntelliX Plugin Update — Senior Review Lessons — Implementation Plan
 
+> **HISTÓRICO — não é regra vigente.** Documento superado pela remediação de 2026-09-16
+> (`INTELLIX_PLANO_EXECUCAO_REMEDIACAO.md` e `INTELLIX_MANIFESTO_REMEDIACAO.md`, em
+> `~/Documents/Codex/2026-09-16/leia-toda-x20/outputs/`). Regras atuais:
+> `~/.claude/metodologia.yaml`. Mantido apenas como registro de decisões e contexto.
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Incorporar ao plugin IntelliX as 5 falhas críticas identificadas no code review sênior do LeadFinder Pro, tornando-as checklist obrigatório em projetos futuros.

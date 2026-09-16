@@ -1,5 +1,11 @@
 # IntelliX Plugin — Refatoração Arquitetural Implementation Plan
 
+> **HISTÓRICO — não é regra vigente.** Documento superado pela remediação de 2026-09-16
+> (`INTELLIX_PLANO_EXECUCAO_REMEDIACAO.md` e `INTELLIX_MANIFESTO_REMEDIACAO.md`, em
+> `~/Documents/Codex/2026-09-16/leia-toda-x20/outputs/`). Regras atuais:
+> `~/.claude/metodologia.yaml`. Mantido apenas como registro de decisões e contexto.
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Tornar o plugin IntelliX profissional, lean e manutenível: corrigir contradição interna, desacoplar o god-document em referências focadas, eliminar numeração frágil de skills e documentar convenções de extensão.
