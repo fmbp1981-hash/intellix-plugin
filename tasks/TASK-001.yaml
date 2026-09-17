@@ -1,7 +1,7 @@
 {
   "id": "TASK-001",
   "title": "Consolidate framework authority and project-root validation",
-  "status": "IN_REVIEW",
+  "status": "APPROVED",
   "objective": "Establish one authority map and make validation fail closed against an explicit client project root.",
   "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md", "spec": "docs/architecture/TASK-CONTRACT-V1.md", "adrs": ["docs/adr/0001-vendor-neutral-multiagent-kernel.md", "docs/adr/0002-operational-orchestrator.md"]},
   "risk": {"level": "high", "reasons": ["Changes the normative boundary and validator used by all consumers"], "irreversible_actions": []},
@@ -25,6 +25,6 @@
   ],
   "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
   "rollback": "Revert the scoped implementation commit and rerun the baseline validator; no runtime or external data migration is involved.",
-  "notes": ["Human approval for the five target architecture artifacts and the expanded role fileset was recorded in the controlling session on 2026-09-17.", "TASK-001 validates an explicit project root, a local framework source and matching framework version. Snapshot lock filename, digest and distribution remain exclusively in TASK-002.", "This task replaces the earlier validator-only TASK-001 because authority and root semantics must be fixed together.", "Implementation completed in the dedicated same-branch worktree intellix-plugin-TASK-001; no later task was started.", "Independent Claude review returned APPROVE with no high or medium findings; its Windows absolute-path hardening suggestion was implemented and regression-tested."],
+  "notes": ["Human approval for the five target architecture artifacts and the expanded role fileset was recorded in the controlling session on 2026-09-17.", "TASK-001 validates an explicit project root, a local framework source and matching framework version. Snapshot lock filename, digest and distribution remain exclusively in TASK-002.", "This task replaces the earlier validator-only TASK-001 because authority and root semantics must be fixed together.", "Implementation completed in the dedicated same-branch worktree intellix-plugin-TASK-001; no later task was started.", "Independent Claude review returned APPROVE with no high or medium findings; its Windows absolute-path hardening suggestion was implemented and regression-tested.", "The controlling human explicitly approved the TASK-001 handoff on 2026-09-17 after CI and independent review passed."],
   "handoff": {"required_evidence": ["external-consumer fixture plus fail-closed negative cases", "22 passing validator tests", "explicit-root, task and tasks-directory validation output", "compileall, hook validation and diff-check output", "changed-file inventory restricted to the approved fileset", "independent Claude review decision: APPROVE"], "open_questions": []}
 }
