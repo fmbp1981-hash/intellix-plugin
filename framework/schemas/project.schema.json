@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "project", "framework", "documents", "repositories", "quality", "deployment"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string"},
+    "project": {"type": "object", "required": ["name", "profile", "owners"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "profile": {"type": "string"}, "owners": {"type": "array", "minItems": 1, "items": {"type": "string"}}}},
+    "framework": {"type": "object", "required": ["version", "source"], "additionalProperties": false, "properties": {"version": {"type": "string"}, "source": {"type": "string"}}},
+    "documents": {"type": "object", "required": ["prd", "architecture", "spec", "tasks", "adrs"], "additionalProperties": false, "properties": {"prd": {"type": "string"}, "architecture": {"type": "string"}, "spec": {"type": "string"}, "tasks": {"type": "string"}, "adrs": {"type": "string"}}},
+    "repositories": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["path", "default_branch"], "additionalProperties": false, "properties": {"path": {"type": "string"}, "default_branch": {"type": "string"}}}},
+    "quality": {"type": "object", "required": ["commands"], "additionalProperties": false, "properties": {"commands": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "coverage_target": {"type": "number", "minimum": 0, "maximum": 100}}},
+    "deployment": {"type": "object", "required": ["provider", "production_environment"], "additionalProperties": false, "properties": {"provider": {"type": "string"}, "production_environment": {"type": "string"}}}
+  }
+}

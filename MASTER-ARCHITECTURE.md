@@ -2,9 +2,9 @@
 
 > **Este documento explica os princípios e a visão do sistema IntelliX.**
 > Os fatos normativos — IDs de skills, fases e ordem, gates, stack, artefatos
-> obrigatórios de projeto e versões — vivem em `~/.claude/metodologia.yaml`.
-> Em caso de conflito entre este documento e o YAML, **o YAML vence** e a
-> divergência é bug aqui (`python3 ~/.claude/scripts/doctor.py --strict` aponta).
+> obrigatórios de projeto e versões — vivem em `framework/framework.yaml`.
+> `global-config/metodologia.yaml` é o adapter operacional do Claude Code. Em
+> caso de conflito, o framework versionado vence e a divergência está no adapter.
 > Os princípios invioláveis da seção 0b continuam valendo para toda skill e agente.
 
 ---
@@ -86,9 +86,9 @@ Estas regras se aplicam a 100% das decisões. Nunca negocie com elas.
                               inclui inbox/handoff humano. Depende de 01, 02 e 03b.
 ```
 
-> **Numeração:** a fonte normativa é `~/.claude/metodologia.yaml` (`fases`). Esta tabela,
-> o front-matter e os títulos de cada `skills/*/SKILL.md` devem bater com ela — o doctor
-> compara. Divergência é bug no markdown, não no YAML.
+> **Numeração:** `framework/framework.yaml` é a fonte normativa; a tradução das
+> fases para Claude Code fica em `global-config/metodologia.yaml`. O front-matter
+> e os títulos de cada skill devem bater com o adapter — o doctor compara.
 > (Exceção: `test-e2e` usa "FASE 1..7" internamente para os *tipos* de teste — smoke,
 > funcional, negativo, edge, segurança, UI/UX, stress. Essa numeração interna é local
 > à skill e não conflita com a numeração de fases do projeto.)
@@ -109,9 +109,9 @@ Para cada feature/módulo: `/spec` → `/break` → `/plan` → `/execute`. Nunc
 | Comando | Quando | O que faz |
 |---------|--------|-----------|
 | `/spec` | Início de feature | Cria/atualiza `SPEC.md` — O QUÊ, não o COMO |
-| `/break` | Após SPEC aprovado | Cria `issues/` com behaviors atômicos ordenados |
-| `/plan` | Antes de cada issue | Pesquisa codebase, preenche 7 seções, aguarda aprovação |
-| `/execute` | Após plan aprovado | Implementa APENAS os arquivos do plano, roda checklist |
+| `/break` | Após SPEC aprovado | Cria `tasks/TASK-NNN.yaml` com behaviors atômicos |
+| `/plan` | Antes de cada task | Completa risco, fileset, critérios, ownership e gates |
+| `/execute` | Após contrato aprovado | Implementa, gera evidência, revisão independente e CI |
 
 > **Referência completa (templates, exemplos, regras):** [`references/four-commands.md`](references/four-commands.md)
 
@@ -155,7 +155,7 @@ projeto/
 
 Durante o `/execute`, cada arquivo passa por **3 estágios obrigatórios**: agente tipado → spec review → quality review. Um **Estágio 4** (quality critic contra referência externa) roda só quando a issue ou o `DESIGN.md` define `quality_reference`.
 Os agentes vêm do **próprio plugin** (`agents/`), com o namespace `intellix:` — nunca são
-copiados para o projeto (fronteira global × projeto, `~/.claude/metodologia.yaml`). O que é
+copiados para o projeto (fronteira global × projeto, `framework/framework.yaml`). O que é
 específico do projeto fica em `CLAUDE.md`, `references/` e `DESIGN.md`, que os agentes leem.
 
 > **Referência completa do ciclo de execução:** [`references/four-commands.md §/execute`](references/four-commands.md)
@@ -240,7 +240,7 @@ Dois conjuntos de referências disponíveis: arquivos do **plugin IntelliX** (di
 
 ### Referências por Projeto
 
-Criadas durante o kickoff de cada projeto (lista normativa: `artefatos_projeto` em `~/.claude/metodologia.yaml`):
+Criadas durante o kickoff (lista operacional no adapter `global-config/metodologia.yaml`):
 
 | Arquivo | Conteúdo | Quando ler |
 |---------|----------|-----------|

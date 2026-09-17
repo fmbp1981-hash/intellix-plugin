@@ -13,7 +13,8 @@ Fluxo (detalhe na skill):
 4. Retrofit DevSecOps do que faltar (Sprint 0) e roadmap de refatoração (Sprints 1 a 4).
 5. Guia de execução sprint a sprint com as skills IntelliX.
 
-Fronteiras (normativas em `~/.claude/metodologia.yaml → auditorias`):
+Fronteiras operacionais (adapter em `global-config/metodologia.yaml → auditorias`;
+o núcleo normativo permanece em `framework/framework.yaml`):
 - este comando = **auditoria de entrada** ("posso seguir desenvolvendo em cima disto?");
 - `intellix:system-scan` = **auditoria de saída** (veredito Classe A/B/C antes de handoff/demo);
 - `devsecops:security-gate` = **gate de segurança** antes de deploy; `/devsecops:pentest` = teste ofensivo autorizado.

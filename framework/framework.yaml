@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0.0",
+  "framework_version": "1.0.0",
+  "plugin_version": "3.1.0",
+  "name": "IntelliX Multi-Agent Engineering Framework",
+  "normative": true,
+  "principles": [
+    "artifacts_over_chat",
+    "one_normative_source",
+    "vendor_neutral_core",
+    "least_privilege_filesets",
+    "independent_review",
+    "deterministic_ci_is_final_arbiter",
+    "human_approval_for_irreversible_risk",
+    "observability_and_rollback_by_design"
+  ],
+  "artifact_flow": ["PRD", "ARCHITECTURE", "SPEC", "TASK_CONTRACT", "CODE", "EVIDENCE", "RELEASE"],
+  "roles_directory": "framework/roles",
+  "policies": {
+    "git": "framework/policies/git.yaml",
+    "security": "framework/policies/security.yaml",
+    "testing": "framework/policies/testing.yaml",
+    "deployment": "framework/policies/deployment.yaml"
+  },
+  "schemas": {
+    "task": "framework/schemas/task.schema.json",
+    "role": "framework/schemas/role.schema.json",
+    "project": "framework/schemas/project.schema.json",
+    "approval": "framework/schemas/approval.schema.json",
+    "waiver": "framework/schemas/waiver.schema.json",
+    "handoff": "framework/schemas/handoff.schema.json"
+  },
+  "defaults": {
+    "architect": "claude",
+    "executor": "codex",
+    "reviewer": "claude",
+    "ci_arbiter": "github-actions",
+    "branch_strategy": "trunk_based_short_lived",
+    "protected_branch": "main",
+    "worktree_from_risk": "medium",
+    "maximum_review_cycles": 3
+  },
+  "task_lifecycle": [
+    "DRAFT", "READY_FOR_ARCH_REVIEW", "READY", "IN_PROGRESS", "BLOCKED",
+    "IN_REVIEW", "CHANGES_REQUESTED", "APPROVED", "MERGED", "VERIFIED", "RELEASED"
+  ],
+  "risk_gates": {
+    "low": ["schema", "lint", "tests", "independent_review"],
+    "medium": ["schema", "fileset", "lint", "tests", "independent_review", "worktree"],
+    "high": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+    "critical": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "staged_release", "worktree"]
+  },
+  "authority": [
+    "framework/framework.yaml",
+    "framework/policies/*.yaml",
+    "framework/roles/*.yaml",
+    "intellix.yaml",
+    "docs/adr/*.md",
+    "tasks/TASK-*.yaml",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ]
+}

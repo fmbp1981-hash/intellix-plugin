@@ -1,0 +1,6 @@
+# Project agent adapter
+
+Read `{{framework_source}}`, `intellix.yaml` and the assigned Task Contract.
+Codex is the default executor. Work only inside the declared fileset, run every
+verification command, and return a schema-valid handoff for independent review.
+CI failures are blocking. Human approval is mandatory for irreversible actions.

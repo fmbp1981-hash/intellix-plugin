@@ -12,7 +12,8 @@ Ela executa:
 1. Diagnóstico e briefing (tipo de sistema, integrações, IA, dados pessoais, nome, cliente, cores).
 2. Estrutura canônica + `AGENTS.md`, `CLAUDE.md`, `CLAUDE.local.md`, `.claude/settings.json`, `.gitignore`.
 3. Bootstrap técnico (`skills/project-kickoff/references/bootstrap-projeto-novo.md`):
-   `references/` (architecture, security, stack, workflow), `DESIGN.md` semente, `issues/`,
+   `references/` (architecture, security, stack, workflow), `DESIGN.md` semente,
+   `tasks/`, `intellix.yaml`, adapters `AGENTS.md`/`CLAUDE.md` e `issues/` legado,
    `.github/workflows/security.yml`, `.env.example`/`.env.local`, `package.json` (versões
    verificadas antes) e `npm install` com sua confirmação.
 4. Verificação: `python3 ~/.claude/scripts/scaffold-check.py . --fase kickoff`.

@@ -1,0 +1,1 @@
+{"task":"TASK-001","from":"codex","to":"claude","status":"ready","summary":"Implementation is complete and ready for independent review.","changed_files":["src/example.ts"],"evidence":["npm test: PASS"],"open_risks":[],"next_action":"Review acceptance criteria and diff, then record a gate decision."}

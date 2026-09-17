@@ -122,7 +122,9 @@ projeto/
 │   ├── integration/
 │   └── e2e/                    # Playwright
 ├── references/                 # architecture.md, security.md, stack.md, workflow.md (dos templates)
-├── issues/                     # criado vazio; /break preenche
+├── tasks/                      # Task Contracts; /break preenche
+├── issues/                     # legado; manter apenas ao migrar projeto existente
+├── intellix.yaml               # vínculo projeto → framework, docs, CI e deploy
 ├── DESIGN.md                   # semente do design (se houver UI) — o impeccable:impeccable mantém
 ├── .intellix-phase             # Fase atual: init|arch|dev|test|deploy|done
 ├── AGENTS.md                   # Contexto operacional para QUALQUER agente (Cursor, Codex, Copilot...)
@@ -132,7 +134,9 @@ projeto/
 └── README.md
 ```
 
-> **`AGENTS.md` vs `CLAUDE.md`:** `AGENTS.md` contém fatos operacionais neutros (comandos, testes, PR format) legíveis por qualquer agente de coding. `CLAUDE.md` contém regras Claude-específicas (IntelliX workflow, plugin hooks). Claude Code lê ambos; Cursor/Codex/Aider/Copilot só leem `AGENTS.md`.
+> **`AGENTS.md` vs `CLAUDE.md`:** `AGENTS.md` é o adapter neutro e aponta para
+> `framework/framework.yaml`, `intellix.yaml` e Task Contracts. `CLAUDE.md` só
+> contém regras Claude-específicas. Nenhum dos dois replica a fonte normativa.
 
 > **`CLAUDE.md` vs `CLAUDE.local.md`:** o primeiro é versionado e vale para o time inteiro (stack, fase, convenções). O segundo é gitignored e vale só para a sua máquina (paths absolutos, branch em que você está, string de conexão do banco local). Nunca coloque segredo em nenhum dos dois.
 

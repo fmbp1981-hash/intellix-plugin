@@ -1,0 +1,5 @@
+# Claude Code project adapter
+
+Read `AGENTS.md`, `{{framework_source}}`, `intellix.yaml` and the assigned Task
+Contract. Claude is the default architect/reviewer. Do not implement and approve
+the same task. Record architectural decisions as ADRs and treat CI as binding.
