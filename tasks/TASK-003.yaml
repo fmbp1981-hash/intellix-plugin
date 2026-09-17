@@ -1,0 +1,123 @@
+{
+  "id": "TASK-003",
+  "title": "Task worktree ownership and isolation",
+  "status": "DRAFT",
+  "objective": "Enforce exclusive task ownership and Git worktree isolation for medium, high and critical risk.",
+  "source": {
+    "prd": "README.md",
+    "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
+    "adrs": [
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md"
+    ]
+  },
+  "risk": {
+    "level": "high",
+    "reasons": [
+      "Changes governance or execution controls for all framework consumers"
+    ],
+    "irreversible_actions": []
+  },
+  "ownership": {
+    "architect": "claude",
+    "executor": "codex",
+    "reviewer": "claude",
+    "domain_role": "platform-engineer"
+  },
+  "scope": {
+    "create": [
+      "framework/worktrees.py",
+      "framework/tests/test_worktrees.py",
+      "tasks/evidence/TASK-003.md"
+    ],
+    "modify": [
+      "framework/orchestrate.py",
+      "framework/runtime.py",
+      "tasks/TASK-003.yaml"
+    ],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      "infra/production/**",
+      "issues/**",
+      "global-config/settings.json"
+    ]
+  },
+  "dependencies": [
+    "TASK-002"
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-001",
+      "given": "a medium or higher risk task",
+      "when": "start is requested",
+      "then": "a dedicated worktree and exclusive reservation are required"
+    },
+    {
+      "id": "AC-002",
+      "given": "two tasks overlap writable filesets",
+      "when": "parallel start is requested",
+      "then": "the second start is blocked, including glob intersections"
+    },
+    {
+      "id": "AC-003",
+      "given": "the same-branch isolation procedure",
+      "when": "worktree setup is requested",
+      "then": "the original checkout is safely detached and the authorized branch is checked out only in the linked worktree"
+    },
+    {
+      "id": "AC-004",
+      "given": "a dirty checkout or unfinished task",
+      "when": "cleanup is requested",
+      "then": "no changes or evidence are discarded"
+    }
+  ],
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --all",
+      "proves": "Framework and task validation"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -v",
+      "proves": "Positive and negative regression coverage"
+    },
+    {
+      "command": "python3 -m compileall -q framework",
+      "proves": "Python syntax; this is not a lint substitute"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Hook compatibility"
+    }
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "rollback": "Revert the task implementation commit on the authorized feature branch after approval, preserve evidence and rerun baseline checks. No reset, production or data migration.",
+  "notes": [
+    "Draft planning only; accept ADR-0002 and resolve its identity decision before promoting this task to READY.",
+    "User authorizes commits and push exclusively on feat/intellix-multiagent-framework. No merge, deploy, release, secrets, permissions or destructive migrations.",
+    "Use the same authorized branch in a linked worktree while the original checkout is detached. Never commit in the detached checkout.",
+    "Sources must be read at the implementation base revision; exact commit/worktree/evidence bindings will use the execution schema introduced by TASK-002."
+  ],
+  "handoff": {
+    "required_evidence": [
+      "Implementation commit and changed-file inventory",
+      "Command outputs and exit codes",
+      "Independent Claude review and security findings",
+      "GitHub CI result for the reviewed revision"
+    ],
+    "open_questions": [
+      "ADR-0002: choose trusted human approval identity and evidence source before implementation."
+    ]
+  }
+}
