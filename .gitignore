@@ -1,3 +1,4 @@
 # Derivados gerados (PDF/PNG) — regeráveis a partir de docs/*.md e docs/*.mmd
 docs/generated/
 .DS_Store
+global-config/**/__pycache__/
