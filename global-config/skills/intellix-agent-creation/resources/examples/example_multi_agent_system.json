@@ -1,0 +1,975 @@
+{
+  "schema_version": "2.0",
+
+  "agent_metadata": {
+    "agent_name": "CustomerJourneySystem",
+    "agent_type": "orchestrator",
+    "business_domain": "custom",
+    "version": "1.0",
+    "description": "Sistema multi-agente genérico que cobre a jornada completa do cliente: recepção, qualificação, agendamento/proposta, acompanhamento e pós-venda. Cada agente é gerado automaticamente com base no nicho informado pelo usuário. A orquestração é event-driven — o cliente flui entre agentes conforme o estágio da jornada.",
+    "tags": ["multi_agent", "orchestration", "customer_journey", "generic", "niche_adaptive"],
+    "author": "IntelliX.AI",
+    "created_at": "2026-03-06T00:00:00Z",
+    "updated_at": "2026-03-06T00:00:00Z"
+  },
+
+  "objective": {
+    "primary_goal": "Orquestrar a jornada completa do cliente desde o primeiro contato até o pós-venda, delegando cada etapa ao agente especializado apropriado",
+    "secondary_goals": [
+      "Garantir transição fluida entre agentes sem perda de contexto",
+      "Permitir que cada agente se especialize profundamente na sua etapa",
+      "Escalar para atendimento humano em qualquer ponto da jornada",
+      "Coletar dados ao longo da jornada para analytics e melhoria contínua"
+    ],
+    "success_criteria": [
+      {
+        "metric": "journey_completion_rate",
+        "target": ">40%",
+        "measurement_method": "Razão entre jornadas que chegaram ao pós-venda vs total de jornadas iniciadas"
+      },
+      {
+        "metric": "avg_handoff_latency_ms",
+        "target": "<2000",
+        "measurement_method": "Tempo médio entre a decisão de handoff e o próximo agente assumir"
+      },
+      {
+        "metric": "context_preservation_score",
+        "target": ">90%",
+        "measurement_method": "Avaliação por sampling: novo agente demonstra conhecer histórico do cliente"
+      },
+      {
+        "metric": "human_escalation_rate",
+        "target": "<20%",
+        "measurement_method": "Razão de jornadas que precisaram de intervenção humana"
+      }
+    ],
+    "constraints": [
+      "Máximo de 5 handoffs por jornada antes de escalar para humano",
+      "Cada agente deve ter acesso ao contexto compartilhado da jornada",
+      "O cliente nunca deve perceber que está falando com agentes diferentes",
+      "Dados sensíveis seguem as regras de compliance da organização",
+      "O orquestrador nunca interage diretamente com o cliente — apenas roteia"
+    ]
+  },
+
+  "operation_mode": {
+    "mode": "hybrid",
+    "runtime_environment": "supabase_edge_function",
+    "concurrency": {
+      "max_concurrent_sessions": 200,
+      "session_isolation": "shared_memory"
+    }
+  },
+
+  "interfaces": {
+    "system_ui": {
+      "enabled": true,
+      "component_type": "dashboard_panel"
+    },
+    "api": {
+      "enabled": true,
+      "protocol": "rest",
+      "base_path": "/api/agents/orchestrator"
+    },
+    "whatsapp": {
+      "enabled": true,
+      "provider": "",
+      "webhook_path": "/webhooks/whatsapp/incoming",
+      "connection_config_ref": "cfg_whatsapp_provider"
+    },
+    "telegram": { "enabled": false, "bot_token_ref": "", "webhook_path": "" },
+    "instagram": { "enabled": false, "api_version": "", "webhook_path": "" },
+    "email": {
+      "enabled": true,
+      "provider": "",
+      "inbound_address": ""
+    },
+    "voice": { "enabled": false, "provider": "", "voice_id": "" }
+  },
+
+  "business_context": {
+    "industry": "",
+    "company_size": "small",
+    "pain_points": [
+      "Jornada do cliente fragmentada entre múltiplas ferramentas e pessoas",
+      "Perda de contexto quando o cliente passa de um atendente para outro",
+      "Falta de padronização no atendimento entre etapas da jornada",
+      "Dificuldade em escalar o atendimento mantendo qualidade"
+    ],
+    "success_metrics": [
+      "Tempo total da jornada do cliente reduzido em 40%",
+      "Taxa de conversão aumentada em 25%",
+      "Satisfação do cliente (NPS) acima de 8.5"
+    ],
+    "compliance_requirements": [],
+    "business_hours": {
+      "timezone": "",
+      "schedule": {
+        "mon": { "start": "08:00", "end": "18:00" },
+        "tue": { "start": "08:00", "end": "18:00" },
+        "wed": { "start": "08:00", "end": "18:00" },
+        "thu": { "start": "08:00", "end": "18:00" },
+        "fri": { "start": "08:00", "end": "18:00" },
+        "sat": null,
+        "sun": null
+      },
+      "outside_hours_behavior": "auto_reply",
+      "outside_hours_message": ""
+    },
+    "brand_voice": {
+      "tone": "",
+      "language": "pt-BR",
+      "formality": "semi_formal",
+      "vocabulary_guidelines": []
+    }
+  },
+
+  "context_sources": [
+    {
+      "source_id": "src_journey_state",
+      "source_type": "database",
+      "source_name": "Estado da Jornada",
+      "description": "Estado atual da jornada do cliente: stage atual, histórico de handoffs, dados coletados, agente ativo",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT * FROM customer_journeys WHERE session_id = '{{session_id}}' AND organization_id = '{{org_id}}'",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 10
+    },
+    {
+      "source_id": "src_customer_profile",
+      "source_type": "database",
+      "source_name": "Perfil do Cliente",
+      "description": "Dados consolidados do cliente: cadastro, histórico de interações, preferências, compras anteriores",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT c.*, json_agg(DISTINCT i.*) as interactions, json_agg(DISTINCT p.*) as purchases FROM customers c LEFT JOIN interactions i ON i.customer_id = c.id LEFT JOIN purchases p ON p.customer_id = c.id WHERE c.identifier = '{{customer_identifier}}' AND c.organization_id = '{{org_id}}' GROUP BY c.id",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 60
+    },
+    {
+      "source_id": "src_shared_conversation",
+      "source_type": "shared_memory",
+      "source_name": "Conversa Compartilhada",
+      "description": "Histórico completo de mensagens da sessão, acessível por todos os agentes do sistema. Inclui metadata de qual agente enviou cada mensagem.",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT * FROM session_messages WHERE session_id = '{{session_id}}' ORDER BY created_at ASC",
+        "headers": {}
+      },
+      "refresh_strategy": "real_time",
+      "cache_ttl_seconds": 0
+    },
+    {
+      "source_id": "src_knowledge_base",
+      "source_type": "rag_knowledge_base",
+      "source_name": "Base de Conhecimento do Negócio",
+      "description": "Documentos sobre produtos, serviços, preços, políticas, FAQ — alimentada pelo usuário durante setup",
+      "connection_config": {
+        "endpoint": "supabase_pgvector",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT content, similarity, metadata FROM match_knowledge('{{query}}', '{{org_id}}', 0.72, 5)",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 300
+    }
+  ],
+
+  "tools": [
+    {
+      "tool_id": "tool_route_to_agent",
+      "tool_name": "rotear_para_agente",
+      "tool_type": "function",
+      "description": "Transfere a sessão para outro agente do sistema. Salva contexto compartilhado e atualiza journey_state.",
+      "endpoint": { "url": "", "method": "POST", "headers": {} },
+      "auth": { "method": "none", "config_ref": "" },
+      "parameters": {
+        "type": "object",
+        "required": ["session_id", "target_agent_ref", "handoff_context"],
+        "properties": {
+          "session_id": { "type": "string", "description": "ID da sessão ativa" },
+          "target_agent_ref": { "type": "string", "description": "agent_ref do agente destino (e.g. ReceptionAgent, QualificationAgent)" },
+          "handoff_context": {
+            "type": "object",
+            "description": "Contexto a ser passado para o próximo agente",
+            "properties": {
+              "reason": { "type": "string", "description": "Motivo do handoff" },
+              "collected_data": { "type": "object", "description": "Dados já coletados na jornada" },
+              "pending_actions": { "type": "array", "items": { "type": "string" }, "description": "Ações que o próximo agente deve executar" },
+              "customer_sentiment": { "type": "string", "description": "Sentimento detectado do cliente" }
+            }
+          }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "handoff_id": { "type": "string" },
+            "status": { "type": "string", "enum": ["success", "agent_unavailable", "max_handoffs_reached"] },
+            "active_agent": { "type": "string" }
+          }
+        }
+      },
+      "error_handling": {
+        "retry_count": 2,
+        "retry_delay_ms": 1000,
+        "timeout_ms": 5000,
+        "on_failure": "escalate",
+        "fallback_tool_ref": "tool_escalate_human"
+      },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 10 }
+    },
+    {
+      "tool_id": "tool_update_journey",
+      "tool_name": "atualizar_jornada",
+      "tool_type": "database_query",
+      "description": "Atualiza o estado da jornada do cliente: stage, dados coletados, agente ativo, timestamps",
+      "endpoint": { "url": "supabase://customer_journeys", "method": "PATCH", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["session_id", "updates"],
+        "properties": {
+          "session_id": { "type": "string" },
+          "updates": {
+            "type": "object",
+            "properties": {
+              "current_stage": { "type": "string" },
+              "active_agent": { "type": "string" },
+              "collected_data": { "type": "object" },
+              "handoff_count": { "type": "integer" },
+              "status": { "type": "string", "enum": ["active", "paused", "completed", "abandoned", "human_active"] }
+            }
+          }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 2, "retry_delay_ms": 500, "timeout_ms": 5000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 60, "max_calls_per_session": 20 }
+    },
+    {
+      "tool_id": "tool_escalate_human",
+      "tool_name": "escalar_para_humano",
+      "tool_type": "function",
+      "description": "Transfere a sessão inteira para atendimento humano. Envia todo o contexto da jornada.",
+      "endpoint": { "url": "", "method": "POST", "headers": {} },
+      "auth": { "method": "none", "config_ref": "" },
+      "parameters": {
+        "type": "object",
+        "required": ["session_id", "reason"],
+        "properties": {
+          "session_id": { "type": "string" },
+          "reason": { "type": "string" },
+          "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"] },
+          "department": { "type": "string", "description": "Departamento destino (se aplicável)" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 3, "retry_delay_ms": 1000, "timeout_ms": 10000, "on_failure": "abort", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 10, "max_calls_per_session": 3 }
+    },
+    {
+      "tool_id": "tool_send_message",
+      "tool_name": "enviar_mensagem",
+      "tool_type": "api_call",
+      "description": "Envia mensagem ao cliente pelo canal ativo da sessão (WhatsApp, email, chat). O canal é determinado automaticamente pelo session_channel.",
+      "endpoint": {
+        "url": "{{messaging_api_url}}/send",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" }
+      },
+      "auth": { "method": "api_key", "config_ref": "cfg_messaging_provider" },
+      "parameters": {
+        "type": "object",
+        "required": ["session_id", "text"],
+        "properties": {
+          "session_id": { "type": "string" },
+          "text": { "type": "string" },
+          "channel_override": { "type": "string", "enum": ["whatsapp", "email", "sms", "system_chat"], "description": "Sobrescrever canal (opcional)" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 3, "retry_delay_ms": 2000, "timeout_ms": 10000, "on_failure": "escalate", "fallback_tool_ref": "tool_escalate_human" },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 30 }
+    },
+    {
+      "tool_id": "tool_search_knowledge",
+      "tool_name": "consultar_base_conhecimento",
+      "tool_type": "database_query",
+      "description": "Busca semântica na base de conhecimento do negócio. Usado por qualquer agente que precise de informações sobre produtos, serviços, preços, políticas.",
+      "endpoint": { "url": "supabase://rpc/match_knowledge", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": { "type": "string" },
+          "max_results": { "type": "integer" },
+          "filter_category": { "type": "string", "description": "Filtrar por categoria (products, services, pricing, policies, faq)" }
+        }
+      },
+      "response_format": {
+        "type": "json",
+        "schema": { "type": "array", "items": { "type": "object", "properties": { "content": { "type": "string" }, "similarity": { "type": "number" }, "metadata": { "type": "object" } } } }
+      },
+      "error_handling": { "retry_count": 2, "retry_delay_ms": 500, "timeout_ms": 5000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 20 }
+    },
+    {
+      "tool_id": "tool_create_record",
+      "tool_name": "criar_registro",
+      "tool_type": "database_query",
+      "description": "Cria um registro genérico no sistema (contato, deal, atividade, agendamento). O tipo é determinado pelo parâmetro entity_type.",
+      "endpoint": { "url": "supabase://{{entity_type}}", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["entity_type", "data"],
+        "properties": {
+          "entity_type": { "type": "string", "description": "Tipo de entidade (contacts, deals, activities, appointments, invoices)" },
+          "data": { "type": "object", "description": "Dados da entidade" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 1, "retry_delay_ms": 1000, "timeout_ms": 5000, "on_failure": "abort", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 20, "max_calls_per_session": 15 }
+    }
+  ],
+
+  "memory": {
+    "short_term": {
+      "enabled": true,
+      "max_messages": 50,
+      "summarization": {
+        "enabled": true,
+        "trigger_message_count": 30,
+        "strategy": "key_points"
+      }
+    },
+    "long_term": {
+      "enabled": true,
+      "storage_backend": "supabase_table",
+      "table_name": "customer_journeys",
+      "schema": {
+        "columns": [
+          { "name": "id", "type": "uuid", "nullable": false, "default": "gen_random_uuid()", "description": "PK" },
+          { "name": "session_id", "type": "text", "nullable": false, "default": "", "description": "ID único da sessão" },
+          { "name": "organization_id", "type": "uuid", "nullable": false, "default": "", "description": "Multi-tenant" },
+          { "name": "customer_identifier", "type": "text", "nullable": false, "default": "", "description": "Phone, email ou ID do cliente" },
+          { "name": "channel", "type": "text", "nullable": false, "default": "'whatsapp'", "description": "Canal ativo: whatsapp, email, system_chat" },
+          { "name": "current_stage", "type": "text", "nullable": false, "default": "'reception'", "description": "Stage da jornada: reception, qualification, proposal, follow_up, post_sale" },
+          { "name": "active_agent", "type": "text", "nullable": false, "default": "'ReceptionAgent'", "description": "agent_ref do agente atualmente ativo" },
+          { "name": "status", "type": "text", "nullable": false, "default": "'active'", "description": "active, paused, completed, abandoned, human_active" },
+          { "name": "collected_data", "type": "jsonb", "nullable": false, "default": "'{}'", "description": "Dados coletados ao longo da jornada por todos os agentes" },
+          { "name": "handoff_history", "type": "jsonb", "nullable": false, "default": "'[]'", "description": "Histórico de handoffs: [{from, to, reason, timestamp}]" },
+          { "name": "handoff_count", "type": "integer", "nullable": false, "default": "0", "description": "" },
+          { "name": "customer_sentiment", "type": "text", "nullable": true, "default": "'neutral'", "description": "Último sentimento detectado" },
+          { "name": "started_at", "type": "timestamptz", "nullable": false, "default": "now()", "description": "" },
+          { "name": "last_activity_at", "type": "timestamptz", "nullable": false, "default": "now()", "description": "" },
+          { "name": "completed_at", "type": "timestamptz", "nullable": true, "default": "", "description": "" },
+          { "name": "metadata", "type": "jsonb", "nullable": true, "default": "'{}'", "description": "Metadados adicionais" }
+        ],
+        "indexes": [
+          { "columns": ["organization_id", "session_id"], "type": "btree" },
+          { "columns": ["customer_identifier"], "type": "btree" },
+          { "columns": ["status", "current_stage"], "type": "btree" },
+          { "columns": ["last_activity_at"], "type": "btree" }
+        ]
+      },
+      "ttl_days": 730,
+      "max_entries_per_session": 500
+    },
+    "episodic": {
+      "enabled": true,
+      "embedding_model": "text-embedding-3-small",
+      "vector_store": "supabase_pgvector",
+      "similarity_threshold": 0.72,
+      "max_results": 5,
+      "chunk_strategy": { "method": "semantic", "chunk_size_tokens": 512, "overlap_tokens": 50 }
+    }
+  },
+
+  "reasoning": {
+    "strategy": "react",
+    "fallback_strategy": "escalate_to_human",
+    "max_reasoning_steps": 5,
+    "confidence_threshold": 0.7,
+    "model_config": {
+      "provider": "",
+      "model": "",
+      "temperature": 0.3,
+      "max_tokens": 1024,
+      "config_ref": "cfg_llm_api_key"
+    }
+  },
+
+  "cognitive_loop": {
+    "enabled": true,
+    "observe": {
+      "data_sources": ["src_journey_state", "src_customer_profile", "src_shared_conversation"],
+      "event_listeners": [
+        { "event_type": "message.received", "source": "messaging_channel", "filter": {} },
+        { "event_type": "handoff.requested", "source": "internal", "filter": {} },
+        { "event_type": "journey.timeout", "source": "scheduler", "filter": {} }
+      ],
+      "polling_interval_seconds": 0
+    },
+    "think": {
+      "analysis_strategy": "composite",
+      "context_window_strategy": "hybrid",
+      "max_context_tokens": 8192
+    },
+    "plan": {
+      "planning_method": "conditional",
+      "max_plan_steps": 8,
+      "resource_constraints": ["max_handoffs:5", "max_time_seconds:30"],
+      "replanning_enabled": true
+    },
+    "act": {
+      "execution_mode": "sync",
+      "timeout_seconds": 30,
+      "rollback_enabled": false,
+      "confirmation_required": false
+    },
+    "reflect": {
+      "evaluation_criteria": [
+        { "criterion": "customer_need_addressed", "weight": 0.3 },
+        { "criterion": "correct_agent_selected", "weight": 0.3 },
+        { "criterion": "context_preserved_on_handoff", "weight": 0.2 },
+        { "criterion": "response_time_acceptable", "weight": 0.2 }
+      ],
+      "success_threshold": 0.75,
+      "logging": { "level": "detailed", "destination": "supabase://orchestrator_logs" }
+    },
+    "learn": {
+      "learning_type": "episodic",
+      "update_frequency": "per_interaction",
+      "knowledge_base_ref": "src_knowledge_base",
+      "human_review_required": false
+    }
+  },
+
+  "workflow": [
+    {
+      "step_id": "step_001",
+      "step_name": "Receber mensagem / evento",
+      "step_type": "receive_input",
+      "description": "Ponto de entrada do orquestrador. Recebe mensagem do cliente ou evento interno (handoff, timeout).",
+      "inputs": [
+        { "name": "event_type", "source": "trigger.payload.event_type", "required": true },
+        { "name": "session_id", "source": "trigger.payload.session_id", "required": false },
+        { "name": "customer_identifier", "source": "trigger.payload.customer_identifier", "required": true },
+        { "name": "message", "source": "trigger.payload.message", "required": false }
+      ],
+      "outputs": [{ "name": "event", "type": "object", "description": "" }],
+      "tool_ref": "",
+      "on_error": { "strategy": "abort", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_002"
+    },
+    {
+      "step_id": "step_002",
+      "step_name": "Carregar ou criar jornada",
+      "step_type": "process",
+      "description": "Busca jornada existente pelo session_id ou customer_identifier. Se não existe, cria nova jornada com stage=reception.",
+      "inputs": [
+        { "name": "session_id", "source": "step_001.event.session_id", "required": false },
+        { "name": "customer_identifier", "source": "step_001.event.customer_identifier", "required": true }
+      ],
+      "outputs": [
+        { "name": "journey", "type": "object", "description": "Estado da jornada (novo ou existente)" },
+        { "name": "is_new_journey", "type": "boolean", "description": "" }
+      ],
+      "tool_ref": "",
+      "on_error": { "strategy": "abort", "retry_count": 2, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_003"
+    },
+    {
+      "step_id": "step_003",
+      "step_name": "Verificar status da jornada",
+      "step_type": "condition",
+      "description": "Se a jornada está em human_active, não processa — a mensagem vai direto para o painel humano.",
+      "inputs": [{ "name": "journey_status", "source": "step_002.journey.status", "required": true }],
+      "outputs": [],
+      "tool_ref": "",
+      "condition": {
+        "expression": "journey_status == 'human_active'",
+        "if_true": "step_010",
+        "if_false": "step_004"
+      },
+      "on_error": { "strategy": "fallback", "retry_count": 0, "fallback_step": "step_004", "error_message": "" },
+      "timeout_seconds": 2,
+      "next_step": ""
+    },
+    {
+      "step_id": "step_004",
+      "step_name": "Identificar agente ativo",
+      "step_type": "process",
+      "description": "Determina qual agente deve processar esta mensagem baseado no current_stage da jornada.",
+      "inputs": [
+        { "name": "journey", "source": "step_002.journey", "required": true },
+        { "name": "event_type", "source": "step_001.event.event_type", "required": true }
+      ],
+      "outputs": [
+        { "name": "active_agent_ref", "type": "string", "description": "agent_ref do agente que deve processar" },
+        { "name": "agent_context", "type": "object", "description": "Contexto a enviar ao agente" }
+      ],
+      "tool_ref": "",
+      "on_error": { "strategy": "fallback", "retry_count": 0, "fallback_step": "step_009", "error_message": "" },
+      "timeout_seconds": 3,
+      "next_step": "step_005"
+    },
+    {
+      "step_id": "step_005",
+      "step_name": "Delegar para agente especializado",
+      "step_type": "tool_call",
+      "description": "Encaminha a mensagem e contexto para o agente ativo. O agente processa e retorna: resposta ao cliente, dados coletados, e opcionalmente um pedido de handoff.",
+      "inputs": [
+        { "name": "session_id", "source": "step_002.journey.session_id", "required": true },
+        { "name": "active_agent_ref", "source": "step_004.active_agent_ref", "required": true },
+        { "name": "message", "source": "step_001.event.message", "required": false },
+        { "name": "agent_context", "source": "step_004.agent_context", "required": true }
+      ],
+      "outputs": [
+        { "name": "agent_response", "type": "object", "description": "Resposta do agente: {response_text, collected_data, handoff_request, actions_taken}" }
+      ],
+      "tool_ref": "tool_route_to_agent",
+      "on_error": { "strategy": "escalate", "retry_count": 2, "fallback_step": "step_009", "error_message": "Agente indisponível" },
+      "timeout_seconds": 25,
+      "next_step": "step_006"
+    },
+    {
+      "step_id": "step_006",
+      "step_name": "Processar resposta do agente",
+      "step_type": "condition",
+      "description": "Verifica se o agente solicitou handoff para outro agente.",
+      "inputs": [{ "name": "handoff_request", "source": "step_005.agent_response.handoff_request", "required": false }],
+      "outputs": [],
+      "tool_ref": "",
+      "condition": {
+        "expression": "handoff_request != null AND handoff_request.target_agent != null",
+        "if_true": "step_007",
+        "if_false": "step_008"
+      },
+      "on_error": { "strategy": "fallback", "retry_count": 0, "fallback_step": "step_008", "error_message": "" },
+      "timeout_seconds": 2,
+      "next_step": ""
+    },
+    {
+      "step_id": "step_007",
+      "step_name": "Executar handoff",
+      "step_type": "process",
+      "description": "Verifica se não excedeu max_handoffs. Se OK, atualiza journey com novo agente e stage. Se excedeu, escala para humano.",
+      "inputs": [
+        { "name": "journey", "source": "step_002.journey", "required": true },
+        { "name": "handoff_request", "source": "step_005.agent_response.handoff_request", "required": true },
+        { "name": "collected_data", "source": "step_005.agent_response.collected_data", "required": false }
+      ],
+      "outputs": [
+        { "name": "handoff_result", "type": "object", "description": "" },
+        { "name": "max_handoffs_exceeded", "type": "boolean", "description": "" }
+      ],
+      "tool_ref": "",
+      "on_error": { "strategy": "escalate", "retry_count": 1, "fallback_step": "step_009", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_008"
+    },
+    {
+      "step_id": "step_008",
+      "step_name": "Atualizar jornada e salvar",
+      "step_type": "tool_call",
+      "description": "Persiste o novo estado da jornada: collected_data, current_stage, active_agent, handoff_history, sentiment",
+      "inputs": [
+        { "name": "session_id", "source": "step_002.journey.session_id", "required": true },
+        { "name": "agent_response", "source": "step_005.agent_response", "required": true },
+        { "name": "handoff_result", "source": "step_007.handoff_result", "required": false }
+      ],
+      "outputs": [],
+      "tool_ref": "tool_update_journey",
+      "on_error": { "strategy": "skip", "retry_count": 2, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5,
+      "next_step": "step_010"
+    },
+    {
+      "step_id": "step_009",
+      "step_name": "Escalar para humano",
+      "step_type": "tool_call",
+      "description": "Fallback: transfere tudo para atendente humano com contexto completo da jornada",
+      "inputs": [
+        { "name": "session_id", "source": "step_002.journey.session_id", "required": true },
+        { "name": "reason", "source": "context.error_reason", "required": true }
+      ],
+      "outputs": [],
+      "tool_ref": "tool_escalate_human",
+      "on_error": { "strategy": "abort", "retry_count": 3, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 10,
+      "next_step": "step_010"
+    },
+    {
+      "step_id": "step_010",
+      "step_name": "Finalizar ciclo",
+      "step_type": "terminate",
+      "description": "Encerra o ciclo de processamento desta mensagem/evento.",
+      "inputs": [],
+      "outputs": [],
+      "tool_ref": "",
+      "on_error": { "strategy": "skip", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 1,
+      "next_step": ""
+    }
+  ],
+
+  "actions": [
+    {
+      "action_id": "action_handoff",
+      "action_name": "Transferir entre agentes",
+      "action_type": "tool_call",
+      "description": "Executa handoff de um agente para outro preservando contexto",
+      "tool_ref": "tool_route_to_agent",
+      "parameters": {},
+      "conditions": [
+        { "field": "journey.handoff_count", "operator": "less_than", "value": 5 }
+      ],
+      "side_effects": ["updates_journey_state", "logs_handoff"],
+      "requires_confirmation": false
+    },
+    {
+      "action_id": "action_escalate",
+      "action_name": "Escalar para humano",
+      "action_type": "escalate_to_human",
+      "description": "Transfere sessão para atendente humano",
+      "tool_ref": "tool_escalate_human",
+      "parameters": {},
+      "conditions": [],
+      "side_effects": ["changes_journey_status", "notifies_human_team"],
+      "requires_confirmation": false
+    },
+    {
+      "action_id": "action_complete_journey",
+      "action_name": "Finalizar jornada",
+      "action_type": "state_update",
+      "description": "Marca a jornada como completa",
+      "tool_ref": "tool_update_journey",
+      "parameters": { "updates": { "status": "completed" } },
+      "conditions": [
+        { "field": "journey.current_stage", "operator": "equals", "value": "post_sale" }
+      ],
+      "side_effects": ["completes_journey", "triggers_satisfaction_survey"],
+      "requires_confirmation": false
+    }
+  ],
+
+  "triggers": [
+    {
+      "trigger_id": "trigger_incoming_message",
+      "trigger_type": "webhook",
+      "source": "messaging_channel",
+      "event_name": "message.received",
+      "cron_expression": "",
+      "conditions": [],
+      "payload_schema": {
+        "type": "object",
+        "properties": {
+          "event_type": { "type": "string", "const": "message.received" },
+          "customer_identifier": { "type": "string" },
+          "session_id": { "type": "string" },
+          "message": { "type": "object", "properties": { "type": { "type": "string" }, "text": { "type": "string" } } },
+          "channel": { "type": "string" }
+        }
+      },
+      "activates_workflow_step": "step_001",
+      "debounce_seconds": 2,
+      "enabled": true
+    },
+    {
+      "trigger_id": "trigger_internal_handoff",
+      "trigger_type": "event",
+      "source": "internal",
+      "event_name": "handoff.requested",
+      "cron_expression": "",
+      "conditions": [],
+      "payload_schema": {
+        "type": "object",
+        "properties": {
+          "event_type": { "type": "string", "const": "handoff.requested" },
+          "session_id": { "type": "string" },
+          "from_agent": { "type": "string" },
+          "to_agent": { "type": "string" },
+          "reason": { "type": "string" },
+          "context": { "type": "object" }
+        }
+      },
+      "activates_workflow_step": "step_001",
+      "debounce_seconds": 0,
+      "enabled": true
+    },
+    {
+      "trigger_id": "trigger_journey_timeout",
+      "trigger_type": "schedule",
+      "source": "cron",
+      "event_name": "journey.inactivity_check",
+      "cron_expression": "*/30 * * * *",
+      "conditions": [
+        { "field": "journey.last_activity_at", "operator": "less_than", "value": "{{now - 24h}}" },
+        { "field": "journey.status", "operator": "equals", "value": "active" }
+      ],
+      "payload_schema": {},
+      "activates_workflow_step": "",
+      "debounce_seconds": 0,
+      "enabled": true
+    }
+  ],
+
+  "integration": {
+    "primary_protocol": "webhook",
+    "base_url": "",
+    "auth": { "method": "api_key", "config_ref": "cfg_messaging_provider" },
+    "retry_policy": { "max_retries": 3, "backoff_strategy": "exponential", "initial_delay_ms": 1000, "max_delay_ms": 30000 },
+    "rate_limit": { "max_requests_per_minute": 120, "max_requests_per_day": 50000, "queue_strategy": "throttle" },
+    "health_check": { "enabled": true, "endpoint": "/health", "interval_seconds": 300 }
+  },
+
+  "prompt_template": {
+    "system_prompt": "Você é o orquestrador do sistema multi-agente. Você NÃO interage diretamente com o cliente. Sua função é:\n\n1. Receber mensagens/eventos\n2. Determinar qual agente deve processá-los baseado no stage da jornada\n3. Rotear a mensagem para o agente correto com o contexto adequado\n4. Processar pedidos de handoff entre agentes\n5. Garantir que o contexto da jornada é preservado entre handoffs\n6. Escalar para humano quando necessário\n\n## REGRAS DE ROTEAMENTO\n- Stage 'reception': encaminhar para o agente de recepção/triagem\n- Stage 'qualification': encaminhar para o agente de qualificação\n- Stage 'proposal': encaminhar para o agente de proposta/agendamento\n- Stage 'follow_up': encaminhar para o agente de acompanhamento\n- Stage 'post_sale': encaminhar para o agente de pós-venda\n\n## REGRAS DE HANDOFF\n- Máximo 5 handoffs por jornada\n- Cada handoff deve incluir collected_data acumulado\n- Se o agente destino não responder em 25s, escalar para humano\n- Nunca perder dados coletados durante handoff\n\n## NOTAS\n- Os nomes dos agentes variam por nicho — use agent_ref do multi_agent.agents[]\n- O stage mapping pode variar — consulte multi_agent.orchestration.routing_rules",
+    "system_prompt_sections": [],
+    "user_prompt_template": "Evento: {{event_type}}\nSession: {{session_id}}\nJornada atual: {{journey_state_json}}\nMensagem (se aplicável): {{message_text}}\n\nDetermine: qual agente deve processar e qual contexto enviar.",
+    "few_shot_examples": [],
+    "output_format": {
+      "type": "json",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "enum": ["route_to_agent", "escalate_to_human", "update_journey", "terminate"] },
+          "target_agent_ref": { "type": "string" },
+          "context_to_send": { "type": "object" },
+          "reason": { "type": "string" }
+        }
+      },
+      "instructions": "Responda SEMPRE em JSON válido."
+    },
+    "guardrails": [
+      { "rule": "Nunca enviar mensagem diretamente ao cliente — sempre delegar ao agente", "severity": "hard_block", "action_on_violation": "block_response" },
+      { "rule": "Nunca descartar dados coletados durante handoff", "severity": "hard_block", "action_on_violation": "block_response" },
+      { "rule": "Escalar para humano se handoff_count >= 5", "severity": "hard_block", "action_on_violation": "escalate" }
+    ]
+  },
+
+  "pending_configuration": [
+    {
+      "config_id": "cfg_supabase",
+      "field_path": "context_sources.*.connection_config",
+      "description": "Credenciais Supabase: Project URL e Service Role Key",
+      "type": "json",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "Deve conter: project_url, service_role_key",
+      "sensitive": true,
+      "example_value": "{\"project_url\": \"https://xxx.supabase.co\", \"service_role_key\": \"eyJ...\"}"
+    },
+    {
+      "config_id": "cfg_llm_api_key",
+      "field_path": "reasoning.model_config",
+      "description": "API key do provedor LLM para o orquestrador e agentes",
+      "type": "api_key",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "",
+      "sensitive": true,
+      "example_value": "sk-ant-..."
+    },
+    {
+      "config_id": "cfg_messaging_provider",
+      "field_path": "interfaces.whatsapp",
+      "description": "Credenciais do provedor de mensageria (WhatsApp, Telegram, etc.)",
+      "type": "json",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "Deve conter: api_url, api_key, instance_name (ou equivalentes do provedor)",
+      "sensitive": true,
+      "example_value": "{\"api_url\": \"https://evolution.example.com\", \"api_key\": \"xxx\", \"instance_name\": \"main\"}"
+    },
+    {
+      "config_id": "cfg_business_niche",
+      "field_path": "business_context.industry",
+      "description": "Nicho de negócio. Determina o vocabulário, tom, stages da jornada e funcionalidades específicas de cada agente.",
+      "type": "string",
+      "required": true,
+      "default_value": null,
+      "validation_rule": "Texto descritivo do nicho (e.g. 'clínica odontológica', 'imobiliária de alto padrão', 'escritório de advocacia')",
+      "sensitive": false,
+      "example_value": "clínica odontológica"
+    },
+    {
+      "config_id": "cfg_journey_stages",
+      "field_path": "multi_agent.orchestration.routing_rules",
+      "description": "Mapeamento customizado de stages da jornada para agentes. Se não informado, usa o padrão: reception→qualification→proposal→follow_up→post_sale.",
+      "type": "json",
+      "required": false,
+      "default_value": null,
+      "validation_rule": "Array de objetos com {stage, agent_ref}",
+      "sensitive": false,
+      "example_value": "[{\"stage\": \"reception\", \"agent_ref\": \"ReceptionAgent\"}, {\"stage\": \"qualification\", \"agent_ref\": \"QualificationAgent\"}]"
+    }
+  ],
+
+  "governance": {
+    "permissions": {
+      "allowed_actions": ["action_handoff", "action_escalate", "action_complete_journey"],
+      "denied_actions": [],
+      "approval_required": []
+    },
+    "audit": {
+      "log_level": "full_trace",
+      "log_destination": "supabase://orchestrator_audit_logs",
+      "retention_days": 365
+    },
+    "rate_limits": {
+      "max_messages_per_minute": 120,
+      "max_tokens_per_request": 2048,
+      "max_cost_per_day_usd": 30.0,
+      "max_sessions_per_hour": 500
+    },
+    "safety": {
+      "content_filters": ["pii_detection"],
+      "pii_handling": "redact",
+      "escalation_triggers": [
+        { "condition": "handoff_count >= 5", "action": "transfer_to_human" },
+        { "condition": "customer_sentiment == 'very_negative' for 3 consecutive messages", "action": "transfer_to_human" },
+        { "condition": "agent_error_count >= 3 in session", "action": "transfer_to_human" },
+        { "condition": "customer requests human explicitly", "action": "transfer_to_human" }
+      ],
+      "max_consecutive_failures": 3
+    },
+    "compliance": {
+      "frameworks": [],
+      "data_residency": "",
+      "consent_required": false,
+      "consent_message": ""
+    }
+  },
+
+  "learning": {
+    "feedback_loop": {
+      "enabled": true,
+      "collection_method": "automated_metrics",
+      "storage": "supabase://journey_analytics",
+      "review_cadence": "weekly"
+    },
+    "performance_tracking": {
+      "metrics": [
+        { "metric_name": "journey_completion_rate", "calculation": "completed_journeys / total_journeys", "alert_threshold": "<30%" },
+        { "metric_name": "avg_handoff_count", "calculation": "avg(handoff_count) per completed journey", "alert_threshold": ">3" },
+        { "metric_name": "human_escalation_rate", "calculation": "escalated_journeys / total_journeys", "alert_threshold": ">25%" },
+        { "metric_name": "avg_journey_duration_hours", "calculation": "avg(completed_at - started_at)", "alert_threshold": ">48" },
+        { "metric_name": "context_loss_incidents", "calculation": "count(handoffs where next_agent_asked_for_repeated_info)", "alert_threshold": ">5 per week" }
+      ]
+    },
+    "knowledge_update": {
+      "update_trigger": "manual",
+      "validation_required": true,
+      "rollback_enabled": true
+    }
+  },
+
+  "multi_agent": {
+    "system_name": "CustomerJourneySystem",
+    "system_description": "Sistema multi-agente genérico para jornada completa do cliente. Os agentes individuais são gerados automaticamente com base no nicho informado pelo usuário. Cada agente é um blueprint independente referenciado por agent_ref.",
+    "agents": [
+      {
+        "agent_ref": "ReceptionAgent",
+        "role": "Primeiro contato. Identifica o cliente, entende a necessidade inicial e direciona para o próximo agente.",
+        "priority": 1,
+        "can_delegate_to": ["QualificationAgent", "SupportAgent"]
+      },
+      {
+        "agent_ref": "QualificationAgent",
+        "role": "Qualifica o lead/cliente. Coleta informações, aplica scoring e determina se está pronto para proposta.",
+        "priority": 2,
+        "can_delegate_to": ["ProposalAgent", "NurturingAgent"]
+      },
+      {
+        "agent_ref": "ProposalAgent",
+        "role": "Apresenta proposta, agenda serviço/reunião, negocia condições. O comportamento varia por nicho (agendamento em clínica, visita em imobiliária, reunião em consultoria).",
+        "priority": 3,
+        "can_delegate_to": ["FollowUpAgent", "ReceptionAgent"]
+      },
+      {
+        "agent_ref": "FollowUpAgent",
+        "role": "Acompanha o cliente após proposta: confirma agendamento, envia lembretes, reengaja leads que esfriaram.",
+        "priority": 4,
+        "can_delegate_to": ["ProposalAgent", "PostSaleAgent"]
+      },
+      {
+        "agent_ref": "PostSaleAgent",
+        "role": "Pós-venda: pesquisa de satisfação, cross-sell, fidelização, suporte pós-serviço.",
+        "priority": 5,
+        "can_delegate_to": ["ReceptionAgent", "SupportAgent"]
+      }
+    ],
+    "orchestration": {
+      "type": "event_driven",
+      "routing_rules": [
+        { "condition": "journey.current_stage == 'reception'", "route_to": "ReceptionAgent", "priority": 1 },
+        { "condition": "journey.current_stage == 'qualification'", "route_to": "QualificationAgent", "priority": 2 },
+        { "condition": "journey.current_stage == 'proposal'", "route_to": "ProposalAgent", "priority": 3 },
+        { "condition": "journey.current_stage == 'follow_up'", "route_to": "FollowUpAgent", "priority": 4 },
+        { "condition": "journey.current_stage == 'post_sale'", "route_to": "PostSaleAgent", "priority": 5 },
+        { "condition": "customer_intent == 'support' AND journey.status == 'completed'", "route_to": "SupportAgent", "priority": 0 }
+      ],
+      "escalation_chain": ["active_agent", "ReceptionAgent", "human_support"],
+      "max_handoffs_per_session": 5
+    },
+    "communication": {
+      "protocol": "shared_memory",
+      "message_format": {
+        "type": "json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "from_agent": { "type": "string" },
+            "to_agent": { "type": "string" },
+            "type": { "type": "string", "enum": ["handoff", "data_share", "query", "notification"] },
+            "payload": { "type": "object" },
+            "timestamp": { "type": "string", "format": "date-time" }
+          }
+        }
+      },
+      "channels": [
+        {
+          "channel_id": "journey_state",
+          "participants": ["ReceptionAgent", "QualificationAgent", "ProposalAgent", "FollowUpAgent", "PostSaleAgent"],
+          "direction": "bidirectional"
+        },
+        {
+          "channel_id": "handoff_events",
+          "participants": ["Orchestrator", "ReceptionAgent", "QualificationAgent", "ProposalAgent", "FollowUpAgent", "PostSaleAgent"],
+          "direction": "bidirectional"
+        }
+      ]
+    },
+    "shared_resources": {
+      "shared_memory": {
+        "type": "database",
+        "table": "customer_journeys",
+        "description": "Estado da jornada acessível por todos os agentes. Cada agente lê o collected_data e contribui com novos dados."
+      },
+      "shared_tools": ["tool_send_message", "tool_search_knowledge", "tool_create_record", "tool_escalate_human"],
+      "shared_context_sources": ["src_customer_profile", "src_shared_conversation", "src_knowledge_base"]
+    }
+  }
+}

@@ -1,0 +1,536 @@
+{
+  "schema_version": "2.0",
+
+  "agent_metadata": {
+    "agent_name": "FollowUpNurturingAgent",
+    "agent_type": "follow_up_nurturing",
+    "business_domain": "custom",
+    "version": "1.0",
+    "description": "Agente embedded genérico para follow-up e nurturing de leads/clientes. Opera em qualquer vertical. Executa sequências de mensagens condicionais baseadas em triggers temporais e comportamentais, reengaja leads inativos e envia lembretes pré-agendamento.",
+    "tags": ["follow_up", "nurturing", "sequences", "reengagement", "reminders", "generic", "multi_vertical"],
+    "author": "IntelliX.AI",
+    "created_at": "2026-03-06T00:00:00Z",
+    "updated_at": "2026-03-06T00:00:00Z"
+  },
+
+  "objective": {
+    "primary_goal": "Manter leads e clientes engajados ao longo da jornada com sequências de follow-up automatizadas e personalizadas por contexto",
+    "secondary_goals": [
+      "Reengajar leads que pararam de responder",
+      "Enviar lembretes de compromissos/agendamentos",
+      "Coletar feedback pós-atendimento",
+      "Escalar para humano quando o lead demonstra interesse quente"
+    ],
+    "success_criteria": [
+      { "metric": "reengagement_rate", "target": ">20%", "measurement_method": "Leads inativos que responderam após sequência de follow-up" },
+      { "metric": "no_show_reduction", "target": ">30%", "measurement_method": "Comparação de no-show antes vs depois da ativação dos lembretes" },
+      { "metric": "unsubscribe_rate", "target": "<5%", "measurement_method": "Leads que pediram para parar de receber mensagens" }
+    ],
+    "constraints": [
+      "Máximo 2 mensagens por dia por lead",
+      "Máximo 3 mensagens consecutivas sem resposta antes de pausar sequência",
+      "SEMPRE respeitar opt-out do lead",
+      "NUNCA enviar fora do horário comercial",
+      "NUNCA enviar follow-up se conversa está em status 'human_active'",
+      "Intervalo mínimo de 4 horas entre mensagens para o mesmo lead"
+    ]
+  },
+
+  "operation_mode": {
+    "mode": "embedded",
+    "runtime_environment": "supabase_edge_function",
+    "concurrency": {
+      "max_concurrent_sessions": 500,
+      "session_isolation": "full"
+    }
+  },
+
+  "interfaces": {
+    "system_ui": { "enabled": true, "component_type": "dashboard_panel" },
+    "api": { "enabled": true, "protocol": "rest", "base_path": "/api/agents/follow-up" },
+    "whatsapp": { "enabled": true, "provider": "", "webhook_path": "", "connection_config_ref": "cfg_messaging_provider" },
+    "telegram": { "enabled": false, "bot_token_ref": "", "webhook_path": "" },
+    "instagram": { "enabled": false, "api_version": "", "webhook_path": "" },
+    "email": { "enabled": true, "provider": "", "inbound_address": "" },
+    "voice": { "enabled": false, "provider": "", "voice_id": "" }
+  },
+
+  "business_context": {
+    "industry": "",
+    "company_size": "small",
+    "pain_points": [
+      "Leads esfriam porque ninguém faz follow-up consistente",
+      "Altas taxas de no-show por falta de lembrete",
+      "Sem processo de reativação de leads antigos",
+      "Follow-up manual é esquecido quando o time está ocupado"
+    ],
+    "success_metrics": [
+      "Redução de 30% em no-shows",
+      "Aumento de 20% na taxa de reengajamento de leads inativos",
+      "Zero leads sem follow-up após 24h"
+    ],
+    "compliance_requirements": [],
+    "business_hours": {
+      "timezone": "",
+      "schedule": {
+        "mon": { "start": "08:00", "end": "18:00" },
+        "tue": { "start": "08:00", "end": "18:00" },
+        "wed": { "start": "08:00", "end": "18:00" },
+        "thu": { "start": "08:00", "end": "18:00" },
+        "fri": { "start": "08:00", "end": "18:00" },
+        "sat": null,
+        "sun": null
+      },
+      "outside_hours_behavior": "queue_message",
+      "outside_hours_message": ""
+    },
+    "brand_voice": {
+      "tone": "",
+      "language": "pt-BR",
+      "formality": "semi_formal",
+      "vocabulary_guidelines": []
+    }
+  },
+
+  "context_sources": [
+    {
+      "source_id": "src_lead_data",
+      "source_type": "database",
+      "source_name": "Dados do Lead/Cliente",
+      "description": "Dados completos do contato incluindo deal, stage, histórico de interações e sequências ativas",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT c.*, d.*, fs.* FROM contacts c LEFT JOIN deals d ON d.contact_id = c.id LEFT JOIN follow_up_sequences fs ON fs.contact_id = c.id AND fs.status = 'active' WHERE c.id = '{{contact_id}}' AND c.organization_id = '{{org_id}}'",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 30
+    },
+    {
+      "source_id": "src_sequence_templates",
+      "source_type": "database",
+      "source_name": "Templates de Sequências",
+      "description": "Templates de sequências de follow-up configurados pela organização, categorizados por tipo e vertical",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT * FROM sequence_templates WHERE organization_id = '{{org_id}}' AND active = true ORDER BY category, priority",
+        "headers": {}
+      },
+      "refresh_strategy": "cached",
+      "cache_ttl_seconds": 3600
+    },
+    {
+      "source_id": "src_appointments",
+      "source_type": "database",
+      "source_name": "Agendamentos",
+      "description": "Compromissos futuros do lead/cliente para envio de lembretes",
+      "connection_config": {
+        "endpoint": "supabase",
+        "method": "QUERY",
+        "auth_ref": "cfg_supabase",
+        "query_template": "SELECT * FROM appointments WHERE contact_id = '{{contact_id}}' AND datetime > now() AND status = 'confirmed' ORDER BY datetime ASC LIMIT 5",
+        "headers": {}
+      },
+      "refresh_strategy": "on_demand",
+      "cache_ttl_seconds": 60
+    }
+  ],
+
+  "tools": [
+    {
+      "tool_id": "tool_send_message",
+      "tool_name": "enviar_mensagem",
+      "tool_type": "api_call",
+      "description": "Envia mensagem ao lead via canal configurado (WhatsApp ou email). Escolhe automaticamente o canal baseado na preferência do lead.",
+      "endpoint": { "url": "{{messaging_api_url}}/send", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_messaging_provider" },
+      "parameters": {
+        "type": "object",
+        "required": ["contact_id", "text"],
+        "properties": {
+          "contact_id": { "type": "string" },
+          "text": { "type": "string" },
+          "channel": { "type": "string", "enum": ["whatsapp", "email", "auto"], "description": "Canal de envio. Auto seleciona pelo preferido do lead." }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 3, "retry_delay_ms": 2000, "timeout_ms": 10000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 5 }
+    },
+    {
+      "tool_id": "tool_update_sequence",
+      "tool_name": "atualizar_sequencia",
+      "tool_type": "database_query",
+      "description": "Atualiza o estado da sequência de follow-up: avança step, pausa, cancela ou completa.",
+      "endpoint": { "url": "supabase://follow_up_sequences", "method": "PATCH", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["sequence_id", "action"],
+        "properties": {
+          "sequence_id": { "type": "string" },
+          "action": { "type": "string", "enum": ["advance", "pause", "cancel", "complete", "restart"] },
+          "reason": { "type": "string" },
+          "next_scheduled_at": { "type": "string", "description": "ISO datetime do próximo envio (para advance)" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 2, "retry_delay_ms": 500, "timeout_ms": 5000, "on_failure": "abort", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 30, "max_calls_per_session": 10 }
+    },
+    {
+      "tool_id": "tool_create_sequence",
+      "tool_name": "criar_sequencia",
+      "tool_type": "database_query",
+      "description": "Inicia uma nova sequência de follow-up para um lead. Verifica se já existe sequência ativa antes de criar.",
+      "endpoint": { "url": "supabase://follow_up_sequences", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["contact_id", "sequence_type", "template_id"],
+        "properties": {
+          "contact_id": { "type": "string" },
+          "sequence_type": { "type": "string", "enum": ["quick_follow_up", "warm_nurturing", "cold_reactivation", "post_appointment", "post_sale", "reminder"] },
+          "template_id": { "type": "string" },
+          "start_delay_hours": { "type": "integer", "description": "Horas para esperar antes do primeiro envio" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 1, "retry_delay_ms": 500, "timeout_ms": 5000, "on_failure": "abort", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 20, "max_calls_per_session": 5 }
+    },
+    {
+      "tool_id": "tool_notify_team",
+      "tool_name": "notificar_time",
+      "tool_type": "webhook",
+      "description": "Notifica o time quando lead reengaja após follow-up ou quando precisa de atenção humana.",
+      "endpoint": { "url": "{{notification_webhook_url}}", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_notification_webhook" },
+      "parameters": {
+        "type": "object",
+        "required": ["contact_id", "event_type"],
+        "properties": {
+          "contact_id": { "type": "string" },
+          "event_type": { "type": "string", "enum": ["reengaged", "hot_signal", "opt_out", "appointment_confirmed"] },
+          "summary": { "type": "string" }
+        }
+      },
+      "response_format": { "type": "void", "schema": {} },
+      "error_handling": { "retry_count": 2, "retry_delay_ms": 2000, "timeout_ms": 5000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 20, "max_calls_per_session": 5 }
+    },
+    {
+      "tool_id": "tool_log_interaction",
+      "tool_name": "registrar_interacao",
+      "tool_type": "database_query",
+      "description": "Registra cada interação de follow-up para auditoria e analytics.",
+      "endpoint": { "url": "supabase://follow_up_logs", "method": "POST", "headers": { "Content-Type": "application/json" } },
+      "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+      "parameters": {
+        "type": "object",
+        "required": ["contact_id", "sequence_id", "action", "message_sent"],
+        "properties": {
+          "contact_id": { "type": "string" },
+          "sequence_id": { "type": "string" },
+          "action": { "type": "string" },
+          "message_sent": { "type": "string" },
+          "channel": { "type": "string" },
+          "lead_responded": { "type": "boolean" }
+        }
+      },
+      "response_format": { "type": "json", "schema": {} },
+      "error_handling": { "retry_count": 1, "retry_delay_ms": 500, "timeout_ms": 3000, "on_failure": "skip", "fallback_tool_ref": "" },
+      "rate_limit": { "max_calls_per_minute": 60, "max_calls_per_session": 20 }
+    }
+  ],
+
+  "memory": {
+    "short_term": { "enabled": true, "max_messages": 10, "summarization": { "enabled": false, "trigger_message_count": 15, "strategy": "rolling_summary" } },
+    "long_term": {
+      "enabled": true,
+      "storage_backend": "supabase_table",
+      "table_name": "follow_up_sequences",
+      "schema": {
+        "columns": [
+          { "name": "id", "type": "uuid", "nullable": false, "default": "gen_random_uuid()", "description": "PK" },
+          { "name": "organization_id", "type": "uuid", "nullable": false, "default": "", "description": "" },
+          { "name": "contact_id", "type": "uuid", "nullable": false, "default": "", "description": "" },
+          { "name": "sequence_type", "type": "text", "nullable": false, "default": "", "description": "quick_follow_up, warm_nurturing, cold_reactivation, post_appointment, post_sale, reminder" },
+          { "name": "template_id", "type": "uuid", "nullable": true, "default": "", "description": "Template de sequência usado" },
+          { "name": "current_step", "type": "integer", "nullable": false, "default": "0", "description": "Step atual na sequência (0-indexed)" },
+          { "name": "total_steps", "type": "integer", "nullable": false, "default": "0", "description": "" },
+          { "name": "status", "type": "text", "nullable": false, "default": "'active'", "description": "active, paused, completed, cancelled, opted_out" },
+          { "name": "messages_sent", "type": "integer", "nullable": false, "default": "0", "description": "" },
+          { "name": "messages_without_response", "type": "integer", "nullable": false, "default": "0", "description": "Contador de mensagens consecutivas sem resposta" },
+          { "name": "last_sent_at", "type": "timestamptz", "nullable": true, "default": "", "description": "" },
+          { "name": "next_scheduled_at", "type": "timestamptz", "nullable": true, "default": "", "description": "" },
+          { "name": "lead_responded", "type": "boolean", "nullable": false, "default": "false", "description": "" },
+          { "name": "created_at", "type": "timestamptz", "nullable": false, "default": "now()", "description": "" },
+          { "name": "completed_at", "type": "timestamptz", "nullable": true, "default": "", "description": "" },
+          { "name": "metadata", "type": "jsonb", "nullable": true, "default": "'{}'", "description": "" }
+        ],
+        "indexes": [
+          { "columns": ["organization_id", "contact_id", "status"], "type": "btree" },
+          { "columns": ["next_scheduled_at", "status"], "type": "btree" },
+          { "columns": ["sequence_type"], "type": "btree" }
+        ]
+      },
+      "ttl_days": 365,
+      "max_entries_per_session": 100
+    },
+    "episodic": { "enabled": false, "embedding_model": "", "vector_store": "", "similarity_threshold": 0.75, "max_results": 5, "chunk_strategy": { "method": "semantic", "chunk_size_tokens": 512, "overlap_tokens": 50 } }
+  },
+
+  "reasoning": {
+    "strategy": "deterministic",
+    "fallback_strategy": "abort",
+    "max_reasoning_steps": 4,
+    "confidence_threshold": 0.8,
+    "model_config": {
+      "provider": "",
+      "model": "",
+      "temperature": 0.3,
+      "max_tokens": 512,
+      "config_ref": "cfg_llm_api_key"
+    }
+  },
+
+  "cognitive_loop": {
+    "enabled": false,
+    "observe": { "data_sources": [], "event_listeners": [], "polling_interval_seconds": 0 },
+    "think": { "analysis_strategy": "intent_classification", "context_window_strategy": "hybrid", "max_context_tokens": 2048 },
+    "plan": { "planning_method": "sequential", "max_plan_steps": 3, "resource_constraints": [], "replanning_enabled": false },
+    "act": { "execution_mode": "sync", "timeout_seconds": 15, "rollback_enabled": false, "confirmation_required": false },
+    "reflect": { "evaluation_criteria": [], "success_threshold": 0.8, "logging": { "level": "actions_only", "destination": "" } },
+    "learn": { "learning_type": "none", "update_frequency": "manual", "knowledge_base_ref": "", "human_review_required": true }
+  },
+
+  "workflow": [
+    {
+      "step_id": "step_001", "step_name": "Receber trigger", "step_type": "receive_input",
+      "description": "Recebe trigger: cron (hora de enviar follow-up), evento (lead respondeu, deal moveu), ou manual",
+      "inputs": [
+        { "name": "trigger_type", "source": "trigger.payload.trigger_type", "required": true },
+        { "name": "contact_id", "source": "trigger.payload.contact_id", "required": false },
+        { "name": "sequence_id", "source": "trigger.payload.sequence_id", "required": false },
+        { "name": "event_data", "source": "trigger.payload", "required": true }
+      ],
+      "outputs": [{ "name": "trigger_data", "type": "object", "description": "" }],
+      "tool_ref": "", "on_error": { "strategy": "abort", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5, "next_step": "step_002"
+    },
+    {
+      "step_id": "step_002", "step_name": "Classificar tipo de trigger", "step_type": "condition",
+      "description": "Roteia: cron (processar batch), lead_responded (avaliar reengajamento), deal_event (iniciar/ajustar sequência), reminder (enviar lembrete)",
+      "inputs": [{ "name": "trigger_type", "source": "step_001.trigger_data.trigger_type", "required": true }],
+      "outputs": [], "tool_ref": "",
+      "condition": { "expression": "trigger_type == 'cron_batch'", "if_true": "step_003", "if_false": "step_004" },
+      "on_error": { "strategy": "fallback", "retry_count": 0, "fallback_step": "step_003", "error_message": "" },
+      "timeout_seconds": 2, "next_step": ""
+    },
+    {
+      "step_id": "step_003", "step_name": "Processar batch de sequências", "step_type": "process",
+      "description": "Busca todas as sequências ativas com next_scheduled_at <= now(). Para cada uma, verifica regras (horário, max mensagens, opt-out) e decide se envia.",
+      "inputs": [{ "name": "current_time", "source": "system.current_time", "required": true }],
+      "outputs": [
+        { "name": "sequences_to_process", "type": "array", "description": "Sequências que devem enviar agora" },
+        { "name": "sequences_to_pause", "type": "array", "description": "Sequências que atingiram max sem resposta" }
+      ],
+      "tool_ref": "", "on_error": { "strategy": "abort", "retry_count": 2, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 10, "next_step": "step_005"
+    },
+    {
+      "step_id": "step_004", "step_name": "Processar evento individual", "step_type": "process",
+      "description": "Processa evento: se lead respondeu, pausa sequência e notifica time. Se deal moveu de stage, inicia sequência apropriada. Se appointment criado, inicia lembretes.",
+      "inputs": [
+        { "name": "event_data", "source": "step_001.trigger_data", "required": true },
+        { "name": "contact_id", "source": "step_001.trigger_data.contact_id", "required": true }
+      ],
+      "outputs": [
+        { "name": "action", "type": "string", "description": "send, pause, create_sequence, notify_team, skip" },
+        { "name": "sequence_data", "type": "object", "description": "" }
+      ],
+      "tool_ref": "", "on_error": { "strategy": "skip", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5, "next_step": "step_005"
+    },
+    {
+      "step_id": "step_005", "step_name": "Gerar mensagem personalizada", "step_type": "llm_reasoning",
+      "description": "Para cada sequência a enviar: carrega o template do step atual, personaliza com dados do lead e contexto do negócio. O LLM adapta o tom e conteúdo ao nicho.",
+      "inputs": [
+        { "name": "sequence", "source": "step_003.sequences_to_process", "required": false },
+        { "name": "lead_data", "source": "src_lead_data", "required": true },
+        { "name": "template", "source": "src_sequence_templates", "required": true }
+      ],
+      "outputs": [
+        { "name": "messages_to_send", "type": "array", "description": "[{contact_id, text, channel}]" }
+      ],
+      "tool_ref": "", "on_error": { "strategy": "skip", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 15, "next_step": "step_006"
+    },
+    {
+      "step_id": "step_006", "step_name": "Enviar mensagens", "step_type": "loop",
+      "description": "Envia cada mensagem gerada via canal apropriado",
+      "inputs": [{ "name": "messages", "source": "step_005.messages_to_send", "required": true }],
+      "outputs": [], "tool_ref": "",
+      "loop_config": { "over": "step_005.messages_to_send", "body_steps": ["tool_send_message"], "max_iterations": 50 },
+      "on_error": { "strategy": "skip", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 60, "next_step": "step_007"
+    },
+    {
+      "step_id": "step_007", "step_name": "Atualizar sequências", "step_type": "process",
+      "description": "Para cada sequência processada: avança step, atualiza next_scheduled_at, incrementa contadores. Para sequências pausadas: atualiza status.",
+      "inputs": [
+        { "name": "sequences_processed", "source": "step_003.sequences_to_process", "required": false },
+        { "name": "sequences_to_pause", "source": "step_003.sequences_to_pause", "required": false }
+      ],
+      "outputs": [], "tool_ref": "",
+      "on_error": { "strategy": "skip", "retry_count": 2, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 10, "next_step": "step_008"
+    },
+    {
+      "step_id": "step_008", "step_name": "Registrar logs", "step_type": "tool_call",
+      "description": "Salva logs de todas as interações para analytics",
+      "inputs": [{ "name": "interactions", "source": "context.interactions_log", "required": true }],
+      "outputs": [], "tool_ref": "tool_log_interaction",
+      "on_error": { "strategy": "skip", "retry_count": 1, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 5, "next_step": "step_009"
+    },
+    {
+      "step_id": "step_009", "step_name": "Finalizar", "step_type": "terminate",
+      "description": "Encerra o ciclo",
+      "inputs": [], "outputs": [], "tool_ref": "",
+      "on_error": { "strategy": "skip", "retry_count": 0, "fallback_step": "", "error_message": "" },
+      "timeout_seconds": 1, "next_step": ""
+    }
+  ],
+
+  "actions": [
+    {
+      "action_id": "action_send_followup", "action_name": "Enviar follow-up", "action_type": "tool_call",
+      "description": "Envia a próxima mensagem da sequência ativa",
+      "tool_ref": "tool_send_message", "parameters": {},
+      "conditions": [
+        { "field": "sequence.status", "operator": "equals", "value": "active" },
+        { "field": "sequence.messages_without_response", "operator": "less_than", "value": 3 }
+      ],
+      "side_effects": ["sends_message", "advances_sequence_step"], "requires_confirmation": false
+    },
+    {
+      "action_id": "action_pause_sequence", "action_name": "Pausar sequência", "action_type": "state_update",
+      "description": "Pausa a sequência quando lead não responde após 3 tentativas",
+      "tool_ref": "tool_update_sequence", "parameters": { "action": "pause" },
+      "conditions": [{ "field": "sequence.messages_without_response", "operator": "greater_than", "value": 2 }],
+      "side_effects": ["pauses_sequence", "logs_event"], "requires_confirmation": false
+    },
+    {
+      "action_id": "action_start_sequence", "action_name": "Iniciar nova sequência", "action_type": "tool_call",
+      "description": "Cria e inicia uma nova sequência de follow-up para o lead",
+      "tool_ref": "tool_create_sequence", "parameters": {},
+      "conditions": [
+        { "field": "contact.active_sequences", "operator": "equals", "value": 0 }
+      ],
+      "side_effects": ["creates_sequence"], "requires_confirmation": false
+    },
+    {
+      "action_id": "action_notify_reengagement", "action_name": "Notificar reengajamento", "action_type": "send_notification",
+      "description": "Notifica time quando lead reengaja após follow-up",
+      "tool_ref": "tool_notify_team", "parameters": {},
+      "conditions": [{ "field": "event_type", "operator": "equals", "value": "lead_responded" }],
+      "side_effects": ["sends_notification"], "requires_confirmation": false
+    }
+  ],
+
+  "triggers": [
+    {
+      "trigger_id": "trigger_cron_batch", "trigger_type": "schedule", "source": "cron",
+      "event_name": "follow_up.process_batch", "cron_expression": "*/15 * * * *",
+      "conditions": [],
+      "payload_schema": { "type": "object", "properties": { "trigger_type": { "type": "string", "const": "cron_batch" } } },
+      "activates_workflow_step": "step_001", "debounce_seconds": 0, "enabled": true
+    },
+    {
+      "trigger_id": "trigger_lead_responded", "trigger_type": "event", "source": "messaging_channel",
+      "event_name": "message.received", "cron_expression": "",
+      "conditions": [{ "field": "contact.has_active_sequence", "operator": "equals", "value": true }],
+      "payload_schema": { "type": "object", "properties": { "trigger_type": { "type": "string", "const": "lead_responded" }, "contact_id": { "type": "string" } } },
+      "activates_workflow_step": "step_001", "debounce_seconds": 5, "enabled": true
+    },
+    {
+      "trigger_id": "trigger_deal_stage_changed", "trigger_type": "event", "source": "crm_database",
+      "event_name": "deal.stage_changed", "cron_expression": "",
+      "conditions": [],
+      "payload_schema": { "type": "object", "properties": { "trigger_type": { "type": "string", "const": "deal_event" }, "contact_id": { "type": "string" }, "new_stage": { "type": "string" } } },
+      "activates_workflow_step": "step_001", "debounce_seconds": 10, "enabled": true
+    },
+    {
+      "trigger_id": "trigger_appointment_created", "trigger_type": "event", "source": "crm_database",
+      "event_name": "appointment.created", "cron_expression": "",
+      "conditions": [],
+      "payload_schema": { "type": "object", "properties": { "trigger_type": { "type": "string", "const": "reminder" }, "contact_id": { "type": "string" }, "appointment_datetime": { "type": "string" } } },
+      "activates_workflow_step": "step_001", "debounce_seconds": 0, "enabled": true
+    }
+  ],
+
+  "integration": {
+    "primary_protocol": "rest", "base_url": "",
+    "auth": { "method": "api_key", "config_ref": "cfg_supabase" },
+    "retry_policy": { "max_retries": 3, "backoff_strategy": "exponential", "initial_delay_ms": 1000, "max_delay_ms": 15000 },
+    "rate_limit": { "max_requests_per_minute": 120, "max_requests_per_day": 50000, "queue_strategy": "throttle" },
+    "health_check": { "enabled": false, "endpoint": "", "interval_seconds": 300 }
+  },
+
+  "prompt_template": {
+    "system_prompt": "Você é o agente de follow-up e nurturing. Sua função é gerar mensagens personalizadas de follow-up para leads e clientes.\n\n## REGRAS\n1. Personalize SEMPRE com nome do lead e contexto do negócio\n2. Cada mensagem deve ter um CTA claro (responder, agendar, confirmar)\n3. Tom varia por nicho — use brand_voice da configuração\n4. Mensagens de follow-up devem ser curtas (max 3 parágrafos)\n5. NUNCA pareça robótico ou genérico\n6. Varie o approach entre mensagens da mesma sequência\n7. Se o lead respondeu, NÃO envie o próximo follow-up automático\n\n## TIPOS DE SEQUÊNCIA\n- quick_follow_up: 2-3 mensagens em 24-48h para leads quentes\n- warm_nurturing: 5-7 mensagens em 2-3 semanas para leads mornos\n- cold_reactivation: 3 mensagens em 2 semanas para leads inativos 30+ dias\n- post_appointment: 1-2 mensagens após atendimento (satisfação + cross-sell)\n- reminder: Lembretes 24h e 1h antes do compromisso",
+    "system_prompt_sections": [],
+    "user_prompt_template": "Gere a mensagem de follow-up:\n\nLead: {{lead_name}}\nNicho: {{business_niche}}\nTipo de sequência: {{sequence_type}}\nStep atual: {{current_step}}/{{total_steps}}\nÚltima mensagem enviada: {{last_message}}\nDados do lead: {{lead_context}}\nBrand voice: {{brand_voice}}\n\nGere UMA mensagem personalizada e natural.",
+    "few_shot_examples": [],
+    "output_format": { "type": "free_text", "schema": {}, "instructions": "Retorne apenas o texto da mensagem, sem formatação, pronto para enviar via WhatsApp." },
+    "guardrails": [
+      { "rule": "Máximo 2 mensagens por dia por lead", "severity": "hard_block", "action_on_violation": "block_response" },
+      { "rule": "Respeitar opt-out imediatamente", "severity": "hard_block", "action_on_violation": "block_response" },
+      { "rule": "Não enviar fora do horário comercial", "severity": "hard_block", "action_on_violation": "block_response" }
+    ]
+  },
+
+  "pending_configuration": [
+    { "config_id": "cfg_supabase", "field_path": "context_sources.*.connection_config", "description": "Credenciais Supabase", "type": "json", "required": true, "default_value": null, "validation_rule": "project_url, service_role_key", "sensitive": true, "example_value": "{\"project_url\": \"https://xxx.supabase.co\", \"service_role_key\": \"eyJ...\"}" },
+    { "config_id": "cfg_llm_api_key", "field_path": "reasoning.model_config", "description": "API key do LLM para personalização de mensagens", "type": "api_key", "required": true, "default_value": null, "validation_rule": "", "sensitive": true, "example_value": "sk-ant-..." },
+    { "config_id": "cfg_messaging_provider", "field_path": "interfaces.whatsapp", "description": "Credenciais do provedor de mensageria", "type": "json", "required": true, "default_value": null, "validation_rule": "api_url, api_key, instance_name", "sensitive": true, "example_value": "{\"api_url\": \"https://evolution.example.com\", \"api_key\": \"xxx\", \"instance_name\": \"main\"}" },
+    { "config_id": "cfg_notification_webhook", "field_path": "tools.tool_notify_team.endpoint", "description": "URL do webhook para notificações ao time", "type": "url", "required": false, "default_value": null, "validation_rule": "HTTPS URL", "sensitive": false, "example_value": "https://n8n.example.com/webhook/follow-up-notification" }
+  ],
+
+  "governance": {
+    "permissions": { "allowed_actions": ["action_send_followup", "action_pause_sequence", "action_start_sequence", "action_notify_reengagement"], "denied_actions": [], "approval_required": [] },
+    "audit": { "log_level": "actions_only", "log_destination": "supabase://follow_up_logs", "retention_days": 365 },
+    "rate_limits": { "max_messages_per_minute": 60, "max_tokens_per_request": 512, "max_cost_per_day_usd": 5.0, "max_sessions_per_hour": 500 },
+    "safety": {
+      "content_filters": ["pii_detection"],
+      "pii_handling": "redact",
+      "escalation_triggers": [
+        { "condition": "lead explicitly opts out", "action": "pause_agent" },
+        { "condition": "lead sends angry/frustrated message in response to follow-up", "action": "notify_admin" }
+      ],
+      "max_consecutive_failures": 5
+    },
+    "compliance": { "frameworks": [], "data_residency": "", "consent_required": false, "consent_message": "" }
+  },
+
+  "learning": {
+    "feedback_loop": { "enabled": true, "collection_method": "automated_metrics", "storage": "supabase://follow_up_logs", "review_cadence": "weekly" },
+    "performance_tracking": {
+      "metrics": [
+        { "metric_name": "reengagement_rate", "calculation": "leads_responded_after_followup / total_followup_sequences", "alert_threshold": "<15%" },
+        { "metric_name": "opt_out_rate", "calculation": "opt_outs / total_messages_sent", "alert_threshold": ">5%" },
+        { "metric_name": "avg_sequence_completion_rate", "calculation": "completed_sequences / total_sequences", "alert_threshold": "<40%" },
+        { "metric_name": "no_show_rate_with_reminders", "calculation": "no_shows / appointments_with_reminders", "alert_threshold": ">15%" }
+      ]
+    },
+    "knowledge_update": { "update_trigger": "manual", "validation_required": true, "rollback_enabled": true }
+  },
+
+  "multi_agent": null
+}

@@ -1,0 +1,286 @@
+{
+  "schema_version": "2.0",
+
+  "agent_metadata": {
+    "agent_name": "",
+    "agent_type": "custom",
+    "business_domain": "custom",
+    "version": "1.0",
+    "description": "",
+    "tags": [],
+    "author": "",
+    "created_at": "",
+    "updated_at": ""
+  },
+
+  "objective": {
+    "primary_goal": "",
+    "secondary_goals": [],
+    "success_criteria": [],
+    "constraints": []
+  },
+
+  "operation_mode": {
+    "mode": "embedded",
+    "runtime_environment": "",
+    "concurrency": {
+      "max_concurrent_sessions": 10,
+      "session_isolation": "full"
+    }
+  },
+
+  "interfaces": {
+    "system_ui": {
+      "enabled": false,
+      "component_type": "chat_widget"
+    },
+    "api": {
+      "enabled": true,
+      "protocol": "rest",
+      "base_path": ""
+    },
+    "whatsapp": {
+      "enabled": false,
+      "provider": "",
+      "webhook_path": "",
+      "connection_config_ref": ""
+    },
+    "telegram": {
+      "enabled": false,
+      "bot_token_ref": "",
+      "webhook_path": ""
+    },
+    "instagram": {
+      "enabled": false,
+      "api_version": "",
+      "webhook_path": ""
+    },
+    "email": {
+      "enabled": false,
+      "provider": "",
+      "inbound_address": ""
+    },
+    "voice": {
+      "enabled": false,
+      "provider": "",
+      "voice_id": ""
+    }
+  },
+
+  "business_context": {
+    "industry": "",
+    "company_size": "small",
+    "pain_points": [],
+    "success_metrics": [],
+    "compliance_requirements": [],
+    "business_hours": {
+      "timezone": "America/Sao_Paulo",
+      "schedule": {
+        "mon": { "start": "08:00", "end": "18:00" },
+        "tue": { "start": "08:00", "end": "18:00" },
+        "wed": { "start": "08:00", "end": "18:00" },
+        "thu": { "start": "08:00", "end": "18:00" },
+        "fri": { "start": "08:00", "end": "18:00" },
+        "sat": null,
+        "sun": null
+      },
+      "outside_hours_behavior": "auto_reply",
+      "outside_hours_message": ""
+    },
+    "brand_voice": {
+      "tone": "professional",
+      "language": "pt-BR",
+      "formality": "semi_formal",
+      "vocabulary_guidelines": []
+    }
+  },
+
+  "context_sources": [],
+
+  "tools": [],
+
+  "memory": {
+    "short_term": {
+      "enabled": true,
+      "max_messages": 20,
+      "summarization": {
+        "enabled": false,
+        "trigger_message_count": 15,
+        "strategy": "rolling_summary"
+      }
+    },
+    "long_term": {
+      "enabled": false,
+      "storage_backend": "",
+      "table_name": "",
+      "schema": {
+        "columns": [],
+        "indexes": []
+      },
+      "ttl_days": null,
+      "max_entries_per_session": 100
+    },
+    "episodic": {
+      "enabled": false,
+      "embedding_model": "",
+      "vector_store": "",
+      "similarity_threshold": 0.75,
+      "max_results": 5,
+      "chunk_strategy": {
+        "method": "semantic",
+        "chunk_size_tokens": 512,
+        "overlap_tokens": 50
+      }
+    }
+  },
+
+  "reasoning": {
+    "strategy": "deterministic",
+    "fallback_strategy": "escalate_to_human",
+    "max_reasoning_steps": 5,
+    "confidence_threshold": 0.7,
+    "model_config": {
+      "provider": "",
+      "model": "",
+      "temperature": 0.3,
+      "max_tokens": 1024,
+      "config_ref": ""
+    }
+  },
+
+  "cognitive_loop": {
+    "enabled": false,
+    "observe": {
+      "data_sources": [],
+      "event_listeners": [],
+      "polling_interval_seconds": 0
+    },
+    "think": {
+      "analysis_strategy": "intent_classification",
+      "context_window_strategy": "hybrid",
+      "max_context_tokens": 4096
+    },
+    "plan": {
+      "planning_method": "sequential",
+      "max_plan_steps": 5,
+      "resource_constraints": [],
+      "replanning_enabled": false
+    },
+    "act": {
+      "execution_mode": "sync",
+      "timeout_seconds": 30,
+      "rollback_enabled": false,
+      "confirmation_required": false
+    },
+    "reflect": {
+      "evaluation_criteria": [],
+      "success_threshold": 0.8,
+      "logging": {
+        "level": "actions_only",
+        "destination": ""
+      }
+    },
+    "learn": {
+      "learning_type": "none",
+      "update_frequency": "manual",
+      "knowledge_base_ref": "",
+      "human_review_required": true
+    }
+  },
+
+  "workflow": [],
+
+  "actions": [],
+
+  "triggers": [],
+
+  "integration": {
+    "primary_protocol": "rest",
+    "base_url": "",
+    "auth": {
+      "method": "none",
+      "config_ref": ""
+    },
+    "retry_policy": {
+      "max_retries": 3,
+      "backoff_strategy": "exponential",
+      "initial_delay_ms": 1000,
+      "max_delay_ms": 30000
+    },
+    "rate_limit": {
+      "max_requests_per_minute": 60,
+      "max_requests_per_day": 10000,
+      "queue_strategy": "throttle"
+    },
+    "health_check": {
+      "enabled": false,
+      "endpoint": "",
+      "interval_seconds": 300
+    }
+  },
+
+  "prompt_template": {
+    "system_prompt": "",
+    "system_prompt_sections": [],
+    "user_prompt_template": "",
+    "few_shot_examples": [],
+    "output_format": {
+      "type": "free_text",
+      "schema": {},
+      "instructions": ""
+    },
+    "guardrails": []
+  },
+
+  "pending_configuration": [],
+
+  "governance": {
+    "permissions": {
+      "allowed_actions": [],
+      "denied_actions": [],
+      "approval_required": []
+    },
+    "audit": {
+      "log_level": "actions_only",
+      "log_destination": "",
+      "retention_days": 90
+    },
+    "rate_limits": {
+      "max_messages_per_minute": 30,
+      "max_tokens_per_request": 4096,
+      "max_cost_per_day_usd": 10.0,
+      "max_sessions_per_hour": 100
+    },
+    "safety": {
+      "content_filters": [],
+      "pii_handling": "redact",
+      "escalation_triggers": [],
+      "max_consecutive_failures": 3
+    },
+    "compliance": {
+      "frameworks": [],
+      "data_residency": "",
+      "consent_required": false,
+      "consent_message": ""
+    }
+  },
+
+  "learning": {
+    "feedback_loop": {
+      "enabled": false,
+      "collection_method": "implicit_signals",
+      "storage": "",
+      "review_cadence": "weekly"
+    },
+    "performance_tracking": {
+      "metrics": []
+    },
+    "knowledge_update": {
+      "update_trigger": "manual",
+      "validation_required": true,
+      "rollback_enabled": true
+    }
+  },
+
+  "multi_agent": null
+}

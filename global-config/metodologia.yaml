@@ -1,0 +1,373 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# FONTE ÚNICA DE VERDADE — Metodologia IntelliX
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Criado em 2026-09-07 (Fase 3.1 do PLANO-CORRECAO-2026-09-07.md).
+#
+# POR QUE ESTE ARQUIVO EXISTE
+# Fases, stack e ordem viviam em prosa markdown duplicada em 6 lugares
+# (MASTER-ARCHITECTURE.md, master-workflow/SKILL.md, README.md, session-start.sh,
+# modules/dev-rules.md, cada SKILL.md individual). Toda vez que uma decisão mudava,
+# alguns arquivos ficavam para trás — foi exatamente assim que nasceram os achados
+# C1, A2, A3 e A5 da AUDITORIA-ESTRUTURA-2026-09-07.md: fase trocada entre dois
+# documentos, deploy em Vercel meses depois da migração, gatilhos apontando para
+# skills arquivadas.
+#
+# REGRA DE OURO
+# Este arquivo é NORMATIVO. Os markdowns explicam e exemplificam; este define.
+# Divergência entre um markdown e este arquivo é bug NO MARKDOWN.
+# `scripts/doctor.py` valida os markdowns contra este arquivo a cada sessão.
+#
+# AO MUDAR ALGO AQUI
+# 1. edite este arquivo primeiro;
+# 2. rode `python3 scripts/doctor.py` para ver o que ficou divergente;
+# 3. corrija os markdowns apontados;
+# 4. se mexeu em plugin próprio, suba `version` no plugin.json, no
+#    marketplace.json e em `versoes` abaixo (o doctor compara os três e o
+#    registro de instalação). Marketplace `directory` carrega direto do fonte.
+# ═══════════════════════════════════════════════════════════════════════════
+
+versao: 1
+atualizado_em: 2026-09-16
+
+# ── Stack padrão ────────────────────────────────────────────────────────────
+# Mudou em 2026-09-07: deploy passou de Vercel para Cloudflare Workers/Pages.
+stack:
+  framework: Next.js 16 (App Router)
+  linguagem: TypeScript strict
+  estilo: Tailwind CSS + Shadcn/UI
+  animacao: Framer Motion
+  banco: Supabase (PostgreSQL + Auth + RLS + Edge Functions)
+  validacao: Zod + React Hook Form
+  deploy: Cloudflare (Workers/Pages)
+  deploy_adapter: "@opennextjs/cloudflare"
+  deploy_cli: wrangler
+  ci: GitHub Actions
+  testes: Vitest (unit) + Playwright (E2E)
+  whatsapp: Evolution API
+  automacao: n8n
+  agentes: GPT Maker
+  observabilidade: Sentry + logging estruturado
+
+# Tecnologias descontinuadas. O doctor acusa quando aparecem como alvo de deploy.
+stack_descontinuada:
+  - nome: Vercel
+    substituto: Cloudflare (Workers/Pages)
+    desde: 2026-09-07
+    # Exceção legítima: a skill `vercel-react-best-practices` trata de performance
+    # React/Next e independe do host — continua válida.
+    excecoes:
+      - vercel-react-best-practices
+
+# ── Fases do workflow ───────────────────────────────────────────────────────
+# `id` é o número normativo. `skill` precisa existir (o doctor verifica).
+# `condicional: true` = pode ser pulada conforme o tipo de projeto.
+fases:
+  - id: "00"
+    nome: Project Kickoff
+    skill: project-kickoff
+    entrega: scaffolding, estrutura canônica, references/, DESIGN.md, DevSecOps CI, .intellix-phase
+    entrada: /intellix:new-project   # entrada única (D7); modo adaptação para projeto existente
+    gate: aprovação do usuário
+  - id: "00b"
+    nome: Code Audit
+    skill: code-audit
+    entrega: gap analysis, score, roadmap priorizado
+    condicional: true
+    aplica_a: projetos existentes
+  - id: "00c"
+    nome: System Scan
+    skill: system-scan
+    entrega: veredito de maturidade Classe A/B/C, nota ponderada, historico comparavel
+    condicional: true
+    aplica_a: pre-handoff, demo importante, pratica trimestral de manutencao
+  - id: "01"
+    nome: Architecture
+    skill: architecture
+    entrega: schema Supabase com RLS, rotas, tipos, repository/service
+    gate: aprovação do usuário
+  - id: "02"
+    nome: Frontend Design
+    skill: frontend-design
+    entrega: design system, tokens, componentes base
+    condicional: true
+    aplica_a: projetos com interface de usuário
+  - id: "03"
+    nome: Dev Standards
+    skill: dev-standards
+    entrega: TypeScript strict, naming, estrutura de componentes
+  - id: "03b"
+    nome: Agent Creation
+    skill: agent-creation
+    entrega: blueprint de agentes IA
+    condicional: true
+    aplica_a: sistemas com agentes ou automação com LLM
+  - id: "04"
+    nome: Implementation
+    skill: null   # executada pelos 4 comandos, não por skill única
+    comandos: [/spec, /break, /plan, /execute]
+    entrega: código implementado com review em dois estágios
+    gate: aprovação por issue
+  - id: "05"
+    nome: Integration
+    skill: integration
+    entrega: APIs externas, WhatsApp, n8n, SDKs de IA
+    condicional: true
+  - id: "06"
+    nome: Security
+    skill: security-observability
+    skills_paralelas: [devsecops:lgpd-compliance]
+    entrega: OWASP, rate limiting, observabilidade, LGPD
+    gate: "devsecops:security-gate == PASS"
+  - id: "07"
+    nome: Test E2E
+    skill: test-e2e
+    entrega: smoke, funcional, segurança, performance, stress
+    gate: 100% dos testes passando
+  - id: "08"
+    nome: Deploy
+    skill: deploy
+    entrega: Cloudflare Workers/Pages, DNS, health check, runbook
+    gate: autorização explícita do responsável
+  - id: "09"
+    nome: Handoff
+    skill: project-handoff
+    entrega: README, ADRs, runbook, acesso ao cliente
+
+# Módulo opcional de produto — não é fase de processo.
+modulos_opcionais:
+  - nome: Live Chat
+    skill: live-chat
+    depende_de: ["01", "02", "03b"]
+
+# ── Contrato de hooks (C7, 2026-09-16) ─────────────────────────────────────
+# Hooks de vários donos rodam em paralelo no mesmo evento e o Claude Code junta
+# as saídas. Hook que precisa COLOCAR TEXTO NO CONTEXTO (SessionStart,
+# UserPromptSubmit) tem de ser síncrono: nesta instalação, a saída de hooks
+# `async: true` nunca apareceu para o modelo (a documentação não define o caso).
+# O doctor acusa hook de contexto marcado como async.
+hooks:
+  SessionStart:
+    - dono: global
+      scripts: [auto-claude-md.py, new-session-flag.py, intellix-project-check.py, doctor.py --quiet]
+      papel: estado do projeto, saúde da metodologia
+    - dono: intellix
+      scripts: [session-start.sh]
+      papel: fases, IDs e padrões (espelha este arquivo)
+    - dono: devsecops
+      scripts: [session-banner.sh]
+      papel: baseline de segurança e LGPD
+  UserPromptSubmit:
+    - dono: global
+      scripts: [perplexity-check.py, context-loader.py, intellix-skill-router.py]
+      papel: pesquisa externa, checkpoint, sugestão de skills (router único do workflow)
+    - dono: devsecops
+      scripts: [security-router.sh]
+      papel: sugestões de segurança/LGPD e frota de revisores antes de deploy
+  PreToolUse:
+    - dono: global
+      matcher: Write|Edit
+      scripts: [phase-gate-hook.py]
+      bloqueia: código de produção em fase init/arch (exit 2)
+    - dono: global
+      matcher: Bash
+      scripts: [bash-guardrail.py]
+      bloqueia: comandos destrutivos (exit 2)
+    - dono: intellix
+      matcher: Write|Edit
+      tipo: prompt
+      papel: revisão de padrões TypeScript/camadas por modelo (não determinística)
+    - dono: devsecops
+      matcher: Write|Edit|MultiEdit
+      scripts: [guardrail-write.py]
+      bloqueia: secrets e NEXT_PUBLIC_ sensível; avisa SQL sem RLS
+  PostToolUse:
+    - dono: global
+      scripts: [session-tracker.py, context-monitor.py]
+  Stop:
+    - dono: global
+      scripts: [session-history.py]
+
+# ── Perfis de auditoria e gates (D8, 2026-09-16) ───────────────────────────
+# Cada perfil tem gatilho, saída e critério próprios. Um perfil pode orquestrar
+# outro (o system-scan chama o code-audit), nunca copiar o checklist dele.
+auditorias:
+  - perfil: entrada
+    skill: intellix:code-audit
+    comando: /intellix:audit
+    quando: projeto existente, antes de refatorar ou continuar desenvolvendo
+    saida: docs/intellix-audit-<data>.md
+    criterio: score por dimensão; itens críticos resolvidos antes de feature nova
+  - perfil: saida
+    skill: intellix:system-scan
+    quando: pré-handoff, demo importante, rotina trimestral (após a Fase 01)
+    saida: docs/system-scan/SCAN-<data>.md
+    criterio: Classe A/B/C; bloqueante sem aceitação formal reprova
+  - perfil: gate_de_seguranca
+    skill: devsecops:security-gate
+    quando: antes de qualquer deploy
+    saida: bloco SECURITY_GATE PASS/FAIL
+    criterio: zero CRITICAL e zero HIGH sem aceitação formal
+  - perfil: pentest
+    comando: /devsecops:pentest
+    quando: janela de teste autorizada pelo dono do alvo
+    saida: strix_runs/
+    criterio: CRITICAL/HIGH bloqueiam deploy
+  - perfil: testes_de_release
+    skill: intellix:test-e2e
+    quando: Fase 07
+    criterio: 100% dos testes passando
+
+# ── Arquivo de controle de fase ─────────────────────────────────────────────
+controle_de_fase:
+  arquivo: .intellix-phase
+  valores: [init, arch, dev, test, deploy, done]
+  # Usado pelo gate de enforcement (Fase 3.2): bloqueia escrita em src/
+  # enquanto a fase for `init` ou `arch`.
+  bloqueia_codigo_em: [init, arch]
+
+# ── Fronteira global × projeto (decisão de 2026-09-07) ──────────────────────
+# Critério: só vai para o repositório do cliente o que NÃO tem cópia canônica em
+# outro lugar. Skill/agent/command copiado vira fork congelado da metodologia.
+fronteira:
+  vai_para_o_projeto:
+    - .claude/settings.json
+    - .claude/settings.local.json
+    - .claude/rules/
+    - .claude/hooks/
+    - .mcp.json
+    - CLAUDE.md
+    - CLAUDE.local.md
+    - AGENTS.md
+    - .intellix-phase
+    - .gitignore
+    - .github/workflows/
+    - references/         # só decisões DESTE projeto (templates do plugin como semente)
+    - DESIGN.md           # mantido pelo impeccable:impeccable
+    - PRODUCT.md
+    - SPEC.md
+    - issues/
+    - docs/adr/
+    - docs/deploys.jsonl
+  fica_global:
+    - skills/
+    - agents/             # inclusive os agentes do /execute (intellix-plugin/agents/)
+    - commands/
+    - metodologia e gates
+  gitignored_no_projeto:
+    - CLAUDE.local.md
+    - .claude/settings.local.json
+    - .env
+    - .env.local
+
+# ── Plugins próprios ────────────────────────────────────────────────────────
+# O doctor policia só estes; plugins de terceiros têm convenções próprias.
+plugins_proprios:
+  - diretorio: intellix-plugin
+    id: intellix@intellix-plugin
+  - diretorio: devsecops-plugin
+    id: devsecops@devsecops-plugin
+
+# Versão esperada de cada plugin próprio. plugin.json, marketplace.json, README e
+# o registro de instalação precisam concordar com este valor (doctor, check 11).
+versoes:
+  intellix: "3.0.3"
+  devsecops: "1.2.1"
+
+# ── Identificadores (remediação 2026-09-16, D1–D5) ──────────────────────────
+# O runtime do Claude Code usa o NOME DA PASTA como ID da skill de plugin
+# (`intellix:<pasta>`). O `name:` do frontmatter tem de ser igual à pasta.
+# As strings abaixo são nomes antigos: só podem aparecer aqui, em docs/plans
+# (histórico) ou em linha marcada como "legado"/"alias" (doctor, check 12).
+aliases_legados:
+  - antigo: "frontend-design-workflow"
+    canonico: "intellix:frontend-design"
+  - antigo: "intellix:handoff"
+    canonico: "intellix:project-handoff"
+  - antigo: "intellix-master-workflow"
+    canonico: "intellix:master-workflow"
+  - antigo: "intellix-projeto-novo"
+    canonico: "intellix:project-kickoff"
+  - antigo: "/projeto novo"
+    canonico: "/intellix:new-project"
+  - antigo: "references/DESIGN.md"
+    canonico: "DESIGN.md (raiz do projeto)"
+  - antigo: "design_system.md"
+    canonico: "DESIGN.md (raiz do projeto)"
+  - antigo: "docs/design-system.md"
+    canonico: "DESIGN.md (raiz do projeto)"
+  - antigo: "grill-me"
+    canonico: "mattpocock-skills:grilling"
+  - antigo: "_writer.json"
+    canonico: "agentes Markdown em intellix-plugin/agents/"
+
+# Artefatos que existem no repositório de cada projeto. Commands, gates e
+# templates só podem exigir o que está listado aqui (doctor, checks 9 e 14).
+# O DESIGN.md é o arquivo que o `impeccable` grava na raiz (D4).
+artefatos_projeto:
+  sempre:                  # exigidos desde o kickoff (scaffold-check --fase kickoff)
+    - AGENTS.md
+    - CLAUDE.md
+    - CLAUDE.local.md
+    - README.md
+    - .gitignore
+    - .intellix-phase
+    - .env.example
+    - .claude/settings.json
+    - .github/workflows/security.yml
+    - issues/
+    - references/architecture.md
+    - references/security.md
+    - references/stack.md
+    - references/workflow.md
+  com_interface:           # DESIGN.md desde o kickoff; PRODUCT.md a partir da Fase 02
+    - DESIGN.md
+    - PRODUCT.md
+  gerados_pelo_workflow:
+    - SPEC.md
+    - tests/
+    - docs/adr/
+    - docs/deploys.jsonl
+
+# Contrato de agentes do /execute (D5). Distribuídos pelo intellix-plugin em
+# agents/ (Markdown com frontmatter), expostos como `intellix:<nome>`. Nunca são
+# copiados para o projeto (ver `fronteira`). O doctor confere a existência.
+agentes:
+  implementadores: [model-writer, action-writer, component-writer, test-writer]
+  revisores: [spec-reviewer, code-quality-reviewer]
+
+# Arquivos globais (fora dos plugins) dos quais os plugins próprios dependem.
+# O doctor verifica a existência; citações no plugin usam o path ~/.claude/…
+dependencias_globais:
+  - modules/context7.md
+  - modules/perplexity.md
+  - modules/claude-md-rules.md
+  - modules/new-skills-triggers.md
+  - WORKFLOW-SPINE-VS-ORBIT.md
+  - skills/intellix-agent-creation/SKILL.md
+
+# Skills soltas em ~/.claude/skills/ de autoria própria — policiadas pelo doctor
+# como os plugins próprios (stack descontinuada, aliases).
+skills_autorais_globais:
+  - intellix-agent-creation
+  - ai-project-brainstorm
+
+# ── Métricas de entrega (DORA) — Fase 3.5 ──────────────────────────────────
+# Coletadas de docs/deploys.jsonl no repositório de cada cliente, escrito pela
+# Fase 08. Sem esse arquivo não há o que medir — por isso a instrumentação é
+# obrigatória no deploy, não opcional.
+metricas:
+  fonte: docs/deploys.jsonl
+  dora:
+    - nome: lead_time_for_changes
+      calculo: ts do deploy menos primeiro_commit_da_entrega
+    - nome: deployment_frequency
+      calculo: contagem de linhas por período
+    - nome: change_failure_rate
+      calculo: (resultado != sucesso ou rollback == true) / total
+    - nome: mttr
+      calculo: ts do deploy de correção menos ts do incidente
+  adr:
+    diretorio: docs/adr/
+    quando: toda decisão técnica que restringe opções futuras
+    antes_de: o deploy que a materializa

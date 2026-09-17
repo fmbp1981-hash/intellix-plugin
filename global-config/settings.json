@@ -1,0 +1,212 @@
+{
+  "model": "opusplan",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/auto-claude-md.py"
+          },
+          {
+            "type": "command",
+            "command": "echo \"\nPerplexity MCP ativo. Use: perplexity_search (versoes/precos), perplexity_ask (docs), perplexity_research (mercado), perplexity_reason (analise). Sempre verifique informacoes externas antes de responder.\n\""
+          },
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/new-session-flag.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/intellix-project-check.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/doctor.py --quiet",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/perplexity-check.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/context-loader.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/intellix-skill-router.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/phase-gate-hook.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/bash-guardrail.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/session-tracker.py"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/context-monitor.py",
+            "timeout": 5,
+            "statusMessage": "Monitorando contexto..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/felipemaranhao/.claude/scripts/session-history.py"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": false,
+    "playwright@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true,
+    "impeccable@impeccable": true,
+    "ui-design@claude-code-workflows": true,
+    "intellix@intellix-plugin": true,
+    "mattpocock-skills@claude-plugins-official": true,
+    "devsecops@devsecops-plugin": true,
+    "security-guidance@claude-plugins-official": false,
+    "static-analysis@trailofbits": true,
+    "semgrep-rule-creator@trailofbits": true,
+    "differential-review@trailofbits": true,
+    "testing-handbook-skills@trailofbits": false,
+    "variant-analysis@trailofbits": true,
+    "warp@claude-code-warp": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-code-workflows": {
+      "source": {
+        "source": "github",
+        "repo": "wshobson/agents"
+      }
+    },
+    "impeccable": {
+      "source": {
+        "source": "github",
+        "repo": "pbakaus/impeccable"
+      }
+    },
+    "addy-web-quality-skills": {
+      "source": {
+        "source": "github",
+        "repo": "addyosmani/web-quality-skills"
+      }
+    },
+    "intellix-plugin": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/felipemaranhao/.claude/plugins/marketplaces/intellix-plugin"
+      }
+    },
+    "devsecops-plugin": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/felipemaranhao/.claude/plugins/marketplaces/devsecops-plugin"
+      }
+    },
+    "trailofbits": {
+      "source": {
+        "source": "github",
+        "repo": "trailofbits/skills"
+      }
+    },
+    "claude-code-warp": {
+      "source": {
+        "source": "github",
+        "repo": "warpdotdev/claude-code-warp"
+      }
+    }
+  },
+  "effortLevel": "medium",
+  "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark",
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Bash(rm:-rf *) in /Users/felipemaranhao/Projects/intellix-content-engine — irreversible local destruction of pipeline data/state",
+      "Writes or deploys targeting ssh://intellix-vps/opt/intellix-content-engine outside of normal `git push` (e.g. direct file edits or restarts over SSH) — remote shell writes to the only deploy target"
+    ],
+    "environment": [
+      "### Org-wide",
+      "**Organization**: IntelliX.AI",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: Not queryable via gh (remote is an ssh alias, not a plain owner/repo URL) — assume private; repo is deployed to a single VPS via SSH, no public host evidence",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: .env files (gitignored) — ANTHROPIC_API_KEY, NEON_DATABASE_URL, GMAIL_*, TELEGRAM_*, RENDER_API_TOKEN, DEDUPE_SHARED_SECRET",
+      "**Default / protected branches**: Unknown — origin/HEAD unset locally, and gh branch-protection check was not queryable for this remote",
+      "**CI/CD deploy targets**: ssh://intellix-vps/opt/intellix-content-engine (git remote `vps-hostinger`) — deploy target for this project",
+      "**Network posture**: None configured",
+      "**Host containment**: None configured — assume Claude Code runs on an ordinary developer machine with open internet",
+      "**Source control**: This repo (intellix-content-engine) and its remote `vps-hostinger` (ssh://intellix-vps/opt/intellix-content-engine) only",
+      "**Trusted internal domains**: intellixai.com.br (contacted in recent project transcripts)",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: RENDER_API_BASE_URL host http://2.25.200.152:3002 (render/image service, referenced in .env.example for this project)",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: .env, .env.example, dashboard/.env.local, instagram-storage-state.local.json (gitignored Instagram session state) — credentials and session data, share only with audiences cleared for IntelliX.AI internal ops",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment; also treat the vps-hostinger deploy target (ssh://intellix-vps/opt/intellix-content-engine) as a live deploy destination for this project",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development — IntelliX.AI content-automation pipeline (Node.js, R0–R3 stages)",
+      "**Trusted repo**: /Users/felipemaranhao/Projects/intellix-content-engine and its remote vps-hostinger (ssh://intellix-vps/opt/intellix-content-engine)",
+      "**Org-specific CLIs**: None configured",
+      "routine under intellix-content-engine/ prefix: npm run r0/r1/r2/r3 pipeline stages, db-migrate* scripts, test"
+    ]
+  }
+}
