@@ -1,14 +1,36 @@
 {
   "id": "TASK-003",
   "title": "Implement thin dispatcher and minimal lifecycle",
-  "status": "DRAFT",
+  "status": "READY",
   "objective": "Route a READY Task Contract to an available permitted adapter while enforcing minimal deterministic transitions.",
   "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/architecture/TASK-CONTRACT-V1.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
   "risk": {"level": "high", "reasons": ["Controls task progression and adapter selection"], "irreversible_actions": []},
   "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
   "scope": {
-    "create": ["framework/dispatch.py", "framework/runtime.py", "framework/tests/test_dispatch.py", "framework/schemas/runtime.schema.json"],
-    "modify": ["framework/framework.yaml", "framework/schemas/task.schema.json", "framework/validate.py", "commands/execute.md", "tasks/TASK-003.yaml"],
+    "create": [
+      "framework/dispatch.py",
+      "framework/runtime.py",
+      "framework/tests/test_dispatch.py",
+      "framework/tests/test_runtime.py",
+      "framework/schemas/runtime.schema.json"
+    ],
+    "modify": [
+      "framework/framework.yaml",
+      "framework/schemas/task.schema.json",
+      "framework/schemas/project.schema.json",
+      "framework/schemas/lock.schema.json",
+      "framework/validate.py",
+      "framework/sync.py",
+      "framework/tests/test_validate.py",
+      "framework/tests/test_distribution.py",
+      "framework/tests/fixtures/projects/valid/intellix.yaml",
+      "framework/templates/PROJECT.yaml",
+      "commands/execute.md",
+      "intellix.yaml",
+      "intellix.lock.json",
+      "intellix-templates/root-template/intellix.yaml",
+      "tasks/TASK-003.yaml"
+    ],
     "forbidden": [".env*", "**/.env*", ".github/**", "issues/**", "infra/production/**"]
   },
   "dependencies": ["TASK-002"],
@@ -20,11 +42,21 @@
   ],
   "verification": [
     {"command": "python3 framework/validate.py --root . --all", "proves": "Contracts and lifecycle configuration validate"},
+    {"command": "python3 framework/sync.py --source-root . --target-root . --check", "proves": "The pinned kernel and control-plane snapshot have no drift"},
     {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Resolver, fallback and transition negative paths are covered"},
-    {"command": "python3 -m compileall -q framework", "proves": "Dispatcher and runtime compile"}
+    {"command": "python3 -m compileall -q framework", "proves": "Dispatcher and runtime compile"},
+    {"command": "git diff --check", "proves": "The scoped patch has no whitespace errors"}
   ],
   "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
   "rollback": "Revert dispatcher/runtime changes and restore the previous manual command behavior while retaining Task Contracts.",
-  "notes": ["The dispatcher is deterministic control code, not an autonomous agent.", "Human identity is never inferred from a CLI actor string."],
+  "notes": [
+    "The dispatcher is deterministic control code, not an autonomous agent.",
+    "Human identity is never inferred from a CLI actor string.",
+    "Human architecture decision: preserve the normative framework lifecycle and automate only READY to IN_PROGRESS, IN_PROGRESS to IN_REVIEW, IN_REVIEW to IN_PROGRESS for findings, and applicable states to BLOCKED.",
+    "Human architecture decision: APPROVED, merge, release and deploy are never automated by this task; ADR-0002 remains Proposed.",
+    "Human architecture decision: durable records live under the project-declared .intellix/runtime path; project bindings declare default and permitted adapters plus explicit current-adapter fallback policy.",
+    "Human architecture decision: installed adapter capability is detected at runtime and underscore gate IDs in the kernel are canonical for this task; role gate-name drift remains a later gap.",
+    "Human architecture decision: distributed control-plane files are pinned so consumer drift is detectable."
+  ],
   "handoff": {"required_evidence": ["adapter resolution matrix tests", "Claude-only compatibility test", "transition log tests", "independent review"], "open_questions": []}
 }
