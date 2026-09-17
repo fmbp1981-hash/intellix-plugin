@@ -19,15 +19,16 @@ Baseline passed: validate.py --all; seven unittest tests; validate-hooks.sh
 
 | Priority | Task | Gap |
 | --- | --- | --- |
-| P0 | TASK-001 | Absolute/traversal filesets, missing sources and unknown domain roles are accepted; identity is not bound to filename. |
-| P0 | TASK-002 | No executable dynamic planner, dependency graph or enforced lifecycle; approvals and waivers are schemas without enforced provenance. |
-| P0 | TASK-003 | No operational worktree ownership; intersecting globs can escape collision detection. |
-| P0 | TASK-004 | /execute instructs handoff to Codex rather than dispatching bounded work and collecting independent review. |
-| P0 | TASK-005 | CI runs on PR/main only, not feature push; no exact-revision task gate, macOS matrix or complete pilot. |
+| P0 | TASK-001 | Authority is duplicated; validation resolves paths against the plugin instead of an explicit project root. |
+| P0 | TASK-002 | The kernel is not pinned/distributed to client projects and adapters are manually duplicated. |
+| P0 | TASK-003 | No thin dispatcher, minimal lifecycle, role resolution or Claude-only compatibility path. |
+| P0 | TASK-004 | No operational worktree ownership, bounded adapter handoff or independent-review enforcement. |
+| P0 | TASK-005 | CI is not bound end-to-end to the reviewed revision; no portable pilot proves the method. |
 
-The sequencing is deliberate: establish trusted input, durable state, exclusive
-ownership, bounded dispatch, then end-to-end adoption. DRAFT task filesets may
-overlap because tasks are sequential; promote only after dependencies complete.
+The sequencing is deliberate: establish one authority and trusted project root,
+distribute a pinned kernel, add a thin dispatcher, isolate execution/review, then
+prove the method end to end. DRAFT filesets may overlap because tasks are
+sequential; promote only after dependencies complete.
 
 ## Drift requiring reconciliation
 

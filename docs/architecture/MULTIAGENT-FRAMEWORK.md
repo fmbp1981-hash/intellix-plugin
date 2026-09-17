@@ -1,10 +1,18 @@
 # IntelliX Multi-Agent Engineering Framework
 
-Status: adopted architecture
+Status: Proposed — superseded for review by the target architecture set dated 2026-09-17
 
 Normative source: `framework/framework.yaml`
 
 Project binding: `intellix.yaml`
+
+Decision set under review:
+
+- `INTELLIX-TARGET-ARCHITECTURE.md`
+- `INTELLIX-WORKFLOW.md`
+- `TASK-CONTRACT-V1.md`
+- `ROLE-EXECUTOR-MATRIX.md`
+- `AUTHORITY-AND-TRUST-MODEL.md`
 
 ## 1. Decision
 

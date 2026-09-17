@@ -1,125 +1,30 @@
 {
   "id": "TASK-001",
-  "title": "Enforce Task Contract trust boundaries",
-  "status": "READY_FOR_ARCH_REVIEW",
-  "objective": "Make Task Contract validation fail closed when repository paths or declared references cannot be trusted.",
-  "source": {
-    "prd": "README.md",
-    "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md",
-    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": ["docs/adr/0001-vendor-neutral-multiagent-kernel.md"]
-  },
-  "risk": {
-    "level": "high",
-    "reasons": [
-      "The validator is a mandatory governance and CI boundary for every Task Contract",
-      "A false negative can authorize writes outside the repository or execution from untraceable inputs"
-    ],
-    "irreversible_actions": []
-  },
-  "ownership": {
-    "architect": "claude",
-    "executor": "codex",
-    "reviewer": "claude",
-    "domain_role": "platform-engineer"
-  },
+  "title": "Consolidate framework authority and project-root validation",
+  "status": "DRAFT",
+  "objective": "Establish one authority map and make validation fail closed against an explicit client project root.",
+  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md", "spec": "docs/architecture/TASK-CONTRACT-V1.md", "adrs": ["docs/adr/0001-vendor-neutral-multiagent-kernel.md", "docs/adr/0002-operational-orchestrator.md"]},
+  "risk": {"level": "high", "reasons": ["Changes the normative boundary and validator used by all consumers"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
   "scope": {
-    "create": [],
-    "modify": [
-      "framework/validate.py",
-      "framework/tests/test_validate.py",
-      "tasks/TASK-001.yaml"
-    ],
-    "forbidden": [
-      ".claude-plugin/**",
-      ".github/**",
-      "AGENTS.md",
-      "CLAUDE.md",
-      "commands/**",
-      "framework/framework.yaml",
-      "framework/policies/**",
-      "framework/roles/**",
-      "framework/schemas/**",
-      "hooks/**",
-      "intellix.yaml"
-    ]
+    "create": ["framework/tests/fixtures/projects/**"],
+    "modify": ["framework/framework.yaml", "framework/schemas/role.schema.json", "framework/schemas/task.schema.json", "framework/validate.py", "framework/tests/test_validate.py", "global-config/metodologia.yaml", "tasks/TASK-001.yaml"],
+    "forbidden": [".env*", "**/.env*", ".github/**", "commands/**", "hooks/**", "infra/production/**"]
   },
   "dependencies": [],
   "acceptance_criteria": [
-    {
-      "id": "AC-001",
-      "given": "a Task Contract containing an absolute path or parent-directory traversal in a source or fileset entry",
-      "when": "the task validator runs",
-      "then": "it reports every unsafe path and exits non-zero"
-    },
-    {
-      "id": "AC-002",
-      "given": "a Task Contract whose domain role is not registered in framework/roles",
-      "when": "the task validator runs",
-      "then": "it identifies the unknown role and exits non-zero"
-    },
-    {
-      "id": "AC-003",
-      "given": "a Task Contract whose source artifact is missing or whose id differs from its TASK-NNN filename",
-      "when": "the task validator runs",
-      "then": "it identifies each broken reference and exits non-zero"
-    },
-    {
-      "id": "AC-004",
-      "given": "the repository's valid contracts and the validator regression suite",
-      "when": "all declared verification commands run on a clean checkout",
-      "then": "valid contracts remain green and every new negative fixture fails closed"
-    }
+    {"id": "AC-001", "given": "a project outside the plugin without required sources or a pinned kernel", "when": "validation runs with --root", "then": "it fails and names every missing or escaping path"},
+    {"id": "AC-002", "given": "kernel roles and policies", "when": "normative validation runs", "then": "plugin versions and preferred adapters are not kernel facts"},
+    {"id": "AC-003", "given": "a Task Contract with traversal, absolute paths, unknown roles or mismatched filename identity", "when": "validation runs", "then": "every violation blocks progression"},
+    {"id": "AC-004", "given": "repository and installed Claude configuration", "when": "the authority check runs", "then": "the one-way source-to-install direction and any drift are explicit"}
   ],
   "verification": [
-    {
-      "command": "python3 framework/validate.py --all",
-      "proves": "The canonical framework, project binding and repository Task Contracts remain valid"
-    },
-    {
-      "command": "python3 -m unittest discover -s framework/tests -v",
-      "proves": "Unsafe paths, missing sources, unknown roles and mismatched task identities are rejected without regressions"
-    },
-    {
-      "command": "python3 -m compileall -q framework",
-      "proves": "The dependency-free validator and tests are syntactically valid Python"
-    },
-    {
-      "command": "bash hooks/scripts/validate-hooks.sh .",
-      "proves": "The existing Claude adapter hook wiring remains intact"
-    }
+    {"command": "python3 framework/validate.py --root . --all", "proves": "Repository contracts validate from an explicit root"},
+    {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Project-root, traversal, role and authority rules fail closed"},
+    {"command": "python3 -m compileall -q framework", "proves": "Validator code compiles"}
   ],
-  "gates": [
-    "schema",
-    "fileset",
-    "lint",
-    "tests",
-    "security_review",
-    "independent_review",
-    "rollback_plan",
-    "human_approval",
-    "worktree"
-  ],
-  "rollback": "Revert the single implementation commit for TASK-001 and rerun the pre-change validation suite; no data or external state migration is involved.",
-  "notes": [
-    "Implementation plan: add centralized repository-relative path normalization, validate task source existence and containment, validate domain_role against the role registry, enforce task id-to-filename identity, and cover every rule with positive and negative unit tests.",
-    "Base commit: dfba13ed8f57b765144c6c9bc89e5e29eee198f9. The user now authorizes implementation, tests, commits and push exclusively on feat/intellix-multiagent-framework.",
-    "Independent Claude architecture review accepts an isolated linked worktree of the same branch while the original checkout is detached; never commit in the detached checkout. Procedure: docs/adr/0002-operational-orchestrator.md.",
-    "No production access, secret change, permission change, destructive migration, merge, release or deploy is authorized.",
-    "Execution remains pending architecture review: the proposed orchestrator approval trust boundary is recorded in ADR-0002, not silently accepted by the executor."
-  ],
-  "handoff": {
-    "required_evidence": [
-      "clean pre-implementation baseline",
-      "changed-file inventory matching the approved fileset",
-      "negative-test output for each acceptance criterion",
-      "full validator and unit-test output",
-      "independent Claude review record",
-      "human approval record"
-    ],
-    "open_questions": [
-      "ADR-0002 requires a human decision on the trusted approval channel: local trusted operator or externally authenticated approver with credentials separated from the executor.",
-      "The independent reviewer must confirm that path containment handles symlinks and glob syntax without rejecting valid repository-relative patterns."
-    ]
-  }
+  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "rollback": "Revert the scoped implementation commit and rerun the baseline validator; no runtime or external data migration is involved.",
+  "notes": ["Do not implement until the five target architecture artifacts receive human approval.", "This task replaces the earlier validator-only TASK-001 because authority and root semantics must be fixed together."],
+  "handoff": {"required_evidence": ["negative external-project fixtures", "changed-file inventory", "full test output", "independent review"], "open_questions": ["Confirm the project snapshot/lock filename during architecture approval."]}
 }

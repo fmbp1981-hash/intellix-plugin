@@ -2,7 +2,7 @@
 
 Status: Proposed — human decision required
 Date: 2026-09-17
-Related: ADR-0001; TASK-001 through TASK-005
+Related: ADR-0001; the five target architecture artifacts; TASK-001 through TASK-005
 Authority: framework/framework.yaml (this proposal does not override it)
 
 ## Context

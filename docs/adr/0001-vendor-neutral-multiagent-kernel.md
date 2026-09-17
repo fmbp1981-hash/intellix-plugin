@@ -1,6 +1,6 @@
 # ADR-0001: Vendor-neutral multi-agent engineering kernel
 
-Status: Accepted
+Status: Proposed — human approval not yet recorded
 
 Date: 2026-09-16
 

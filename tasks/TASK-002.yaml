@@ -1,126 +1,30 @@
 {
   "id": "TASK-002",
-  "title": "Deterministic orchestration and durable lifecycle",
+  "title": "Distribute a pinned kernel and generate vendor adapters",
   "status": "DRAFT",
-  "objective": "Implement dynamic role selection and legal task transitions governed by the accepted orchestrator ADR.",
-  "source": {
-    "prd": "README.md",
-    "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md",
-    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": [
-      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
-      "docs/adr/0002-operational-orchestrator.md"
-    ]
-  },
-  "risk": {
-    "level": "high",
-    "reasons": [
-      "Changes governance or execution controls for all framework consumers"
-    ],
-    "irreversible_actions": []
-  },
-  "ownership": {
-    "architect": "claude",
-    "executor": "codex",
-    "reviewer": "claude",
-    "domain_role": "platform-engineer"
-  },
+  "objective": "Make client projects consume a versioned kernel snapshot and generated adapters without manual policy duplication.",
+  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md", "spec": "docs/architecture/AUTHORITY-AND-TRUST-MODEL.md", "adrs": ["docs/adr/0001-vendor-neutral-multiagent-kernel.md"]},
+  "risk": {"level": "high", "reasons": ["Changes project bootstrap and framework distribution"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
   "scope": {
-    "create": [
-      "framework/orchestrate.py",
-      "framework/runtime.py",
-      "framework/tests/test_orchestrate.py",
-      "framework/schemas/runtime.schema.json",
-      "tasks/evidence/TASK-002.md"
-    ],
-    "modify": [
-      "framework/framework.yaml",
-      "framework/schemas/task.schema.json",
-      "framework/validate.py",
-      "tasks/TASK-002.yaml"
-    ],
-    "forbidden": [
-      ".env*",
-      "**/.env*",
-      "infra/production/**",
-      "issues/**",
-      "global-config/settings.json"
-    ]
+    "create": ["framework/sync.py", "framework/generate_adapters.py", "framework/tests/test_distribution.py", "framework/schemas/lock.schema.json"],
+    "modify": ["framework/README.md", "framework/templates/PROJECT.yaml", "framework/adapters/**", "intellix-templates/root-template/**", "skills/project-kickoff/SKILL.md", "commands/new-project.md", "tasks/TASK-002.yaml"],
+    "forbidden": [".env*", "**/.env*", "issues/**", "infra/production/**", "global-config/settings.json"]
   },
-  "dependencies": [
-    "TASK-001"
-  ],
+  "dependencies": ["TASK-001"],
   "acceptance_criteria": [
-    {
-      "id": "AC-001",
-      "given": "a valid task with domain, risk and dependencies",
-      "when": "the plan command runs",
-      "then": "only required domain and specialist roles are selected; Codex and independent Claude remain defaults"
-    },
-    {
-      "id": "AC-002",
-      "given": "an illegal transition, unresolved dependency or fileset collision",
-      "when": "progression is requested",
-      "then": "the transition is blocked with a durable reason"
-    },
-    {
-      "id": "AC-003",
-      "given": "CI evidence or required independent or human approval is missing or stale",
-      "when": "APPROVED is requested",
-      "then": "the transition is refused"
-    },
-    {
-      "id": "AC-004",
-      "given": "a valid transition",
-      "when": "the runtime records it",
-      "then": "actor, timestamp, reason, task digest, revision and evidence references are persisted atomically"
-    }
+    {"id": "AC-001", "given": "a fresh client project", "when": "the supported sync/bootstrap runs", "then": "it receives a kernel version and digest that validation can resolve locally"},
+    {"id": "AC-002", "given": "canonical framework and project configuration", "when": "adapters are generated", "then": "AGENTS and CLAUDE entry points contain links and local operations without duplicating policies"},
+    {"id": "AC-003", "given": "a manually modified or stale generated snapshot", "when": "validation runs", "then": "digest/version drift blocks the project"},
+    {"id": "AC-004", "given": "a live Claude installation", "when": "sync is requested", "then": "the direction is repository to installation and no reverse mutation is implicit"}
   ],
   "verification": [
-    {
-      "command": "python3 framework/validate.py --all",
-      "proves": "Framework and task validation"
-    },
-    {
-      "command": "python3 -m unittest discover -s framework/tests -v",
-      "proves": "Positive and negative regression coverage"
-    },
-    {
-      "command": "python3 -m compileall -q framework",
-      "proves": "Python syntax; this is not a lint substitute"
-    },
-    {
-      "command": "bash hooks/scripts/validate-hooks.sh .",
-      "proves": "Hook compatibility"
-    }
+    {"command": "python3 framework/validate.py --root . --all", "proves": "Distribution metadata remains valid"},
+    {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Fresh, stale and tampered distribution paths are covered"},
+    {"command": "bash hooks/scripts/validate-hooks.sh .", "proves": "Claude adapter hook wiring remains compatible"}
   ],
-  "gates": [
-    "schema",
-    "fileset",
-    "lint",
-    "tests",
-    "security_review",
-    "independent_review",
-    "rollback_plan",
-    "human_approval",
-    "worktree"
-  ],
-  "rollback": "Revert the task implementation commit on the authorized feature branch after approval, preserve evidence and rerun baseline checks. No reset, production or data migration.",
-  "notes": [
-    "Draft planning only; accept ADR-0002 and resolve its identity decision before promoting this task to READY.",
-    "User authorizes commits and push exclusively on feat/intellix-multiagent-framework. No merge, deploy, release, secrets, permissions or destructive migrations.",
-    "Use the same authorized branch in a linked worktree while the original checkout is detached. Never commit in the detached checkout.",
-    "Sources must be read at the implementation base revision; exact commit/worktree/evidence bindings will use the execution schema introduced by TASK-002."
-  ],
-  "handoff": {
-    "required_evidence": [
-      "Implementation commit and changed-file inventory",
-      "Command outputs and exit codes",
-      "Independent Claude review and security findings",
-      "GitHub CI result for the reviewed revision"
-    ],
-    "open_questions": [
-      "ADR-0002: choose trusted human approval identity and evidence source before implementation."
-    ]
-  }
+  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "rollback": "Revert the distribution implementation commit; existing projects remain pinned to their previous framework version.",
+  "notes": ["Keep the kernel in this repository for MVP while making it extraction-ready.", "Generated project copies are deliberate pinned artifacts, not competing sources."],
+  "handoff": {"required_evidence": ["fresh-project fixture", "digest drift test", "generated adapter diff", "independent review"], "open_questions": []}
 }

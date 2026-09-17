@@ -1,123 +1,30 @@
 {
   "id": "TASK-004",
-  "title": "Bounded executor and reviewer adapters",
+  "title": "Enforce worktree ownership and independent adapter handoffs",
   "status": "DRAFT",
-  "objective": "Dispatch contract-scoped Codex execution and read-only independent Claude review with durable handoffs.",
-  "source": {
-    "prd": "README.md",
-    "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md",
-    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": [
-      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
-      "docs/adr/0002-operational-orchestrator.md"
-    ]
-  },
-  "risk": {
-    "level": "high",
-    "reasons": [
-      "Changes governance or execution controls for all framework consumers"
-    ],
-    "irreversible_actions": []
-  },
-  "ownership": {
-    "architect": "claude",
-    "executor": "codex",
-    "reviewer": "claude",
-    "domain_role": "platform-engineer"
-  },
+  "objective": "Isolate medium-or-higher risk work and exchange bounded implementation and review evidence between adapters.",
+  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/architecture/ROLE-EXECUTOR-MATRIX.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
+  "risk": {"level": "high", "reasons": ["Manages Git isolation and cross-adapter evidence"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
   "scope": {
-    "create": [
-      "framework/adapters.py",
-      "framework/tests/test_adapters.py",
-      "tasks/evidence/TASK-004.md"
-    ],
-    "modify": [
-      "framework/orchestrate.py",
-      "framework/runtime.py",
-      "tasks/TASK-004.yaml"
-    ],
-    "forbidden": [
-      ".env*",
-      "**/.env*",
-      "infra/production/**",
-      "issues/**",
-      "global-config/settings.json"
-    ]
+    "create": ["framework/worktrees.py", "framework/adapters.py", "framework/tests/test_worktrees.py", "framework/tests/test_adapters.py"],
+    "modify": ["framework/dispatch.py", "framework/runtime.py", "framework/schemas/handoff.schema.json", "tasks/TASK-004.yaml"],
+    "forbidden": [".env*", "**/.env*", ".github/**", "issues/**", "infra/production/**"]
   },
-  "dependencies": [
-    "TASK-003"
-  ],
+  "dependencies": ["TASK-003"],
   "acceptance_criteria": [
-    {
-      "id": "AC-001",
-      "given": "an approved execution contract",
-      "when": "dispatch is requested",
-      "then": "Codex receives the fileset and sources while Claude review receives the revision diff and evidence"
-    },
-    {
-      "id": "AC-002",
-      "given": "an implementation failure, timeout or out-of-fileset change",
-      "when": "handoff is evaluated",
-      "then": "the task is blocked and the failure evidence is retained"
-    },
-    {
-      "id": "AC-003",
-      "given": "an irreversible, production, secret, permission or destructive migration action",
-      "when": "no authenticated human approval exists",
-      "then": "the action is refused and escalated"
-    },
-    {
-      "id": "AC-004",
-      "given": "a local file claiming approval",
-      "when": "progression is requested",
-      "then": "that file alone cannot satisfy an independent or human gate"
-    }
+    {"id": "AC-001", "given": "a medium, high or critical task", "when": "execution starts", "then": "a dedicated worktree and exclusive writable-fileset reservation are required"},
+    {"id": "AC-002", "given": "dirty state or intersecting globs", "when": "setup or parallel start is requested", "then": "no data is discarded and conflicting execution is blocked"},
+    {"id": "AC-003", "given": "bounded implementation evidence", "when": "independent review starts", "then": "the reviewer receives contract, exact diff and evidence without write ownership"},
+    {"id": "AC-004", "given": "the same identity implemented a change", "when": "approval is evaluated", "then": "its own review cannot satisfy independence"}
   ],
   "verification": [
-    {
-      "command": "python3 framework/validate.py --all",
-      "proves": "Framework and task validation"
-    },
-    {
-      "command": "python3 -m unittest discover -s framework/tests -v",
-      "proves": "Positive and negative regression coverage"
-    },
-    {
-      "command": "python3 -m compileall -q framework",
-      "proves": "Python syntax; this is not a lint substitute"
-    },
-    {
-      "command": "bash hooks/scripts/validate-hooks.sh .",
-      "proves": "Hook compatibility"
-    }
+    {"command": "python3 framework/validate.py --root . --all", "proves": "Handoff and task contracts remain valid"},
+    {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Dirty state, collisions, handoff and independence are covered"},
+    {"command": "python3 -m compileall -q framework", "proves": "Worktree and adapter modules compile"}
   ],
-  "gates": [
-    "schema",
-    "fileset",
-    "lint",
-    "tests",
-    "security_review",
-    "independent_review",
-    "rollback_plan",
-    "human_approval",
-    "worktree"
-  ],
-  "rollback": "Revert the task implementation commit on the authorized feature branch after approval, preserve evidence and rerun baseline checks. No reset, production or data migration.",
-  "notes": [
-    "Draft planning only; accept ADR-0002 and resolve its identity decision before promoting this task to READY.",
-    "User authorizes commits and push exclusively on feat/intellix-multiagent-framework. No merge, deploy, release, secrets, permissions or destructive migrations.",
-    "Use the same authorized branch in a linked worktree while the original checkout is detached. Never commit in the detached checkout.",
-    "Sources must be read at the implementation base revision; exact commit/worktree/evidence bindings will use the execution schema introduced by TASK-002."
-  ],
-  "handoff": {
-    "required_evidence": [
-      "Implementation commit and changed-file inventory",
-      "Command outputs and exit codes",
-      "Independent Claude review and security findings",
-      "GitHub CI result for the reviewed revision"
-    ],
-    "open_questions": [
-      "ADR-0002: choose trusted human approval identity and evidence source before implementation."
-    ]
-  }
+  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "rollback": "Revert the scoped commit without deleting dirty worktrees; preserve evidence and return ownership manually.",
+  "notes": ["Low-risk worktree exceptions remain project policy; fileset ownership never becomes optional.", "No adapter may merge, deploy or mutate permissions."],
+  "handoff": {"required_evidence": ["dirty-worktree safety tests", "glob collision tests", "read-only reviewer handoff", "independent review"], "open_questions": []}
 }

@@ -1,126 +1,31 @@
 {
   "id": "TASK-005",
-  "title": "Verified CI and portable operational pilot",
+  "title": "Bind exact-revision CI and prove a portable pilot",
   "status": "DRAFT",
-  "objective": "Bind deterministic CI results to the reviewed revision and demonstrate the operational workflow through existing commands.",
-  "source": {
-    "prd": "README.md",
-    "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md",
-    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": [
-      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
-      "docs/adr/0002-operational-orchestrator.md"
-    ]
-  },
-  "risk": {
-    "level": "high",
-    "reasons": [
-      "Changes governance or execution controls for all framework consumers"
-    ],
-    "irreversible_actions": []
-  },
-  "ownership": {
-    "architect": "claude",
-    "executor": "codex",
-    "reviewer": "claude",
-    "domain_role": "platform-engineer"
-  },
+  "objective": "Demonstrate the complete method on a clean project while binding gates to the reviewed commit revision.",
+  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/architecture/FRAMEWORK-SPEC.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
+  "risk": {"level": "high", "reasons": ["Defines merge evidence and acceptance of the operating model"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "test-engineer"},
   "scope": {
-    "create": [
-      "framework/tests/test_pilot.py",
-      "tasks/evidence/TASK-005.md"
-    ],
-    "modify": [
-      ".github/workflows/framework-ci.yml",
-      "framework/README.md",
-      "commands/plan.md",
-      "commands/execute.md",
-      "docs/architecture/FRAMEWORK-SPEC.md",
-      "docs/MULTIAGENT-FRAMEWORK-MIGRATION.md",
-      "tasks/TASK-005.yaml"
-    ],
-    "forbidden": [
-      ".env*",
-      "**/.env*",
-      "infra/production/**",
-      "issues/**",
-      "global-config/settings.json"
-    ]
+    "create": ["framework/tests/test_pilot.py", "framework/tests/fixtures/pilot/**", "docs/architecture/PILOT-ACCEPTANCE.md"],
+    "modify": [".github/workflows/framework-ci.yml", "framework/README.md", "commands/break.md", "commands/plan.md", "commands/execute.md", "docs/architecture/FRAMEWORK-SPEC.md", "docs/MULTIAGENT-FRAMEWORK-MIGRATION.md", "tasks/TASK-005.yaml"],
+    "forbidden": [".env*", "**/.env*", "issues/**", "infra/production/**", "global-config/settings.json"]
   },
-  "dependencies": [
-    "TASK-004"
-  ],
+  "dependencies": ["TASK-004"],
   "acceptance_criteria": [
-    {
-      "id": "AC-001",
-      "given": "a CI run for another revision, an absent check or a failed required job",
-      "when": "approval is evaluated",
-      "then": "the task remains blocked"
-    },
-    {
-      "id": "AC-002",
-      "given": "a fresh checkout on Linux or macOS",
-      "when": "the workflow runs",
-      "then": "contract, runtime, adapter, hook and pilot checks execute"
-    },
-    {
-      "id": "AC-003",
-      "given": "a pilot with injected collision, failed CI and missing approval",
-      "when": "the end-to-end suite runs",
-      "then": "each failure blocks progression and a valid path produces a handoff"
-    },
-    {
-      "id": "AC-004",
-      "given": "a new task",
-      "when": "the documented plan and execute commands are used",
-      "then": "they invoke the runtime and keep issues compatibility limited to migration"
-    }
+    {"id": "AC-001", "given": "missing, stale or failed required CI for the reviewed SHA", "when": "DONE or merge eligibility is evaluated", "then": "progression remains blocked"},
+    {"id": "AC-002", "given": "a clean Linux or macOS checkout", "when": "the pilot runs", "then": "bootstrap, plan, dispatch, implementation handoff, CI and review gates execute portably"},
+    {"id": "AC-003", "given": "micro, standard and regulated fixtures", "when": "profile rules are validated", "then": "each receives proportional artifacts and gates"},
+    {"id": "AC-004", "given": "the full pilot and independent findings", "when": "acceptance is reviewed", "then": "merge is proposed only with green exact-revision evidence and explicit human approval"}
   ],
   "verification": [
-    {
-      "command": "python3 framework/validate.py --all",
-      "proves": "Framework and task validation"
-    },
-    {
-      "command": "python3 -m unittest discover -s framework/tests -v",
-      "proves": "Positive and negative regression coverage"
-    },
-    {
-      "command": "python3 -m compileall -q framework",
-      "proves": "Python syntax; this is not a lint substitute"
-    },
-    {
-      "command": "bash hooks/scripts/validate-hooks.sh .",
-      "proves": "Hook compatibility"
-    }
+    {"command": "python3 framework/validate.py --root . --all", "proves": "Complete repository contracts validate"},
+    {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Full framework and pilot behavior passes"},
+    {"command": "bash hooks/scripts/validate-hooks.sh .", "proves": "Claude adapter hooks remain valid"},
+    {"command": "git diff --check", "proves": "The final change set has no whitespace errors"}
   ],
-  "gates": [
-    "schema",
-    "fileset",
-    "lint",
-    "tests",
-    "security_review",
-    "independent_review",
-    "rollback_plan",
-    "human_approval",
-    "worktree"
-  ],
-  "rollback": "Revert the task implementation commit on the authorized feature branch after approval, preserve evidence and rerun baseline checks. No reset, production or data migration.",
-  "notes": [
-    "Draft planning only; accept ADR-0002 and resolve its identity decision before promoting this task to READY.",
-    "User authorizes commits and push exclusively on feat/intellix-multiagent-framework. No merge, deploy, release, secrets, permissions or destructive migrations.",
-    "Use the same authorized branch in a linked worktree while the original checkout is detached. Never commit in the detached checkout.",
-    "Sources must be read at the implementation base revision; exact commit/worktree/evidence bindings will use the execution schema introduced by TASK-002."
-  ],
-  "handoff": {
-    "required_evidence": [
-      "Implementation commit and changed-file inventory",
-      "Command outputs and exit codes",
-      "Independent Claude review and security findings",
-      "GitHub CI result for the reviewed revision"
-    ],
-    "open_questions": [
-      "ADR-0002: choose trusted human approval identity and evidence source before implementation."
-    ]
-  }
+  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "rollback": "Revert CI, command and pilot commits while preserving evidence; do not weaken branch protection or mandatory checks.",
+  "notes": ["This task is the merge-readiness proof, not authorization to merge or deploy.", "Run the pilot before proposing framework extraction to a separate repository."],
+  "handoff": {"required_evidence": ["Linux and macOS results", "exact SHA CI links", "profile fixture results", "independent review", "human merge decision"], "open_questions": []}
 }
