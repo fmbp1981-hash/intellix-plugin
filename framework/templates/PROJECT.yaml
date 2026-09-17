@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "project": {"name": "example", "profile": "saas", "owners": ["engineering"]},
-  "framework": {"version": "1.0.0", "source": "framework/framework.yaml"},
+  "framework": {"version": "1.0.0", "source": "framework/framework.yaml", "lock": "intellix.lock.json"},
   "documents": {"prd": "docs/product/PRD.md", "architecture": "docs/architecture/ARCHITECTURE.md", "spec": "SPEC.md", "tasks": "tasks", "adrs": "docs/adr"},
   "repositories": [{"path": ".", "default_branch": "main"}],
   "quality": {"commands": ["npm run lint", "npm test", "npm run build"], "coverage_target": 80},

@@ -26,6 +26,11 @@ class FrameworkValidationTests(unittest.TestCase):
         shutil.copy2(validate.FRAMEWORK / "framework.yaml", framework / "framework.yaml")
         for directory in ("policies", "roles", "schemas"):
             shutil.copytree(validate.FRAMEWORK / directory, framework / directory)
+        context = validate.build_context(project)
+        (project / "intellix.lock.json").write_text(
+            json.dumps(validate.build_lock_document(context), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         return project
 
     def context_and_task(self, parent: Path):

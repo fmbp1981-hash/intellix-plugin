@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "project": {"name": "intellix-plugin", "profile": "engineering-framework", "owners": ["IntelliX.AI"]},
-  "framework": {"version": "1.0.0", "source": "framework/framework.yaml"},
+  "framework": {"version": "1.0.0", "source": "framework/framework.yaml", "lock": "intellix.lock.json"},
   "documents": {"prd": "README.md", "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md", "spec": "docs/architecture/FRAMEWORK-SPEC.md", "tasks": "tasks", "adrs": "docs/adr"},
   "repositories": [{"path": ".", "default_branch": "main"}],
   "quality": {"commands": ["python3 framework/validate.py --all", "python3 -m unittest discover -s framework/tests -v"]},

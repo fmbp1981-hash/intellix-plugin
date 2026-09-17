@@ -1,0 +1,35 @@
+{
+  "kernel": {
+    "digest": "sha256:0ab8b5cd89ddd333d0e01bad7f0944da8dd2495d174c16b7b1a2830f8a20950b",
+    "files": [
+      "framework/framework.yaml",
+      "framework/policies/deployment.yaml",
+      "framework/policies/git.yaml",
+      "framework/policies/security.yaml",
+      "framework/policies/testing.yaml",
+      "framework/roles/accessibility-reviewer.yaml",
+      "framework/roles/architect.yaml",
+      "framework/roles/backend-engineer.yaml",
+      "framework/roles/database-engineer.yaml",
+      "framework/roles/frontend-engineer.yaml",
+      "framework/roles/integration-engineer.yaml",
+      "framework/roles/observability-reviewer.yaml",
+      "framework/roles/platform-engineer.yaml",
+      "framework/roles/product-spec-author.yaml",
+      "framework/roles/release-manager.yaml",
+      "framework/roles/security-reviewer.yaml",
+      "framework/roles/test-engineer.yaml",
+      "framework/schemas/approval.schema.json",
+      "framework/schemas/handoff.schema.json",
+      "framework/schemas/lock.schema.json",
+      "framework/schemas/project.schema.json",
+      "framework/schemas/role.schema.json",
+      "framework/schemas/task.schema.json",
+      "framework/schemas/waiver.schema.json"
+    ],
+    "source": "framework/framework.yaml",
+    "version": "1.0.0"
+  },
+  "schema_version": "1.0.0",
+  "sync_direction": "repository_to_installation"
+}

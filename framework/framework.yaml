@@ -25,6 +25,7 @@
     "task": "framework/schemas/task.schema.json",
     "role": "framework/schemas/role.schema.json",
     "project": "framework/schemas/project.schema.json",
+    "lock": "framework/schemas/lock.schema.json",
     "approval": "framework/schemas/approval.schema.json",
     "waiver": "framework/schemas/waiver.schema.json",
     "handoff": "framework/schemas/handoff.schema.json"

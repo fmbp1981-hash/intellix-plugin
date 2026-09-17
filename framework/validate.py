@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import hashlib
 import json
 import re
 import sys
@@ -148,6 +149,8 @@ def resolve_root(argument: Path | None) -> Path:
 def _relative_parts(value: str, label: str) -> tuple[str, ...]:
     if not isinstance(value, str) or not value.strip():
         raise ValidationError(f"{label}: path must be a non-empty relative string")
+    if "\x00" in value:
+        raise ValidationError(f"{label}: NUL bytes are forbidden in paths")
     candidate = Path(value)
     if candidate.is_absolute() or PureWindowsPath(value).is_absolute():
         raise ValidationError(f"{label}: absolute paths are forbidden: {value}")
@@ -244,6 +247,98 @@ def declared_path(context: ValidationContext, category: str, name: str) -> Path:
     )
 
 
+def kernel_manifest(context: ValidationContext) -> list[Path]:
+    """Return the sorted normative kernel files used for snapshot integrity."""
+    paths = {context.framework_path}
+    for category in ("policies", "schemas"):
+        for name, relative in context.framework.get(category, {}).items():
+            paths.add(resolve_contract_path(
+                context.root,
+                relative,
+                f"framework.{category}.{name}",
+                expect="file",
+            ))
+    roles_value = context.framework.get("roles_directory")
+    roles_directory = resolve_contract_path(
+        context.root,
+        roles_value,
+        "framework.roles_directory",
+        expect="directory",
+    )
+    role_candidates = sorted(roles_directory.glob("*.yaml"))
+    if not role_candidates:
+        raise ValidationError(f"{roles_directory}: no roles registered")
+    for candidate in role_candidates:
+        relative = candidate.relative_to(context.root).as_posix()
+        paths.add(resolve_contract_path(
+            context.root, relative, f"framework role {relative}", expect="file"
+        ))
+    return sorted(paths, key=lambda path: path.relative_to(context.root).as_posix())
+
+
+def kernel_digest(context: ValidationContext) -> tuple[str, list[str]]:
+    """Hash unambiguous relative-path/byte pairs for the normative kernel."""
+    digest = hashlib.sha256()
+    relative_paths: list[str] = []
+    for path in kernel_manifest(context):
+        relative = path.relative_to(context.root).as_posix()
+        relative_bytes = relative.encode("utf-8")
+        content = path.read_bytes()
+        digest.update(len(relative_bytes).to_bytes(8, "big"))
+        digest.update(relative_bytes)
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
+        relative_paths.append(relative)
+    return f"sha256:{digest.hexdigest()}", relative_paths
+
+
+def build_lock_document(context: ValidationContext) -> dict[str, Any]:
+    digest, files = kernel_digest(context)
+    return {
+        "schema_version": "1.0.0",
+        "kernel": {
+            "version": context.framework.get("framework_version"),
+            "source": context.framework_path.relative_to(context.root).as_posix(),
+            "digest": digest,
+            "files": files,
+        },
+        "sync_direction": "repository_to_installation",
+    }
+
+
+def validate_lock(context: ValidationContext) -> list[str]:
+    errors: list[str] = []
+    lock_value = context.project.get("framework", {}).get("lock")
+    if not isinstance(lock_value, str):
+        return [f"{context.project_path}: framework.lock is required"]
+    try:
+        lock_path = resolve_contract_path(
+            context.root, lock_value, "framework.lock", expect="file"
+        )
+        lock_schema = declared_path(context, "schemas", "lock")
+        lock, lock_errors = validate_file(lock_path, lock_schema)
+        errors.extend(lock_errors)
+        if not isinstance(lock, dict):
+            return errors
+        expected = build_lock_document(context)
+        actual_kernel = lock.get("kernel", {})
+        expected_kernel = expected["kernel"]
+        for key in ("version", "source", "digest", "files"):
+            if actual_kernel.get(key) != expected_kernel[key]:
+                errors.append(
+                    f"{lock_path}: kernel.{key} drift; expected "
+                    f"{expected_kernel[key]!r}, got {actual_kernel.get(key)!r}"
+                )
+        if lock.get("sync_direction") != expected["sync_direction"]:
+            errors.append(
+                f"{lock_path}: sync_direction must be "
+                f"{expected['sync_direction']!r}"
+            )
+    except (OSError, ValidationError) as exc:
+        errors.append(str(exc))
+    return errors
+
+
 def patterns_overlap(left: str, right: str) -> bool:
     return left == right or fnmatch.fnmatch(left, right) or fnmatch.fnmatch(right, left)
 
@@ -260,11 +355,19 @@ def registered_roles(context: ValidationContext) -> tuple[set[str], list[str]]:
         )
     except ValidationError as exc:
         return set(), [str(exc)]
-    role_paths = sorted(roles_directory.glob("*.yaml"))
-    if not role_paths:
+    role_candidates = sorted(roles_directory.glob("*.yaml"))
+    if not role_candidates:
         errors.append(f"{roles_directory}: no roles registered")
     seen: set[str] = set()
-    for role_path in role_paths:
+    for candidate in role_candidates:
+        relative = candidate.relative_to(context.root).as_posix()
+        try:
+            role_path = resolve_contract_path(
+                context.root, relative, f"framework role {relative}", expect="file"
+            )
+        except ValidationError as exc:
+            errors.append(str(exc))
+            continue
         role, role_errors = validate_file(role_path, role_schema)
         errors.extend(role_errors)
         role_id = role.get("id") if isinstance(role, dict) else None
@@ -397,6 +500,8 @@ def validate_project(
             errors.append(f"{path}: framework.source changed during validation")
     except ValidationError as exc:
         errors.append(str(exc))
+
+    errors.extend(validate_lock(context))
 
     for name, relative in project.get("documents", {}).items():
         expect = "directory" if name in {"tasks", "adrs"} else "file"
