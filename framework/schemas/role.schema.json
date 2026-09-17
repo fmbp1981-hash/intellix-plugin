@@ -6,7 +6,6 @@
   "properties": {
     "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]+$"},
     "purpose": {"type": "string", "minLength": 10},
-    "preferred_adapter": {"type": "string", "enum": ["claude", "codex", "human", "any"]},
     "may": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "must_not": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "required_inputs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},

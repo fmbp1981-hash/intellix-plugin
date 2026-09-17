@@ -12,19 +12,34 @@ import fnmatch
 import json
 import re
 import sys
-from pathlib import Path
+from dataclasses import dataclass
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
-FRAMEWORK = ROOT / "framework"
+CODE_ROOT = Path(__file__).resolve().parents[1]
+# Backwards-compatible names for importers. They identify code, never a client root.
+ROOT = CODE_ROOT
+FRAMEWORK = CODE_ROOT / "framework"
 ACTIVE = {
     "READY_FOR_ARCH_REVIEW", "READY", "IN_PROGRESS", "BLOCKED",
     "IN_REVIEW", "CHANGES_REQUESTED", "APPROVED",
 }
+GLOB_MARKERS = "*?["
+VENDOR_DEFAULTS = {"architect", "executor", "reviewer", "ci_arbiter"}
 
 
 class ValidationError(Exception):
-    pass
+    """A fail-closed validation or project-root bootstrap error."""
+
+
+@dataclass(frozen=True)
+class ValidationContext:
+    root: Path
+    project_path: Path
+    project: dict[str, Any]
+    framework_path: Path
+    framework_dir: Path
+    framework: dict[str, Any]
 
 
 def load(path: Path) -> Any:
@@ -32,6 +47,8 @@ def load(path: Path) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
         raise ValidationError(f"{path}: file not found") from exc
+    except OSError as exc:
+        raise ValidationError(f"{path}: cannot be read ({exc})") from exc
     except json.JSONDecodeError as exc:
         raise ValidationError(
             f"{path}:{exc.lineno}:{exc.colno}: expected JSON-compatible YAML ({exc.msg})"
@@ -102,25 +119,217 @@ def validate_file(path: Path, schema_path: Path) -> tuple[Any, list[str]]:
     return value, [f"{path}: {error}" for error in validate_schema(value, schema)]
 
 
+def is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def resolve_root(argument: Path | None) -> Path:
+    if argument is None:
+        current = Path.cwd().resolve()
+        if current != CODE_ROOT:
+            raise ValidationError(
+                f"--root is required outside the validator repository root; cwd is {current}"
+            )
+        return CODE_ROOT
+    candidate = argument if argument.is_absolute() else Path.cwd() / argument
+    try:
+        resolved = candidate.resolve(strict=True)
+    except FileNotFoundError as exc:
+        raise ValidationError(f"project root does not exist: {candidate}") from exc
+    if not resolved.is_dir():
+        raise ValidationError(f"project root is not a directory: {resolved}")
+    return resolved
+
+
+def _relative_parts(value: str, label: str) -> tuple[str, ...]:
+    if not isinstance(value, str) or not value.strip():
+        raise ValidationError(f"{label}: path must be a non-empty relative string")
+    candidate = Path(value)
+    if candidate.is_absolute() or PureWindowsPath(value).is_absolute():
+        raise ValidationError(f"{label}: absolute paths are forbidden: {value}")
+    if ".." in candidate.parts or ".." in PureWindowsPath(value).parts:
+        raise ValidationError(f"{label}: path traversal is forbidden: {value}")
+    return candidate.parts
+
+
+def resolve_contract_path(
+    root: Path,
+    value: str,
+    label: str,
+    *,
+    must_exist: bool = True,
+    expect: str | None = None,
+    allow_glob: bool = False,
+) -> Path:
+    parts = _relative_parts(value, label)
+    if allow_glob:
+        prefix: list[str] = []
+        for part in parts:
+            if any(marker in part for marker in GLOB_MARKERS):
+                break
+            prefix.append(part)
+        candidate = root.joinpath(*prefix)
+        probe = candidate
+        while not probe.exists() and probe != root:
+            probe = probe.parent
+        resolved = probe.resolve(strict=True)
+        if not is_within(resolved, root):
+            raise ValidationError(f"{label}: path escapes project root: {value}")
+        return candidate
+
+    candidate = root.joinpath(*parts)
+    if must_exist and not candidate.exists():
+        raise ValidationError(f"{label}: required source is missing: {value}")
+    try:
+        resolved = candidate.resolve(strict=must_exist)
+    except (FileNotFoundError, RuntimeError) as exc:
+        raise ValidationError(f"{label}: required source is missing: {value}") from exc
+    if not is_within(resolved, root):
+        raise ValidationError(f"{label}: path escapes project root: {value}")
+    if expect == "file" and not resolved.is_file():
+        raise ValidationError(f"{label}: expected a file: {value}")
+    if expect == "directory" and not resolved.is_dir():
+        raise ValidationError(f"{label}: expected a directory: {value}")
+    return resolved
+
+
+def resolve_cli_path(root: Path, value: Path, label: str, expect: str) -> Path:
+    candidate = value if value.is_absolute() else root / value
+    try:
+        resolved = candidate.resolve(strict=True)
+    except FileNotFoundError as exc:
+        raise ValidationError(f"{label}: path does not exist: {value}") from exc
+    if not is_within(resolved, root):
+        raise ValidationError(f"{label}: path escapes project root: {value}")
+    if expect == "file" and not resolved.is_file():
+        raise ValidationError(f"{label}: expected a file: {value}")
+    if expect == "directory" and not resolved.is_dir():
+        raise ValidationError(f"{label}: expected a directory: {value}")
+    return resolved
+
+
+def build_context(root: Path, project_name: str = "intellix.yaml") -> ValidationContext:
+    root = root.resolve(strict=True)
+    project_path = resolve_contract_path(root, project_name, "project manifest", expect="file")
+    project = load(project_path)
+    if not isinstance(project, dict):
+        raise ValidationError(f"{project_path}: project manifest must be an object")
+    source = project.get("framework", {}).get("source")
+    if not isinstance(source, str):
+        raise ValidationError(f"{project_path}: framework.source is required")
+    framework_path = resolve_contract_path(root, source, "framework.source", expect="file")
+    framework = load(framework_path)
+    if not isinstance(framework, dict):
+        raise ValidationError(f"{framework_path}: framework must be an object")
+    return ValidationContext(
+        root=root,
+        project_path=project_path,
+        project=project,
+        framework_path=framework_path,
+        framework_dir=framework_path.parent,
+        framework=framework,
+    )
+
+
+def declared_path(context: ValidationContext, category: str, name: str) -> Path:
+    value = context.framework.get(category, {}).get(name)
+    if not isinstance(value, str):
+        raise ValidationError(f"framework.yaml: missing {category}.{name}")
+    return resolve_contract_path(
+        context.root, value, f"framework.{category}.{name}", expect="file"
+    )
+
+
 def patterns_overlap(left: str, right: str) -> bool:
     return left == right or fnmatch.fnmatch(left, right) or fnmatch.fnmatch(right, left)
 
 
-def semantic_task_errors(task: dict[str, Any], path: Path, framework: dict[str, Any]) -> list[str]:
+def registered_roles(context: ValidationContext) -> tuple[set[str], list[str]]:
+    errors: list[str] = []
+    role_schema = declared_path(context, "schemas", "role")
+    roles_value = context.framework.get("roles_directory")
+    if not isinstance(roles_value, str):
+        return set(), ["framework.yaml: roles_directory is required"]
+    try:
+        roles_directory = resolve_contract_path(
+            context.root, roles_value, "framework.roles_directory", expect="directory"
+        )
+    except ValidationError as exc:
+        return set(), [str(exc)]
+    role_paths = sorted(roles_directory.glob("*.yaml"))
+    if not role_paths:
+        errors.append(f"{roles_directory}: no roles registered")
+    seen: set[str] = set()
+    for role_path in role_paths:
+        role, role_errors = validate_file(role_path, role_schema)
+        errors.extend(role_errors)
+        role_id = role.get("id") if isinstance(role, dict) else None
+        if role_id in seen:
+            errors.append(f"{role_path}: duplicate role id {role_id!r}")
+        if role_id:
+            seen.add(role_id)
+    return seen, errors
+
+
+def semantic_task_errors(
+    task: dict[str, Any],
+    path: Path,
+    context: ValidationContext,
+    role_ids: set[str] | None = None,
+) -> list[str]:
     errors: list[str] = []
     prefix = str(path)
+    expected_name = f"{task.get('id')}.yaml"
+    if path.name != expected_name:
+        errors.append(f"{prefix}: task id requires filename {expected_name!r}")
+
+    for source_name, source in task.get("source", {}).items():
+        values = source if isinstance(source, list) else [source]
+        for index, value in enumerate(values):
+            label = f"{prefix}: source.{source_name}"
+            if isinstance(source, list):
+                label += f"[{index}]"
+            try:
+                resolve_contract_path(context.root, value, label, expect="file")
+            except ValidationError as exc:
+                errors.append(str(exc))
+
     scope = task.get("scope", {})
     writable = scope.get("create", []) + scope.get("modify", [])
     forbidden = scope.get("forbidden", [])
+    for group, values in scope.items():
+        for index, value in enumerate(values):
+            try:
+                resolve_contract_path(
+                    context.root,
+                    value,
+                    f"{prefix}: scope.{group}[{index}]",
+                    must_exist=False,
+                    allow_glob=True,
+                )
+            except ValidationError as exc:
+                errors.append(str(exc))
     for allowed in writable:
         for denied in forbidden:
             if patterns_overlap(allowed, denied):
                 errors.append(f"{prefix}: writable path {allowed!r} overlaps forbidden {denied!r}")
+
     ownership = task.get("ownership", {})
     if ownership.get("executor") == ownership.get("reviewer"):
         errors.append(f"{prefix}: executor and reviewer must be independent")
+    if role_ids is None:
+        role_ids, role_errors = registered_roles(context)
+        errors.extend(role_errors)
+    domain_role = ownership.get("domain_role")
+    if domain_role and domain_role not in role_ids:
+        errors.append(f"{prefix}: unknown domain role {domain_role!r}")
+
     risk = task.get("risk", {}).get("level")
-    required = set(framework.get("risk_gates", {}).get(risk, []))
+    required = set(context.framework.get("risk_gates", {}).get(risk, []))
     actual = set(task.get("gates", []))
     missing = sorted(required - actual)
     if missing:
@@ -130,77 +339,190 @@ def semantic_task_errors(task: dict[str, Any], path: Path, framework: dict[str, 
     return errors
 
 
-def validate_framework() -> list[str]:
+def validate_framework(context: ValidationContext | None = None) -> list[str]:
+    context = context or build_context(CODE_ROOT)
     errors: list[str] = []
-    canonical = load(FRAMEWORK / "framework.yaml")
+    canonical = context.framework
     if not canonical.get("normative"):
-        errors.append("framework/framework.yaml: canonical source must be normative")
+        errors.append(f"{context.framework_path}: canonical source must be normative")
+    if "plugin_version" in canonical:
+        errors.append(f"{context.framework_path}: plugin_version is not a kernel fact")
+    vendor_defaults = sorted(VENDOR_DEFAULTS.intersection(canonical.get("defaults", {})))
+    if vendor_defaults:
+        errors.append(
+            f"{context.framework_path}: vendor-specific defaults are forbidden: {vendor_defaults}"
+        )
     for category in ("policies", "schemas"):
         for name, relative in canonical.get(category, {}).items():
-            if not (ROOT / relative).is_file():
-                errors.append(f"framework.yaml: missing {category}.{name} target {relative}")
-    role_schema = FRAMEWORK / "schemas/role.schema.json"
-    roles = sorted((FRAMEWORK / "roles").glob("*.yaml"))
-    if not roles:
-        errors.append("framework/roles: no roles registered")
-    seen: set[str] = set()
-    for role_path in roles:
-        role, role_errors = validate_file(role_path, role_schema)
+            try:
+                resolve_contract_path(
+                    context.root,
+                    relative,
+                    f"framework.{category}.{name}",
+                    expect="file",
+                )
+            except ValidationError as exc:
+                errors.append(str(exc))
+    try:
+        _, role_errors = registered_roles(context)
         errors.extend(role_errors)
-        role_id = role.get("id") if isinstance(role, dict) else None
-        if role_id in seen:
-            errors.append(f"{role_path}: duplicate role id {role_id!r}")
-        if role_id:
-            seen.add(role_id)
-    plugin = load(ROOT / ".claude-plugin/plugin.json")
-    marketplace = load(ROOT / ".claude-plugin/marketplace.json")
-    versions = {
-        canonical.get("plugin_version"), plugin.get("version"),
-        marketplace.get("plugins", [{}])[0].get("version"),
-    }
-    if len(versions) != 1:
-        errors.append(f"plugin version drift detected: {sorted(str(v) for v in versions)}")
+    except ValidationError as exc:
+        errors.append(str(exc))
     return errors
 
 
-def validate_project(path: Path) -> list[str]:
-    project, errors = validate_file(path, FRAMEWORK / "schemas/project.schema.json")
-    if isinstance(project, dict):
-        source = project.get("framework", {}).get("source")
-        if source and not (ROOT / source).is_file():
-            errors.append(f"{path}: framework source does not exist: {source}")
+def validate_project(
+    path: Path | None = None, context: ValidationContext | None = None
+) -> list[str]:
+    context = context or build_context(CODE_ROOT)
+    path = path or context.project_path
+    project_schema = declared_path(context, "schemas", "project")
+    project, errors = validate_file(path, project_schema)
+    if not isinstance(project, dict):
+        return errors
+
+    configured_version = project.get("framework", {}).get("version")
+    kernel_version = context.framework.get("framework_version")
+    if configured_version != kernel_version:
+        errors.append(
+            f"{path}: framework.version {configured_version!r} does not match "
+            f"kernel framework_version {kernel_version!r}"
+        )
+    source = project.get("framework", {}).get("source")
+    try:
+        resolved_source = resolve_contract_path(
+            context.root, source, f"{path}: framework.source", expect="file"
+        )
+        if resolved_source != context.framework_path:
+            errors.append(f"{path}: framework.source changed during validation")
+    except ValidationError as exc:
+        errors.append(str(exc))
+
+    for name, relative in project.get("documents", {}).items():
+        expect = "directory" if name in {"tasks", "adrs"} else "file"
+        try:
+            resolve_contract_path(
+                context.root, relative, f"{path}: documents.{name}", expect=expect
+            )
+        except ValidationError as exc:
+            errors.append(str(exc))
+    for index, repository in enumerate(project.get("repositories", [])):
+        try:
+            resolve_contract_path(
+                context.root,
+                repository.get("path"),
+                f"{path}: repositories[{index}].path",
+                expect="directory",
+            )
+        except ValidationError as exc:
+            errors.append(str(exc))
     return errors
 
 
-def validate_task(path: Path, framework: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[str]]:
-    task, errors = validate_file(path, FRAMEWORK / "schemas/task.schema.json")
+def validate_task(
+    path: Path,
+    context: ValidationContext | None = None,
+    role_ids: set[str] | None = None,
+) -> tuple[dict[str, Any], list[str]]:
+    context = context or build_context(CODE_ROOT)
+    task_schema = declared_path(context, "schemas", "task")
+    task, errors = validate_file(path, task_schema)
     if isinstance(task, dict):
-        errors.extend(semantic_task_errors(task, path, framework or load(FRAMEWORK / "framework.yaml")))
+        errors.extend(semantic_task_errors(task, path, context, role_ids))
         return task, errors
     return {}, errors
 
 
-def validate_tasks(directory: Path) -> list[str]:
+def validate_tasks(
+    directory: Path, context: ValidationContext | None = None
+) -> list[str]:
+    context = context or build_context(CODE_ROOT)
     errors: list[str] = []
-    framework = load(FRAMEWORK / "framework.yaml")
+    role_ids, role_errors = registered_roles(context)
+    errors.extend(role_errors)
     active: list[tuple[Path, dict[str, Any]]] = []
+    tasks: dict[str, tuple[Path, dict[str, Any]]] = {}
     for path in sorted(directory.glob("TASK-*.yaml")):
-        task, task_errors = validate_task(path, framework)
+        task, task_errors = validate_task(path, context, role_ids)
         errors.extend(task_errors)
+        task_id = task.get("id")
+        if task_id in tasks:
+            errors.append(f"{path}: duplicate task id {task_id!r}")
+        elif task_id:
+            tasks[task_id] = (path, task)
         if task.get("status") in ACTIVE:
             active.append((path, task))
+
+    for path, task in tasks.values():
+        for dependency in task.get("dependencies", []):
+            if dependency not in tasks:
+                errors.append(f"{path}: unknown dependency {dependency!r}")
+
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(task_id: str, chain: list[str]) -> None:
+        if task_id in visiting:
+            cycle = chain[chain.index(task_id):] + [task_id]
+            errors.append(f"task dependency cycle: {' -> '.join(cycle)}")
+            return
+        if task_id in visited or task_id not in tasks:
+            return
+        visiting.add(task_id)
+        for dependency in tasks[task_id][1].get("dependencies", []):
+            visit(dependency, chain + [dependency])
+        visiting.remove(task_id)
+        visited.add(task_id)
+
+    for task_id in tasks:
+        visit(task_id, [task_id])
+
     for index, (left_path, left) in enumerate(active):
         left_paths = left.get("scope", {}).get("create", []) + left.get("scope", {}).get("modify", [])
         for right_path, right in active[index + 1:]:
             right_paths = right.get("scope", {}).get("create", []) + right.get("scope", {}).get("modify", [])
-            collisions = sorted({(a, b) for a in left_paths for b in right_paths if patterns_overlap(a, b)})
+            collisions = sorted({
+                (a, b) for a in left_paths for b in right_paths if patterns_overlap(a, b)
+            })
             if collisions:
-                errors.append(f"fileset collision: {left_path.name} vs {right_path.name}: {collisions}")
+                errors.append(
+                    f"fileset collision: {left_path.name} vs {right_path.name}: {collisions}"
+                )
+    return errors
+
+
+def _scalar_from_adapter(text: str, key: str) -> str | None:
+    match = re.search(rf"(?m)^{re.escape(key)}:\s*([^#\n]+?)\s*$", text)
+    if not match:
+        return None
+    return match.group(1).strip().strip("\"'")
+
+
+def validate_authority(context: ValidationContext) -> list[str]:
+    """Validate the optional repository adapter's one-way installation contract."""
+    adapter = context.root / "global-config/metodologia.yaml"
+    if not adapter.exists():
+        return []
+    try:
+        text = adapter.read_text(encoding="utf-8")
+    except OSError as exc:
+        return [f"{adapter}: cannot be read ({exc})"]
+    expected = {
+        "framework_source": str(context.framework_path.relative_to(context.root)),
+        "framework_version": str(context.framework.get("framework_version")),
+        "sync_direction": "repository_to_installation",
+    }
+    errors: list[str] = []
+    for key, value in expected.items():
+        actual = _scalar_from_adapter(text, key)
+        if actual != value:
+            errors.append(f"{adapter}: {key} must be {value!r}, got {actual!r}")
     return errors
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, help="explicit client project root")
     parser.add_argument("--framework", action="store_true")
     parser.add_argument("--project", type=Path)
     parser.add_argument("--task", type=Path)
@@ -211,18 +533,28 @@ def main() -> int:
         parser.error("select --framework, --project, --task, --tasks-dir or --all")
     errors: list[str] = []
     try:
+        root = resolve_root(args.root)
+        context = build_context(root)
         if args.framework or args.all:
-            errors.extend(validate_framework())
+            errors.extend(validate_framework(context))
         if args.project:
-            errors.extend(validate_project(args.project))
+            project_path = resolve_cli_path(root, args.project, "--project", "file")
+            errors.extend(validate_project(project_path, context))
         if args.task:
-            _, task_errors = validate_task(args.task)
+            task_path = resolve_cli_path(root, args.task, "--task", "file")
+            _, task_errors = validate_task(task_path, context)
             errors.extend(task_errors)
         if args.tasks_dir:
-            errors.extend(validate_tasks(args.tasks_dir))
+            tasks_directory = resolve_cli_path(root, args.tasks_dir, "--tasks-dir", "directory")
+            errors.extend(validate_tasks(tasks_directory, context))
         if args.all:
-            errors.extend(validate_project(ROOT / "intellix.yaml"))
-            errors.extend(validate_tasks(ROOT / "tasks"))
+            errors.extend(validate_project(context.project_path, context))
+            tasks_value = context.project.get("documents", {}).get("tasks")
+            tasks_directory = resolve_contract_path(
+                root, tasks_value, "project documents.tasks", expect="directory"
+            )
+            errors.extend(validate_tasks(tasks_directory, context))
+            errors.extend(validate_authority(context))
     except ValidationError as exc:
         errors.append(str(exc))
     if errors:

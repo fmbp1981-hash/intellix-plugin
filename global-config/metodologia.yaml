@@ -32,6 +32,7 @@ versao: 1
 atualizado_em: 2026-09-16
 framework_source: framework/framework.yaml
 framework_version: 1.0.0
+sync_direction: repository_to_installation
 multiagent:
   architect_default: claude
   executor_default: codex

@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0.0",
+  "project": {"name": "external-consumer", "profile": "saas", "owners": ["Example"]},
+  "framework": {"version": "1.0.0", "source": "framework/framework.yaml"},
+  "documents": {"prd": "README.md", "architecture": "docs/architecture/ARCHITECTURE.md", "spec": "SPEC.md", "tasks": "tasks", "adrs": "docs/adr"},
+  "repositories": [{"path": ".", "default_branch": "main"}],
+  "quality": {"commands": ["python3 framework/validate.py --root . --all"]},
+  "deployment": {"provider": "example", "production_environment": "production"}
+}

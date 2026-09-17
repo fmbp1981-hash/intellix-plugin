@@ -1,7 +1,6 @@
 {
   "schema_version": "1.0.0",
   "framework_version": "1.0.0",
-  "plugin_version": "3.1.0",
   "name": "IntelliX Multi-Agent Engineering Framework",
   "normative": true,
   "principles": [
@@ -31,10 +30,6 @@
     "handoff": "framework/schemas/handoff.schema.json"
   },
   "defaults": {
-    "architect": "claude",
-    "executor": "codex",
-    "reviewer": "claude",
-    "ci_arbiter": "github-actions",
     "branch_strategy": "trunk_based_short_lived",
     "protected_branch": "main",
     "worktree_from_risk": "medium",

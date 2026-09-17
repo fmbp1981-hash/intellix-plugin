@@ -1,0 +1,17 @@
+{
+  "id": "TASK-101",
+  "title": "Validate an external consumer project",
+  "status": "DRAFT",
+  "objective": "Prove that validation is rooted in the explicit consumer project.",
+  "source": {"prd": "README.md", "architecture": "docs/architecture/ARCHITECTURE.md", "spec": "SPEC.md", "adrs": ["docs/adr/0001-fixture.md"]},
+  "risk": {"level": "low", "reasons": ["Fixture only"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
+  "scope": {"create": ["src/example.py"], "modify": [], "forbidden": [".env*", "infra/production/**"]},
+  "dependencies": [],
+  "acceptance_criteria": [{"id": "AC-101", "given": "an explicit project root", "when": "validation runs", "then": "only project-local sources are used"}],
+  "verification": [{"command": "python3 framework/validate.py --root . --all", "proves": "The fixture validates"}],
+  "gates": ["schema", "lint", "tests", "independent_review"],
+  "rollback": null,
+  "notes": [],
+  "handoff": {"required_evidence": ["test output"], "open_questions": []}
+}
