@@ -20,9 +20,9 @@ CODE_ROOT = Path(__file__).resolve().parents[1]
 # Backwards-compatible names for importers. They identify code, never a client root.
 ROOT = CODE_ROOT
 FRAMEWORK = CODE_ROOT / "framework"
-ACTIVE = {
+FILESET_OWNING_STATES = {
     "READY_FOR_ARCH_REVIEW", "READY", "IN_PROGRESS", "BLOCKED",
-    "IN_REVIEW", "CHANGES_REQUESTED", "APPROVED",
+    "IN_REVIEW", "CHANGES_REQUESTED",
 }
 GLOB_MARKERS = "*?["
 VENDOR_DEFAULTS = {"architect", "executor", "reviewer", "ci_arbiter"}
@@ -450,7 +450,7 @@ def validate_tasks(
             errors.append(f"{path}: duplicate task id {task_id!r}")
         elif task_id:
             tasks[task_id] = (path, task)
-        if task.get("status") in ACTIVE:
+        if task.get("status") in FILESET_OWNING_STATES:
             active.append((path, task))
 
     for path, task in tasks.values():

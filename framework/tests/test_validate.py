@@ -237,6 +237,18 @@ class FrameworkValidationTests(unittest.TestCase):
             errors = validate.validate_tasks(project / "tasks", context)
             self.assertTrue(any("fileset collision" in error for error in errors))
 
+    def test_approved_task_releases_fileset_for_dependent_work(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project, context, task_path, completed = self.context_and_task(Path(temporary))
+            completed.update(id="TASK-101", status="APPROVED")
+            dependent = copy.deepcopy(completed)
+            dependent.update(id="TASK-102", status="READY")
+            dependent["dependencies"] = ["TASK-101"]
+            self.write_json(task_path, completed)
+            self.write_json(project / "tasks/TASK-102.yaml", dependent)
+            errors = validate.validate_tasks(project / "tasks", context)
+            self.assertFalse(any("fileset collision" in error for error in errors))
+
     def test_legacy_phase_gate_accepts_task_contract(self):
         gate = validate.CODE_ROOT / "hooks/scripts/phase-gate.sh"
         template = validate.load(validate.FRAMEWORK / "templates/TASK.yaml")
