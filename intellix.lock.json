@@ -1,8 +1,9 @@
 {
   "control_plane": {
-    "digest": "sha256:7ae396ddc93f379262341e99f0bc3df21ab221033c257f2b2f062d05863a1fc0",
+    "digest": "sha256:fd723530d007c532938a73c484906ad8ff3a90007879ca0caf537080ea67b917",
     "files": [
       "framework/adapters.py",
+      "framework/ci.py",
       "framework/dispatch.py",
       "framework/runtime.py",
       "framework/sync.py",
@@ -12,7 +13,7 @@
     "version": "1.0.0"
   },
   "kernel": {
-    "digest": "sha256:7f754c657144554e118482aa0d11c96c50c9f31aec2f9b22941c6b67d65e5791",
+    "digest": "sha256:001998e6d40e9ce191a416093891254bb8062506c0d13443c59d8db3004a719c",
     "files": [
       "framework/framework.yaml",
       "framework/policies/deployment.yaml",
@@ -33,6 +34,7 @@
       "framework/roles/test-engineer.yaml",
       "framework/schemas/approval.schema.json",
       "framework/schemas/checkpoint.schema.json",
+      "framework/schemas/ci-evidence.schema.json",
       "framework/schemas/handoff.schema.json",
       "framework/schemas/lock.schema.json",
       "framework/schemas/project.schema.json",

@@ -27,6 +27,7 @@ FILESET_OWNING_STATES = {
 }
 GLOB_MARKERS = "*?["
 VENDOR_DEFAULTS = {"architect", "executor", "reviewer", "ci_arbiter"}
+GOVERNANCE_PROFILES = {"micro", "standard", "regulated"}
 
 
 class ValidationError(Exception):
@@ -487,11 +488,22 @@ def semantic_task_errors(
             )
 
     risk = task.get("risk", {}).get("level")
-    required = set(context.framework.get("risk_gates", {}).get(risk, []))
+    risk_required = set(context.framework.get("risk_gates", {}).get(risk, []))
+    governance_profile = context.project.get("project", {}).get("governance_profile")
+    profile_required = set(
+        context.framework.get("governance_profiles", {})
+        .get(governance_profile, {})
+        .get("minimum_gates", [])
+    )
     actual = set(task.get("gates", []))
-    missing = sorted(required - actual)
+    missing = sorted(risk_required - actual)
     if missing:
         errors.append(f"{prefix}: risk {risk!r} requires gates {missing}")
+    missing = sorted(profile_required - actual)
+    if missing:
+        errors.append(
+            f"{prefix}: governance profile {governance_profile!r} requires gates {missing}"
+        )
     if risk in {"high", "critical"} and not task.get("rollback"):
         errors.append(f"{prefix}: risk {risk!r} requires a rollback plan")
     return errors
@@ -528,6 +540,30 @@ def validate_framework(context: ValidationContext | None = None) -> list[str]:
     control_version = canonical.get("control_plane", {}).get("version")
     if not isinstance(control_version, str) or not control_version:
         errors.append(f"{context.framework_path}: control_plane.version is required")
+    profiles = canonical.get("governance_profiles")
+    if not isinstance(profiles, dict):
+        errors.append(f"{context.framework_path}: governance_profiles must be an object")
+    else:
+        configured_profiles = set(profiles)
+        if configured_profiles != GOVERNANCE_PROFILES:
+            errors.append(
+                f"{context.framework_path}: governance_profiles must define exactly "
+                f"{sorted(GOVERNANCE_PROFILES)}"
+            )
+        for profile, definition in profiles.items():
+            gates = definition.get("minimum_gates") if isinstance(definition, dict) else None
+            if (
+                not isinstance(definition, dict)
+                or set(definition) != {"minimum_gates"}
+                or not isinstance(gates, list)
+                or not gates
+                or any(not isinstance(gate, str) or not gate for gate in gates)
+                or len(gates) != len(set(gates))
+            ):
+                errors.append(
+                    f"{context.framework_path}: governance profile {profile!r} "
+                    "must contain one unique non-empty minimum_gates array"
+                )
     transitions = canonical.get("runtime", {}).get("transitions", {})
     lifecycle = set(canonical.get("task_lifecycle", []))
     if not isinstance(transitions, dict):
@@ -568,6 +604,12 @@ def validate_project(
         errors.append(
             f"{path}: framework.version {configured_version!r} does not match "
             f"kernel framework_version {kernel_version!r}"
+        )
+    governance_profile = project.get("project", {}).get("governance_profile")
+    if governance_profile not in context.framework.get("governance_profiles", {}):
+        errors.append(
+            f"{path}: project.governance_profile {governance_profile!r} "
+            "is not registered by the framework"
         )
     source = project.get("framework", {}).get("source")
     try:

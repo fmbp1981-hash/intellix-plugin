@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "project": {"name": "external-consumer", "profile": "saas", "owners": ["Example"]},
+  "project": {"name": "external-consumer", "profile": "saas", "governance_profile": "standard", "owners": ["Example"]},
   "framework": {"version": "1.0.0", "source": "framework/framework.yaml", "lock": "intellix.lock.json"},
   "documents": {"prd": "README.md", "architecture": "docs/architecture/ARCHITECTURE.md", "spec": "SPEC.md", "tasks": "tasks", "adrs": "docs/adr"},
   "repositories": [{"path": ".", "default_branch": "main"}],
-  "quality": {"commands": ["python3 framework/validate.py --root . --all"]},
+  "quality": {"commands": ["python3 framework/validate.py --root . --all"], "ci": {"provider": "github", "repository": "example/external-consumer", "required_checks": ["project-ci"]}},
   "deployment": {"provider": "example", "production_environment": "production"},
   "execution": {"default_executor": "codex", "permitted_adapters": ["codex", "claude"], "allow_current_adapter_fallback": true},
   "runtime": {"records_path": ".intellix/runtime"}

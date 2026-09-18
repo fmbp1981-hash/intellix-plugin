@@ -31,7 +31,8 @@
     "handoff": "framework/schemas/handoff.schema.json",
     "runtime": "framework/schemas/runtime.schema.json",
     "reservation": "framework/schemas/reservation.schema.json",
-    "checkpoint": "framework/schemas/checkpoint.schema.json"
+    "checkpoint": "framework/schemas/checkpoint.schema.json",
+    "ci_evidence": "framework/schemas/ci-evidence.schema.json"
   },
   "control_plane": {
     "version": "1.0.0",
@@ -41,7 +42,8 @@
       "framework/runtime.py",
       "framework/dispatch.py",
       "framework/worktrees.py",
-      "framework/adapters.py"
+      "framework/adapters.py",
+      "framework/ci.py"
     ]
   },
   "runtime": {
@@ -69,6 +71,11 @@
     "medium": ["schema", "fileset", "lint", "tests", "independent_review", "worktree"],
     "high": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
     "critical": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "staged_release", "worktree"]
+  },
+  "governance_profiles": {
+    "micro": {"minimum_gates": ["schema", "tests"]},
+    "standard": {"minimum_gates": ["schema", "lint", "tests", "independent_review"]},
+    "regulated": {"minimum_gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"]}
   },
   "authority": [
     "framework/framework.yaml",

@@ -1,0 +1,5 @@
+{
+  "governance_profile": "standard",
+  "minimum_gates": ["schema", "lint", "tests", "independent_review"],
+  "task_gates": ["schema", "lint", "tests", "independent_review"]
+}

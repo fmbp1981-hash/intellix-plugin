@@ -34,8 +34,14 @@ Task alvo: $ARGUMENTS
    - `python3 ${CLAUDE_PLUGIN_ROOT}/framework/dispatch.py --root . --task tasks/$ARGUMENTS.yaml --target-state IN_REVIEW --reason "verification and handoff complete"`
 8. O reviewer independente verifica spec, arquitetura, segurança e qualidade.
    Gaps voltam como `CHANGES_REQUESTED`. Limite: 3 ciclos; depois escale decisão.
-9. CI é o árbitro final. O dispatcher desta etapa não promove `APPROVED`, merge,
-   release ou deploy; esses gates permanecem externos e autenticados.
+9. CI é o árbitro final. Após o workflow terminar, consulte os checks configurados
+   para o SHA completo revisado e grave somente a cópia de auditoria:
+   `python3 ${CLAUDE_PLUGIN_ROOT}/framework/ci.py --root . --revision <sha-40> --output .intellix/runtime/ci/$ARGUMENTS.json`.
+   Check ausente, antigo, incompleto, indeterminado ou falho bloqueia. JSON local,
+   texto de modelo e resultado de outro repositório/SHA não são prova de CI.
+10. O dispatcher desta etapa não promove `APPROVED`, merge, release ou deploy;
+   esses gates permanecem externos e autenticados. Mesmo com CI verde, ausência
+   de aprovação humana externa e credencialmente separada mantém merge bloqueado.
    Invocações contra estados terminais falham sem alterar o contrato; recuperação
    de escrita interrompida e concorrência pertencem ao hardening posterior.
    Merge, deploy e ações irreversíveis continuam sujeitos às políticas e ao

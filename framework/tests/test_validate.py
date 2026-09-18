@@ -205,6 +205,43 @@ class FrameworkValidationTests(unittest.TestCase):
             errors = validate.validate_project(context=validate.build_context(project))
             self.assertTrue(any("path traversal is forbidden" in error for error in errors))
 
+    def test_governance_profile_is_required_and_closed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = self.external_project(Path(temporary))
+            manifest = validate.load(project / "intellix.yaml")
+            manifest["project"].pop("governance_profile")
+            self.write_json(project / "intellix.yaml", manifest)
+            errors = validate.validate_project(context=validate.build_context(project))
+            self.assertTrue(any("governance_profile" in error for error in errors))
+
+            manifest["project"]["governance_profile"] = "enterprise"
+            self.write_json(project / "intellix.yaml", manifest)
+            errors = validate.validate_project(context=validate.build_context(project))
+            self.assertTrue(any("governance_profile" in error for error in errors))
+
+    def test_governance_profile_gates_are_added_to_risk_gates(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project, context, task_path, task = self.context_and_task(Path(temporary))
+            manifest = validate.load(project / "intellix.yaml")
+            manifest["project"]["governance_profile"] = "regulated"
+            self.write_json(project / "intellix.yaml", manifest)
+            context = validate.build_context(project)
+            _, errors = validate.validate_task(task_path, context)
+            joined = "\n".join(errors)
+            self.assertIn("governance profile 'regulated' requires gates", joined)
+            self.assertIn("human_approval", joined)
+            self.assertIn("security_review", joined)
+
+    def test_framework_requires_exact_governance_profile_registry(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = self.external_project(Path(temporary))
+            framework_path = project / "framework/framework.yaml"
+            framework = validate.load(framework_path)
+            framework["governance_profiles"].pop("regulated")
+            self.write_json(framework_path, framework)
+            errors = validate.validate_framework(validate.build_context(project))
+            self.assertTrue(any("must define exactly" in error for error in errors))
+
     def test_kernel_contains_no_vendor_adapter_or_plugin_version_facts(self):
         context = validate.build_context(validate.CODE_ROOT)
         self.assertNotIn("plugin_version", context.framework)

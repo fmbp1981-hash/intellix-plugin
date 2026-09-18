@@ -13,6 +13,11 @@ This directory is the executable, vendor-neutral engineering contract.
 5. Copy `templates/TASK.yaml` to `tasks/TASK-NNN.yaml` for each unit of work.
 6. Validate in the project with `python3 framework/validate.py --root . --all`.
 
+Every project declares both a business `project.profile` and a required
+`project.governance_profile` (`micro`, `standard` or `regulated`). Governance
+profile gates are defined by `framework/framework.yaml` and are added to, never
+substituted for, the minimum gates derived from task risk.
+
 `intellix.lock.json` is generated, not manually edited. It pins the framework
 version, source, normative file manifest and SHA-256 digest. Use `sync.py --check`
 to detect missing, stale or modified snapshots without writing. Synchronization is
@@ -26,6 +31,25 @@ from an intact reviewed framework source (or CI revision) against the explicit
 client root, for example:
 `python3 /trusted/intellix-plugin/framework/validate.py --root /path/to/project --all`.
 
+## Exact-revision CI evidence
+
+Configure `quality.ci.repository` and `quality.ci.required_checks` in
+`intellix.yaml`, then query GitHub for the full reviewed commit SHA:
+
+```bash
+GITHUB_TOKEN=... python3 framework/ci.py \
+  --root . \
+  --revision 0123456789abcdef0123456789abcdef01234567 \
+  --output .intellix/runtime/ci/TASK-NNN.json
+```
+
+The token is read only from the named environment variable and is never written
+to evidence. Missing, stale, incomplete, failed, malformed, unauthorized or
+unavailable results fail closed. The output is a local audit copy of a GitHub API
+query; hand-authored JSON and model statements are not authoritative evidence.
+CI success does not satisfy the human gate. Without a protected approval from a
+separately credentialed external identity, merge eligibility remains blocked.
+
 ## Validate
 
 ```bash
@@ -34,6 +58,7 @@ python3 framework/validate.py --root . --project intellix.yaml
 python3 framework/validate.py --root . --task tasks/TASK-001.yaml
 python3 framework/validate.py --root . --tasks-dir tasks
 python3 framework/sync.py --source-root /path/to/framework-repo --target-root . --check
+python3 framework/ci.py --root . --revision <full-commit-sha>
 ```
 
 The `.yaml` contracts use JSON-compatible YAML deliberately, so the validator

@@ -16,13 +16,19 @@ Task alvo: $ARGUMENTS
    Given/When/Then, comandos de verificação, gates, rollback e handoff.
 5. Declare filesets exatos. `forbidden` deve incluir segredos e superfícies fora
    do escopo. Evite globs amplos.
-6. Use Codex como executor e Claude como reviewer por padrão. Escolha um papel de
+6. Confirme `project.governance_profile` e aplique a união dos gates mínimos do
+   perfil e do risco. Confirme também `quality.ci.repository` e
+   `quality.ci.required_checks`; nomes de branch não substituem SHA completo.
+7. Use Codex como executor e Claude como reviewer por padrão. Escolha um papel de
    domínio do `framework/roles`; não crie um agente permanente. Executor e
    reviewer devem ser independentes.
-7. Rode:
+8. Para gates humanos, indique a fonte externa autenticada e separada do executor.
+   `approval.schema.json`, texto de modelo ou `actor: human` servem apenas para
+   auditoria local e nunca liberam merge.
+9. Rode:
    `python3 ${CLAUDE_PLUGIN_ROOT}/framework/validate.py --task tasks/$ARGUMENTS.yaml`
    e depois `--tasks-dir tasks` para detectar colisões.
-8. Mude para `READY_FOR_ARCH_REVIEW`, apresente o contrato e aguarde aprovação.
+10. Mude para `READY_FOR_ARCH_REVIEW`, apresente o contrato e aguarde aprovação.
    Após aprovação arquitetural, registre evidência e mude para `READY`.
 
 Não escreva código nesta etapa. Se a task exceder 10 arquivos ou misturar

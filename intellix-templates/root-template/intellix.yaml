@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "project": {"name": "replace-me", "profile": "saas", "owners": ["engineering"]},
+  "project": {"name": "replace-me", "profile": "saas", "governance_profile": "standard", "owners": ["engineering"]},
   "framework": {"version": "1.0.0", "source": "framework/framework.yaml", "lock": "intellix.lock.json"},
   "documents": {"prd": "docs/product/PRD.md", "architecture": "docs/architecture/ARCHITECTURE.md", "spec": "SPEC.md", "tasks": "tasks", "adrs": "docs/adr"},
   "repositories": [{"path": ".", "default_branch": "main"}],
-  "quality": {"commands": ["npm run lint", "npm test", "npm run build"], "coverage_target": 80},
+  "quality": {"commands": ["npm run lint", "npm test", "npm run build"], "coverage_target": 80, "ci": {"provider": "github", "repository": "owner/repository", "required_checks": ["project-ci"]}},
   "deployment": {"provider": "cloudflare", "production_environment": "production"},
   "execution": {"default_executor": "codex", "permitted_adapters": ["codex", "claude"], "allow_current_adapter_fallback": false},
   "runtime": {"records_path": ".intellix/runtime"}

@@ -17,9 +17,12 @@ existem. Se não, pare e solicite `/spec`.
 4. Ordene por dependências: contrato/dados, domínio, integrações, UI e release.
 5. Uma task deve caber em uma sessão e, normalmente, em até 10 arquivos. Divida
    apenas quando houver resultado independente; nunca para simular paralelismo.
-6. Detecte filesets provavelmente concorrentes e não proponha execução paralela.
-7. Rode `python3 ${CLAUDE_PLUGIN_ROOT}/framework/validate.py --tasks-dir tasks`.
-8. Apresente ordem, dependências, riscos e perguntas. Aguarde aprovação antes do
+6. Leia `project.governance_profile` e os mínimos correspondentes em
+   `framework/framework.yaml`. Gates preliminares nunca podem ficar abaixo da
+   união entre perfil e risco; perfil `micro` não dispensa fileset explícito.
+7. Detecte filesets provavelmente concorrentes e não proponha execução paralela.
+8. Rode `python3 ${CLAUDE_PLUGIN_ROOT}/framework/validate.py --tasks-dir tasks`.
+9. Apresente ordem, dependências, riscos e perguntas. Aguarde aprovação antes do
    planejamento detalhado.
 
 `issues/*.md` é legado: não crie novas issues salvo solicitação explícita para
