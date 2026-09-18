@@ -1,14 +1,33 @@
 {
   "id": "TASK-004",
   "title": "Enforce worktree ownership and independent adapter handoffs",
-  "status": "DRAFT",
+  "status": "READY",
   "objective": "Isolate medium-or-higher risk work and exchange bounded implementation and review evidence between adapters.",
-  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/architecture/ROLE-EXECUTOR-MATRIX.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
+  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/implementation/INTELLIX-CODEX-MASTER-IMPLEMENTATION-MANUAL.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
   "risk": {"level": "high", "reasons": ["Manages Git isolation and cross-adapter evidence"], "irreversible_actions": []},
   "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
   "scope": {
-    "create": ["framework/worktrees.py", "framework/adapters.py", "framework/tests/test_worktrees.py", "framework/tests/test_adapters.py"],
-    "modify": ["framework/dispatch.py", "framework/runtime.py", "framework/schemas/handoff.schema.json", "tasks/TASK-004.yaml"],
+    "create": [
+      "framework/worktrees.py",
+      "framework/adapters.py",
+      "framework/tests/test_worktrees.py",
+      "framework/tests/test_adapters.py",
+      "framework/schemas/reservation.schema.json",
+      "framework/schemas/checkpoint.schema.json"
+    ],
+    "modify": [
+      "framework/dispatch.py",
+      "framework/runtime.py",
+      "framework/framework.yaml",
+      "framework/policies/git.yaml",
+      "framework/schemas/handoff.schema.json",
+      "framework/templates/HANDOFF.yaml",
+      "framework/tests/test_dispatch.py",
+      "framework/tests/test_distribution.py",
+      "commands/execute.md",
+      "intellix.lock.json",
+      "tasks/TASK-004.yaml"
+    ],
     "forbidden": [".env*", "**/.env*", ".github/**", "issues/**", "infra/production/**"]
   },
   "dependencies": ["TASK-003"],
@@ -20,11 +39,25 @@
   ],
   "verification": [
     {"command": "python3 framework/validate.py --root . --all", "proves": "Handoff and task contracts remain valid"},
+    {"command": "python3 framework/sync.py --source-root . --target-root . --check", "proves": "Worktree and adapter control-plane files are pinned without drift"},
     {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Dirty state, collisions, handoff and independence are covered"},
-    {"command": "python3 -m compileall -q framework", "proves": "Worktree and adapter modules compile"}
+    {"command": "python3 -m compileall -q framework", "proves": "Worktree and adapter modules compile"},
+    {"command": "git diff --check", "proves": "The scoped patch has no whitespace errors"}
   ],
   "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
   "rollback": "Revert the scoped commit without deleting dirty worktrees; preserve evidence and return ownership manually.",
-  "notes": ["Low-risk worktree exceptions remain project policy; fileset ownership never becomes optional.", "No adapter may merge, deploy or mutate permissions."],
+  "notes": [
+    "Low-risk worktree exceptions remain project policy; fileset ownership never becomes optional.",
+    "No adapter may merge, deploy or mutate permissions.",
+    "Human architecture decision: ADR-0002 remains Proposed, while its same-branch worktree procedure is specifically authorized for this task.",
+    "Human architecture decision: reservations use reserving, reserved and released states under runtime.records_path/reservations; reserving and reserved are active ownership and stale or inconsistent records block fail-closed.",
+    "Human architecture decision: worktree automation never uses force, reset, clean or removal of dirty worktrees; partial setup is preserved for manual reconciliation.",
+    "Human architecture decision: reviewers receive contract, digest, commit, exact diff and evidence without a writable worktree or fileset ownership.",
+    "Human architecture decision: executor/reviewer independence is checked at dispatch and handoff recording but remains local advisory identity, not authentication.",
+    "Human architecture decision: checkpoints are structured durable artifacts under runtime.records_path/checkpoints and must include state, last command/result, stop point, risks, active plan, ordered next actions, branch, worktree, commit, recovery command and timestamp.",
+    "Scope cohesion: the 17 files form one atomic ownership and handoff control; splitting reservation, worktree and transfer would create an unsafe partial boundary.",
+    "TASK-005 exclusively owns portable CI, exact-revision external verification, profiles, pilot and authenticated external approval integration.",
+    "Checkpoint active plan: commit this READY contract, create a dedicated same-branch TASK-004 worktree, set IN_PROGRESS, implement schemas/policy first, then reservation/worktree safety, bounded adapters/handoffs, dispatcher integration, tests, independent review and CI."
+  ],
   "handoff": {"required_evidence": ["dirty-worktree safety tests", "glob collision tests", "read-only reviewer handoff", "independent review"], "open_questions": []}
 }
