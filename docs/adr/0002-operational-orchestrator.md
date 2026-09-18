@@ -1,9 +1,10 @@
 # ADR-0002: Operational dynamic Task Contract orchestrator
 
-Status: Proposed — human decision required
+Status: Accepted
 Date: 2026-09-17
-Related: ADR-0001; the five target architecture artifacts; TASK-001 through TASK-005
-Authority: framework/framework.yaml (this proposal does not override it)
+Accepted: 2026-09-18, by explicit human decision
+Related: ADR-0001; the five target architecture artifacts; TASK-001 through TASK-006
+Authority: framework/framework.yaml (this ADR does not override it)
 
 ## Context
 
@@ -16,7 +17,7 @@ Independent read-only Claude architecture review confirmed this trust gap and
 requested explicit authority and transition boundaries before orchestration.
 The review also accepted linked-worktree isolation on the same authorized branch.
 
-## Proposed decision
+## Decision
 
 Implement a deterministic Python control plane under framework/, not an autonomous
 agent persona and not a second methodology. It reads the canonical kernel,
@@ -52,24 +53,28 @@ CI must be queried from GitHub for the exact repository/revision and required jo
 Missing, stale, failed or indeterminate checks block progression. Waivers cannot
 turn failed mandatory CI into success or substitute for independent/human approval.
 
-### Human decision required: trusted approval channel
+### Trusted approval channel
 
-Recommended MVP: a trusted human operator controls approval through a separate
-explicit action; the runtime records that action and its scope. Codex/Claude
-execution cannot grant human gates through their output. Claude review output is
-recorded separately; the trusted operator accepts its provenance when necessary.
-This is policy-level separation on a developer machine, not tamper-proof isolation.
-GitHub CI remains externally verified.
+Accepted MVP boundary: an explicit human action in the controlling session may
+approve technical Task Contract completion, and the runtime records that action
+and its scope. This is local advisory/audit evidence, not authenticated identity
+assurance. Codex or Claude output cannot grant a human gate, and Claude review is
+recorded separately. GitHub CI remains externally verified against the exact
+repository and revision.
 
-Stronger alternative: protected GitHub PR reviews by an allowlisted human identity
-or a separate authenticated approval service. The executor must lack the approver
-credential. This requires account/permission provisioning outside current scope.
+Merge requires a protected GitHub PR review by an allowlisted human identity or a
+separate authenticated approval service. The executor must not possess the
+approver credential. Production, secrets, permissions and destructive operations
+require a provider/IAM approval channel separated from the executor credential.
+Provisioning those identities and permissions remains outside this ADR's execution
+scope and requires a separately authorized Task Contract.
 
 The repository currently contains organization labels, not authenticated approver
 IDs, and the agent has access to the user's GitHub credential. A review under that
 same credential cannot be claimed to prove that a human, rather than the agent,
-acted. Decide which assurance model is required and designate the approval source.
-No CLI --actor human flag, local JSON edit or model opinion resolves this boundary.
+acted. Until a separately credentialed channel is provisioned, merge and production
+remain blocked. No CLI `--actor human` flag, local JSON edit, controlling-session
+approval or model opinion resolves that identity boundary.
 
 ## Same-branch worktree procedure
 
@@ -98,8 +103,10 @@ implicit production authorization; mandatory human clicks for every safe step.
 
 ## Consequences and rollback
 
-A useful operational MVP is feasible with an explicitly accepted local trust
-boundary. Strong isolation needs infrastructure and separate identities.
+A useful operational MVP is authorized with the accepted local trust boundary.
+Strong identity isolation still needs infrastructure and separate credentials.
 Keep the kernel dependency-free, record failures, and test negative paths.
 Revert scoped feature-branch commits to roll back; retain evidence.
-No authority, schema or lifecycle changes are approved by this Proposed ADR.
+This ADR accepts the operational control-plane architecture and trust boundaries;
+it does not authorize merge, release, deploy, branch-protection changes, credential
+provisioning or production access. Those actions remain independently gated.

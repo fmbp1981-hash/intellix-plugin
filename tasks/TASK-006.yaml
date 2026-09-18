@@ -1,66 +1,113 @@
 {
-  "id": "TASK-006",
-  "title": "Record human acceptance of the operational orchestrator ADR",
-  "status": "READY",
-  "objective": "Record the human architectural decision for ADR-0002 without granting merge, production or credential authority.",
-  "source": {
-    "prd": "README.md",
-    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
-    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": ["docs/adr/0001-vendor-neutral-multiagent-kernel.md", "docs/adr/0002-operational-orchestrator.md"]
-  },
-  "risk": {
-    "level": "medium",
-    "reasons": ["Changes an architectural decision from Proposed to Accepted", "Defines the trust boundary for future task, merge and production approvals"],
-    "irreversible_actions": []
-  },
-  "ownership": {
-    "architect": "human",
-    "executor": "codex",
-    "reviewer": "claude-independent",
-    "domain_role": "architect"
-  },
-  "scope": {
-    "create": ["tasks/TASK-006.yaml"],
-    "modify": ["docs/adr/0002-operational-orchestrator.md"],
-    "forbidden": [".env*", "**/.env*", "issues/**", ".github/**", "framework/**", "infra/production/**", "global-config/**"]
-  },
-  "dependencies": ["TASK-005"],
   "acceptance_criteria": [
     {
-      "id": "AC-001",
       "given": "the human explicitly accepted ADR-0002 on 2026-09-18",
-      "when": "the ADR is inspected",
-      "then": "its status is Accepted and the accepted decision no longer presents the trust model as unresolved"
+      "id": "AC-001",
+      "then": "its status is Accepted and the accepted decision no longer presents the trust model as unresolved",
+      "when": "the ADR is inspected"
     },
     {
-      "id": "AC-002",
       "given": "the accepted local MVP trust boundary",
-      "when": "task completion, merge or production approval is evaluated",
-      "then": "local records remain audit evidence only and authenticated merge or production approval still requires a separately credentialed external identity"
+      "id": "AC-002",
+      "then": "local records remain audit evidence only and authenticated merge or production approval still requires a separately credentialed external identity",
+      "when": "task completion, merge or production approval is evaluated"
     },
     {
-      "id": "AC-003",
       "given": "the ADR acceptance change",
-      "when": "the fileset is reviewed",
-      "then": "no code, workflow, permission, credential, merge, release or deployment surface is changed"
+      "id": "AC-003",
+      "then": "no code, workflow, permission, credential, merge, release or deployment surface is changed",
+      "when": "the fileset is reviewed"
     }
   ],
-  "verification": [
-    {"command": "python3 framework/validate.py --root . --all", "proves": "All normative artifacts and Task Contracts remain valid"},
-    {"command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v", "proves": "The accepted wording introduces no framework regression"},
-    {"command": "bash hooks/scripts/validate-hooks.sh .", "proves": "Claude adapter hooks remain valid"},
-    {"command": "git diff --check", "proves": "The decision record has no whitespace defects"}
+  "dependencies": [
+    "TASK-005"
   ],
-  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
-  "rollback": "Revert the focused TASK-006 commits to restore ADR-0002 to Proposed while retaining the human decision in conversation history; do not alter external permissions.",
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "handoff": {
+    "open_questions": [],
+    "required_evidence": [
+      "ADR status and decision diff",
+      "validated two-file inventory",
+      "independent fidelity review",
+      "exact-SHA CI"
+    ]
+  },
+  "id": "TASK-006",
   "notes": [
     "The controlling human explicitly accepted ADR-0002 on 2026-09-18.",
     "Acceptance authorizes the architectural operating model, not merge, deploy, release, credential provisioning, branch protection or production actions.",
     "The local human gate can close technical Task Contracts but cannot claim separately credentialed merge or production identity assurance."
   ],
-  "handoff": {
-    "required_evidence": ["ADR status and decision diff", "validated two-file inventory", "independent fidelity review", "exact-SHA CI"],
-    "open_questions": []
-  }
+  "objective": "Record the human architectural decision for ADR-0002 without granting merge, production or credential authority.",
+  "ownership": {
+    "architect": "human",
+    "domain_role": "architect",
+    "executor": "codex",
+    "reviewer": "claude-independent"
+  },
+  "risk": {
+    "irreversible_actions": [],
+    "level": "medium",
+    "reasons": [
+      "Changes an architectural decision from Proposed to Accepted",
+      "Defines the trust boundary for future task, merge and production approvals"
+    ]
+  },
+  "rollback": "Revert the focused TASK-006 commits to restore ADR-0002 to Proposed while retaining the human decision in conversation history; do not alter external permissions.",
+  "scope": {
+    "create": [
+      "tasks/TASK-006.yaml"
+    ],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      "issues/**",
+      ".github/**",
+      "framework/**",
+      "infra/production/**",
+      "global-config/**"
+    ],
+    "modify": [
+      "docs/adr/0002-operational-orchestrator.md"
+    ]
+  },
+  "source": {
+    "adrs": [
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md"
+    ],
+    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
+    "prd": "README.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md"
+  },
+  "status": "IN_PROGRESS",
+  "title": "Record human acceptance of the operational orchestrator ADR",
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "All normative artifacts and Task Contracts remain valid"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "The accepted wording introduces no framework regression"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Claude adapter hooks remain valid"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The decision record has no whitespace defects"
+    }
+  ]
 }
