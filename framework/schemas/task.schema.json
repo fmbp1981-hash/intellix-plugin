@@ -17,7 +17,7 @@
       "properties": {"level": {"type": "string", "enum": ["low", "medium", "high", "critical"]}, "reasons": {"type": "array", "items": {"type": "string"}}, "irreversible_actions": {"type": "array", "items": {"type": "string"}}}
     },
     "ownership": {
-      "type": "object", "required": ["architect", "executor", "reviewer"], "additionalProperties": false,
+      "type": "object", "required": ["architect", "reviewer"], "additionalProperties": false,
       "properties": {"architect": {"type": "string"}, "executor": {"type": "string"}, "reviewer": {"type": "string"}, "domain_role": {"type": "string"}}
     },
     "scope": {

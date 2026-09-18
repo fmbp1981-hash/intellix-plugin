@@ -26,6 +26,11 @@ class FrameworkValidationTests(unittest.TestCase):
         shutil.copy2(validate.FRAMEWORK / "framework.yaml", framework / "framework.yaml")
         for directory in ("policies", "roles", "schemas"):
             shutil.copytree(validate.FRAMEWORK / directory, framework / directory)
+        source_context = validate.build_context(validate.CODE_ROOT)
+        for source in validate.control_plane_manifest(source_context):
+            destination = project / source.relative_to(validate.CODE_ROOT)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
         context = validate.build_context(project)
         (project / "intellix.lock.json").write_text(
             json.dumps(validate.build_lock_document(context), indent=2, sort_keys=True) + "\n",
@@ -182,6 +187,24 @@ class FrameworkValidationTests(unittest.TestCase):
             errors = validate.validate_project(context=context)
             self.assertTrue(any("does not match kernel framework_version" in error for error in errors))
 
+    def test_default_executor_must_be_permitted(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = self.external_project(Path(temporary))
+            manifest = validate.load(project / "intellix.yaml")
+            manifest["execution"]["default_executor"] = "unlisted"
+            self.write_json(project / "intellix.yaml", manifest)
+            errors = validate.validate_project(context=validate.build_context(project))
+            self.assertTrue(any("is not permitted" in error for error in errors))
+
+    def test_runtime_records_path_traversal_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = self.external_project(Path(temporary))
+            manifest = validate.load(project / "intellix.yaml")
+            manifest["runtime"]["records_path"] = "../runtime"
+            self.write_json(project / "intellix.yaml", manifest)
+            errors = validate.validate_project(context=validate.build_context(project))
+            self.assertTrue(any("path traversal is forbidden" in error for error in errors))
+
     def test_kernel_contains_no_vendor_adapter_or_plugin_version_facts(self):
         context = validate.build_context(validate.CODE_ROOT)
         self.assertNotIn("plugin_version", context.framework)
@@ -211,6 +234,19 @@ class FrameworkValidationTests(unittest.TestCase):
             self.write_json(task_path, task)
             _, errors = validate.validate_task(task_path, context)
             self.assertTrue(any("independent" in error for error in errors))
+
+    def test_missing_executor_requires_project_resolution_policy(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project, context, task_path, task = self.context_and_task(Path(temporary))
+            task["ownership"].pop("executor")
+            manifest = validate.load(project / "intellix.yaml")
+            manifest["execution"]["default_executor"] = None
+            manifest["execution"]["allow_current_adapter_fallback"] = False
+            self.write_json(project / "intellix.yaml", manifest)
+            context = validate.build_context(project)
+            self.write_json(task_path, task)
+            _, errors = validate.validate_task(task_path, context)
+            self.assertTrue(any("requires a project default" in error for error in errors))
 
     def test_high_risk_requires_gates_and_rollback(self):
         with tempfile.TemporaryDirectory() as temporary:

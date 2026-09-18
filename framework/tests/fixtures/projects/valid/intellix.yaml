@@ -5,5 +5,7 @@
   "documents": {"prd": "README.md", "architecture": "docs/architecture/ARCHITECTURE.md", "spec": "SPEC.md", "tasks": "tasks", "adrs": "docs/adr"},
   "repositories": [{"path": ".", "default_branch": "main"}],
   "quality": {"commands": ["python3 framework/validate.py --root . --all"]},
-  "deployment": {"provider": "example", "production_environment": "production"}
+  "deployment": {"provider": "example", "production_environment": "production"},
+  "execution": {"default_executor": "codex", "permitted_adapters": ["codex", "claude"], "allow_current_adapter_fallback": true},
+  "runtime": {"records_path": ".intellix/runtime"}
 }

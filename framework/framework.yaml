@@ -28,7 +28,27 @@
     "lock": "framework/schemas/lock.schema.json",
     "approval": "framework/schemas/approval.schema.json",
     "waiver": "framework/schemas/waiver.schema.json",
-    "handoff": "framework/schemas/handoff.schema.json"
+    "handoff": "framework/schemas/handoff.schema.json",
+    "runtime": "framework/schemas/runtime.schema.json"
+  },
+  "control_plane": {
+    "version": "1.0.0",
+    "files": [
+      "framework/validate.py",
+      "framework/sync.py",
+      "framework/runtime.py",
+      "framework/dispatch.py"
+    ]
+  },
+  "runtime": {
+    "transitions": {
+      "READY": ["IN_PROGRESS", "BLOCKED"],
+      "IN_PROGRESS": ["IN_REVIEW", "BLOCKED"],
+      "IN_REVIEW": ["IN_PROGRESS", "BLOCKED"],
+      "CHANGES_REQUESTED": ["IN_PROGRESS", "BLOCKED"],
+      "DRAFT": ["BLOCKED"],
+      "READY_FOR_ARCH_REVIEW": ["BLOCKED"]
+    }
   },
   "defaults": {
     "branch_strategy": "trunk_based_short_lived",

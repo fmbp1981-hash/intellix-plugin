@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["schema_version", "project", "framework", "documents", "repositories", "quality", "deployment"],
+  "required": ["schema_version", "project", "framework", "documents", "repositories", "quality", "deployment", "execution", "runtime"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {"type": "string"},
@@ -10,6 +10,22 @@
     "documents": {"type": "object", "required": ["prd", "architecture", "spec", "tasks", "adrs"], "additionalProperties": false, "properties": {"prd": {"type": "string"}, "architecture": {"type": "string"}, "spec": {"type": "string"}, "tasks": {"type": "string"}, "adrs": {"type": "string"}}},
     "repositories": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["path", "default_branch"], "additionalProperties": false, "properties": {"path": {"type": "string"}, "default_branch": {"type": "string"}}}},
     "quality": {"type": "object", "required": ["commands"], "additionalProperties": false, "properties": {"commands": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "coverage_target": {"type": "number", "minimum": 0, "maximum": 100}}},
-    "deployment": {"type": "object", "required": ["provider", "production_environment"], "additionalProperties": false, "properties": {"provider": {"type": "string"}, "production_environment": {"type": "string"}}}
+    "deployment": {"type": "object", "required": ["provider", "production_environment"], "additionalProperties": false, "properties": {"provider": {"type": "string"}, "production_environment": {"type": "string"}}},
+    "execution": {
+      "type": "object",
+      "required": ["default_executor", "permitted_adapters", "allow_current_adapter_fallback"],
+      "additionalProperties": false,
+      "properties": {
+        "default_executor": {"type": ["string", "null"], "pattern": "^[a-z][a-z0-9-]*$"},
+        "permitted_adapters": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}},
+        "allow_current_adapter_fallback": {"type": "boolean"}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["records_path"],
+      "additionalProperties": false,
+      "properties": {"records_path": {"type": "string", "minLength": 1}}
+    }
   }
 }

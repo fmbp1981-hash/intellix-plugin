@@ -5,5 +5,7 @@
   "documents": {"prd": "docs/product/PRD.md", "architecture": "docs/architecture/ARCHITECTURE.md", "spec": "SPEC.md", "tasks": "tasks", "adrs": "docs/adr"},
   "repositories": [{"path": ".", "default_branch": "main"}],
   "quality": {"commands": ["npm run lint", "npm test", "npm run build"], "coverage_target": 80},
-  "deployment": {"provider": "cloudflare", "production_environment": "production"}
+  "deployment": {"provider": "cloudflare", "production_environment": "production"},
+  "execution": {"default_executor": "codex", "permitted_adapters": ["codex", "claude"], "allow_current_adapter_fallback": false},
+  "runtime": {"records_path": ".intellix/runtime"}
 }

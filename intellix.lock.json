@@ -1,6 +1,16 @@
 {
+  "control_plane": {
+    "digest": "sha256:02514e092e07c0d7d8992d5508b91c71e36ccb888582da358f3c96fa0c42a969",
+    "files": [
+      "framework/dispatch.py",
+      "framework/runtime.py",
+      "framework/sync.py",
+      "framework/validate.py"
+    ],
+    "version": "1.0.0"
+  },
   "kernel": {
-    "digest": "sha256:0ab8b5cd89ddd333d0e01bad7f0944da8dd2495d174c16b7b1a2830f8a20950b",
+    "digest": "sha256:2e0c9850f2bf8d2f824a8d8f0784b119062bfa5d5eea07cc1afe51d1a88edcac",
     "files": [
       "framework/framework.yaml",
       "framework/policies/deployment.yaml",
@@ -24,6 +34,7 @@
       "framework/schemas/lock.schema.json",
       "framework/schemas/project.schema.json",
       "framework/schemas/role.schema.json",
+      "framework/schemas/runtime.schema.json",
       "framework/schemas/task.schema.json",
       "framework/schemas/waiver.schema.json"
     ],

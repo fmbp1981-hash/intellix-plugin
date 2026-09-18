@@ -1,7 +1,7 @@
 {
   "id": "TASK-003",
   "title": "Implement thin dispatcher and minimal lifecycle",
-  "status": "READY",
+  "status": "IN_REVIEW",
   "objective": "Route a READY Task Contract to an available permitted adapter while enforcing minimal deterministic transitions.",
   "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/architecture/TASK-CONTRACT-V1.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
   "risk": {"level": "high", "reasons": ["Controls task progression and adapter selection"], "irreversible_actions": []},
@@ -56,7 +56,11 @@
     "Human architecture decision: APPROVED, merge, release and deploy are never automated by this task; ADR-0002 remains Proposed.",
     "Human architecture decision: durable records live under the project-declared .intellix/runtime path; project bindings declare default and permitted adapters plus explicit current-adapter fallback policy.",
     "Human architecture decision: installed adapter capability is detected at runtime and underscore gate IDs in the kernel are canonical for this task; role gate-name drift remains a later gap.",
-    "Human architecture decision: distributed control-plane files are pinned so consumer drift is detectable."
+    "Human architecture decision: distributed control-plane files are pinned so consumer drift is detectable.",
+    "Implementation evidence: validate --root . --all and sync --check passed; 52 unit tests passed; compileall, hook validation and git diff --check passed.",
+    "Negative evidence: unavailable adapter, Claude self-review, unresolved dependency, fileset collision, missing gate, illegal transition, runtime path traversal, contract drift and control-plane tampering are rejected.",
+    "Independent review: Claude APPROVE with no blocking or high findings; Claude fallback requires a reviewer identity distinguishable from Claude.",
+    "Residual risk: interrupted two-file transition writes fail closed and require manual reconciliation; concurrent dispatch locking is deferred to later ownership automation; terminal states are outside this dispatcher boundary."
   ],
   "handoff": {"required_evidence": ["adapter resolution matrix tests", "Claude-only compatibility test", "transition log tests", "independent review"], "open_questions": []}
 }

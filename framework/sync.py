@@ -41,17 +41,18 @@ def load_target_manifest(target_root: Path) -> dict:
 
 
 def managed_files(source: validate.ValidationContext) -> list[Path]:
-    files = validate.kernel_manifest(source)
-    validator = validate.resolve_contract_path(
-        source.root, "framework/validate.py", "validator runtime", expect="file"
-    )
+    files = validate.kernel_manifest(source) + validate.control_plane_manifest(source)
     return sorted(
-        {*files, validator},
+        set(files),
         key=lambda path: path.relative_to(source.root).as_posix(),
     )
 
 
 def install_snapshot(source_root: Path, target_root: Path) -> Path:
+    source_root = validate.resolve_root(source_root)
+    target_root = target_root.resolve(strict=True)
+    if not target_root.is_dir():
+        raise validate.ValidationError(f"target root is not a directory: {target_root}")
     source = validate.build_context(source_root)
     target_manifest = load_target_manifest(target_root)
     source_relative = source.framework_path.relative_to(source.root).as_posix()

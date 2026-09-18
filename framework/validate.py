@@ -292,8 +292,42 @@ def kernel_digest(context: ValidationContext) -> tuple[str, list[str]]:
     return f"sha256:{digest.hexdigest()}", relative_paths
 
 
+def control_plane_manifest(context: ValidationContext) -> list[Path]:
+    """Return versioned operational files distributed with the kernel."""
+    configured = context.framework.get("control_plane", {}).get("files", [])
+    if not isinstance(configured, list) or not configured:
+        raise ValidationError("framework.control_plane.files must be a non-empty array")
+    paths: set[Path] = set()
+    for index, relative in enumerate(configured):
+        paths.add(resolve_contract_path(
+            context.root,
+            relative,
+            f"framework.control_plane.files[{index}]",
+            expect="file",
+        ))
+    return sorted(paths, key=lambda path: path.relative_to(context.root).as_posix())
+
+
+def manifest_digest(root: Path, paths: list[Path]) -> tuple[str, list[str]]:
+    digest = hashlib.sha256()
+    relative_paths: list[str] = []
+    for path in paths:
+        relative = path.relative_to(root).as_posix()
+        relative_bytes = relative.encode("utf-8")
+        content = path.read_bytes()
+        digest.update(len(relative_bytes).to_bytes(8, "big"))
+        digest.update(relative_bytes)
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
+        relative_paths.append(relative)
+    return f"sha256:{digest.hexdigest()}", relative_paths
+
+
 def build_lock_document(context: ValidationContext) -> dict[str, Any]:
     digest, files = kernel_digest(context)
+    control_digest, control_files = manifest_digest(
+        context.root, control_plane_manifest(context)
+    )
     return {
         "schema_version": "1.0.0",
         "kernel": {
@@ -301,6 +335,11 @@ def build_lock_document(context: ValidationContext) -> dict[str, Any]:
             "source": context.framework_path.relative_to(context.root).as_posix(),
             "digest": digest,
             "files": files,
+        },
+        "control_plane": {
+            "version": context.framework.get("control_plane", {}).get("version"),
+            "digest": control_digest,
+            "files": control_files,
         },
         "sync_direction": "repository_to_installation",
     }
@@ -328,6 +367,14 @@ def validate_lock(context: ValidationContext) -> list[str]:
                 errors.append(
                     f"{lock_path}: kernel.{key} drift; expected "
                     f"{expected_kernel[key]!r}, got {actual_kernel.get(key)!r}"
+                )
+        actual_control = lock.get("control_plane", {})
+        expected_control = expected["control_plane"]
+        for key in ("version", "digest", "files"):
+            if actual_control.get(key) != expected_control[key]:
+                errors.append(
+                    f"{lock_path}: control_plane.{key} drift; expected "
+                    f"{expected_control[key]!r}, got {actual_control.get(key)!r}"
                 )
         if lock.get("sync_direction") != expected["sync_direction"]:
             errors.append(
@@ -430,6 +477,14 @@ def semantic_task_errors(
     domain_role = ownership.get("domain_role")
     if domain_role and domain_role not in role_ids:
         errors.append(f"{prefix}: unknown domain role {domain_role!r}")
+    if not ownership.get("executor"):
+        execution = context.project.get("execution", {})
+        if not execution.get("default_executor") and not execution.get(
+            "allow_current_adapter_fallback"
+        ):
+            errors.append(
+                f"{prefix}: task without executor requires a project default or explicit fallback policy"
+            )
 
     risk = task.get("risk", {}).get("level")
     required = set(context.framework.get("risk_gates", {}).get(risk, []))
@@ -467,6 +522,29 @@ def validate_framework(context: ValidationContext | None = None) -> list[str]:
             except ValidationError as exc:
                 errors.append(str(exc))
     try:
+        control_plane_manifest(context)
+    except ValidationError as exc:
+        errors.append(str(exc))
+    control_version = canonical.get("control_plane", {}).get("version")
+    if not isinstance(control_version, str) or not control_version:
+        errors.append(f"{context.framework_path}: control_plane.version is required")
+    transitions = canonical.get("runtime", {}).get("transitions", {})
+    lifecycle = set(canonical.get("task_lifecycle", []))
+    if not isinstance(transitions, dict):
+        errors.append(f"{context.framework_path}: runtime.transitions must be an object")
+        transitions = {}
+    for source, targets in transitions.items():
+        if source not in lifecycle:
+            errors.append(f"{context.framework_path}: unknown transition source {source!r}")
+        if not isinstance(targets, list):
+            errors.append(
+                f"{context.framework_path}: transition targets for {source!r} must be an array"
+            )
+            continue
+        for target in targets:
+            if target not in lifecycle:
+                errors.append(f"{context.framework_path}: unknown transition target {target!r}")
+    try:
         _, role_errors = registered_roles(context)
         errors.extend(role_errors)
     except ValidationError as exc:
@@ -502,6 +580,24 @@ def validate_project(
         errors.append(str(exc))
 
     errors.extend(validate_lock(context))
+
+    execution = project.get("execution", {})
+    permitted = execution.get("permitted_adapters", [])
+    default = execution.get("default_executor")
+    if default is not None and default not in permitted:
+        errors.append(
+            f"{path}: execution.default_executor {default!r} is not permitted"
+        )
+    runtime_path = project.get("runtime", {}).get("records_path")
+    try:
+        resolve_contract_path(
+            context.root,
+            runtime_path,
+            f"{path}: runtime.records_path",
+            must_exist=False,
+        )
+    except ValidationError as exc:
+        errors.append(str(exc))
 
     for name, relative in project.get("documents", {}).items():
         expect = "directory" if name in {"tasks", "adrs"} else "file"

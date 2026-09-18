@@ -5,5 +5,7 @@
   "documents": {"prd": "README.md", "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md", "spec": "docs/architecture/FRAMEWORK-SPEC.md", "tasks": "tasks", "adrs": "docs/adr"},
   "repositories": [{"path": ".", "default_branch": "main"}],
   "quality": {"commands": ["python3 framework/validate.py --all", "python3 -m unittest discover -s framework/tests -v"]},
-  "deployment": {"provider": "github-release", "production_environment": "plugin-marketplace"}
+  "deployment": {"provider": "github-release", "production_environment": "plugin-marketplace"},
+  "execution": {"default_executor": "codex", "permitted_adapters": ["codex", "claude"], "allow_current_adapter_fallback": true},
+  "runtime": {"records_path": ".intellix/runtime"}
 }

@@ -57,6 +57,10 @@ class FrameworkDistributionTests(unittest.TestCase):
             self.assertRegex(lock["kernel"]["digest"], r"^sha256:[0-9a-f]{64}$")
             self.assertEqual(lock["kernel"]["version"], "1.0.0")
             self.assertIn("framework/framework.yaml", lock["kernel"]["files"])
+            self.assertIn("framework/dispatch.py", lock["control_plane"]["files"])
+            self.assertIn("framework/runtime.py", lock["control_plane"]["files"])
+            self.assertTrue((target / "framework/dispatch.py").is_file())
+            self.assertTrue((target / "framework/runtime.py").is_file())
             validation = self.validate_consumer(target)
             self.assertEqual(
                 validation.returncode, 0, validation.stderr + validation.stdout
@@ -81,6 +85,18 @@ class FrameworkDistributionTests(unittest.TestCase):
             result = self.validate_consumer(target)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("kernel.digest drift", result.stdout)
+
+    def test_tampered_control_plane_blocks_validation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            target = self.consumer(Path(temporary))
+            self.assertEqual(self.sync_consumer(target).returncode, 0)
+            dispatcher = target / "framework/dispatch.py"
+            dispatcher.write_text(
+                dispatcher.read_text(encoding="utf-8") + "\n", encoding="utf-8"
+            )
+            result = self.validate_consumer(target)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("control_plane.digest drift", result.stdout)
 
     def test_stale_lock_version_blocks_validation(self):
         with tempfile.TemporaryDirectory() as temporary:
