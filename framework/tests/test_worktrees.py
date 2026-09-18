@@ -75,6 +75,8 @@ class WorktreeTests(unittest.TestCase):
                 worktrees.git(context.root, "reset", "--hard")
             with self.assertRaisesRegex(validate.ValidationError, "forbidden"):
                 worktrees.git(context.root, "worktree", "remove", "--force", "x")
+            with self.assertRaisesRegex(validate.ValidationError, "forbidden"):
+                worktrees.git(context.root, "worktree", "remove", "-f", "x")
 
 
 if __name__ == "__main__": unittest.main()

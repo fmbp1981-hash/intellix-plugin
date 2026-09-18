@@ -17,6 +17,9 @@ Task alvo: $ARGUMENTS
 3. O dispatcher cria worktree dedicado e reserva durável do fileset para risco
    médio/alto/crítico. Nunca force, limpe ou remova worktree suja. Estados parciais
    `reserving` exigem reconciliação manual antes de nova execução.
+   Depois da reserva, todas as transições e correções usam `--root` apontando para
+   o worktree reservado; a raiz original responde com o caminho correto e não
+   altera sua cópia obsoleta do contrato.
 4. Leia o papel em `framework/roles`. Implemente o comportamento completo, não um
    arquivo por agente. Não altere nada fora de `scope.create`/`scope.modify`.
 5. Se `ownership.executor` for `codex`, gere um handoff de execução contendo o

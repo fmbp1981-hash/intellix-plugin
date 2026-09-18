@@ -16,7 +16,7 @@ ACTIVE_STATES = {"reserving", "reserved"}
 
 
 def git(root: Path, *arguments: str) -> str:
-    forbidden = {"--force", "reset", "clean"}
+    forbidden = {"--force", "-f", "reset", "clean"}
     if forbidden.intersection(arguments):
         raise validate.ValidationError("destructive Git operation is forbidden")
     result = subprocess.run(
@@ -49,6 +49,15 @@ def active_reservations(context: validate.ValidationContext) -> list[dict[str, A
         if value.get("state") in ACTIVE_STATES:
             records.append(value)
     return records
+
+
+def active_reservation(
+    context: validate.ValidationContext, task_id: str
+) -> dict[str, Any] | None:
+    return next(
+        (record for record in active_reservations(context) if record.get("task_id") == task_id),
+        None,
+    )
 
 
 def reserve(

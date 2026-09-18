@@ -166,6 +166,14 @@ class DispatchTests(unittest.TestCase):
                 "IN_PROGRESS",
             )
             self.assertEqual(validate.load(task_path)["status"], "READY")
+            with self.assertRaisesRegex(dispatch.DispatchBlocked, "rerun with --root"):
+                dispatch.dispatch(
+                    project,
+                    task_path,
+                    available={"codex"},
+                    target_state="IN_PROGRESS",
+                )
+            self.assertEqual(validate.load(task_path)["status"], "READY")
 
 
 if __name__ == "__main__":

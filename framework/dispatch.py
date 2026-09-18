@@ -95,6 +95,12 @@ def dispatch(
     task = validate.load(task_path)
     if not isinstance(task, dict):
         raise DispatchBlocked("task must be an object")
+    existing_reservation = worktrees.active_reservation(context, task.get("id", ""))
+    if existing_reservation:
+        raise DispatchBlocked(
+            f"task {task.get('id')} is reserved; rerun with --root "
+            f"{existing_reservation.get('worktree_path')}"
+        )
 
     project_errors = validate.validate_project(context=context)
     tasks_directory = validate.resolve_contract_path(
