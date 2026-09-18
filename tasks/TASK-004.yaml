@@ -1,7 +1,7 @@
 {
   "id": "TASK-004",
   "title": "Enforce worktree ownership and independent adapter handoffs",
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "objective": "Isolate medium-or-higher risk work and exchange bounded implementation and review evidence between adapters.",
   "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/implementation/INTELLIX-CODEX-MASTER-IMPLEMENTATION-MANUAL.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
   "risk": {"level": "high", "reasons": ["Manages Git isolation and cross-adapter evidence"], "irreversible_actions": []},
@@ -57,7 +57,13 @@
     "Human architecture decision: checkpoints are structured durable artifacts under runtime.records_path/checkpoints and must include state, last command/result, stop point, risks, active plan, ordered next actions, branch, worktree, commit, recovery command and timestamp.",
     "Scope cohesion: the 17 files form one atomic ownership and handoff control; splitting reservation, worktree and transfer would create an unsafe partial boundary.",
     "TASK-005 exclusively owns portable CI, exact-revision external verification, profiles, pilot and authenticated external approval integration.",
-    "Checkpoint active plan: commit this READY contract, create a dedicated same-branch TASK-004 worktree, set IN_PROGRESS, implement schemas/policy first, then reservation/worktree safety, bounded adapters/handoffs, dispatcher integration, tests, independent review and CI."
+    "Checkpoint active plan: implement schemas/policy first, then reservation/worktree safety, bounded adapters/handoffs, dispatcher integration, tests, independent review and CI.",
+    "Checkpoint state: TASK-004 is IN_PROGRESS in the dedicated same-branch worktree intellix-plugin-TASK-004 at planning base d24e134; the original checkout is detached and no implementation files have been edited.",
+    "Checkpoint last execution: git worktree add created intellix-plugin-TASK-004 on feat/intellix-multiagent-framework and git worktree list confirmed all older task worktrees detached.",
+    "Checkpoint exact stop: stopped immediately after safe worktree creation and before the first schema or policy implementation edit.",
+    "Checkpoint recovery command: cd /Users/felipemaranhao/Documents/Codex/2026-09-16/referenced-chatgpt-conversation-this-is-an/work/intellix-plugin-TASK-004 && git status --short && python3 framework/validate.py --root . --all.",
+    "Checkpoint ordered next actions: create reservation and checkpoint schemas; register schemas and control-plane files; update git policy and handoff schema/template; implement worktree reservations; implement adapter handoff/checkpoint; integrate dispatch/runtime; add tests; refresh lock; run all gates; obtain independent review; commit, push and verify CI.",
+    "Checkpoint open risks: partial Git setup must remain fail-closed without cleanup; local identity is advisory; no CI or authenticated approval behavior may leak from TASK-005."
   ],
   "handoff": {"required_evidence": ["dirty-worktree safety tests", "glob collision tests", "read-only reviewer handoff", "independent review"], "open_questions": []}
 }
