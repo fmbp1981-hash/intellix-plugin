@@ -86,7 +86,11 @@
     "The kernel lifecycle uses APPROVED rather than the non-normative DONE label.",
     "The task intentionally exceeds the ten-file planning heuristic because schema, evidence engine, portable workflow and end-to-end fixtures form one acceptance proof; implementation should use focused internal checkpoints and commits while preserving one active fileset owner.",
     "The human approved the expanded fileset and read-only external Claude architecture review in the controlling session on 2026-09-18.",
-    "Independent Claude architecture review returned APPROVE with no blocking, high or medium findings after the trust-boundary, profile-enforcement, stdlib transport, command-scope and portability constraints were made explicit."
+    "Independent Claude architecture review returned APPROVE with no blocking, high or medium findings after the trust-boundary, profile-enforcement, stdlib transport, command-scope and portability constraints were made explicit.",
+    "Implementation commits df98759 and 20c196e passed 76 local tests, explicit-root validation, pinned snapshot verification, compileall, hook validation and diff checking.",
+    "GitHub CI for exact review SHA 986b4a06a3bb7eca74fb3c5f97a1f96c98bf09ee passed on ubuntu-latest and macos-latest; framework/ci.py returned eligible for the configured repository and required framework-validation check.",
+    "Independent Claude implementation review returned APPROVE with no blocking, high or medium findings for diff da7b889..20c196e and acknowledged 986b4a0 as a status-only commit.",
+    "The controlling human explicitly approved TASK-005 technical completion on 2026-09-18. This approval closes the Task Contract only; it is not the separately credentialed authenticated merge approval required by AC-004, so merge remains blocked."
   ],
   "objective": "Demonstrate the complete method on clean project fixtures while fail-closed CI eligibility is bound to the exact reviewed repository revision.",
   "ownership": {
@@ -151,7 +155,7 @@
     "prd": "README.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md"
   },
-  "status": "IN_REVIEW",
+  "status": "APPROVED",
   "title": "Bind exact-revision CI and prove a portable pilot",
   "verification": [
     {
