@@ -14,13 +14,16 @@ Task alvo: $ARGUMENTS
    Falhas movem estados aplicáveis para `BLOCKED` com motivo durável.
    Fallback para Claude exige reviewer com identidade distinguível de Claude;
    `claude-independent` é conservadoramente tratado como a mesma família.
-3. Confirme branch curta. Risco médio/alto/crítico exige worktree isolada. Registre
-   baseline, arquivos permitidos e estado limpo/alterações preexistentes.
+3. O dispatcher cria worktree dedicado e reserva durável do fileset para risco
+   médio/alto/crítico. Nunca force, limpe ou remova worktree suja. Estados parciais
+   `reserving` exigem reconciliação manual antes de nova execução.
 4. Leia o papel em `framework/roles`. Implemente o comportamento completo, não um
    arquivo por agente. Não altere nada fora de `scope.create`/`scope.modify`.
 5. Se `ownership.executor` for `codex`, gere um handoff de execução contendo o
    contrato e solicite execução no Codex; Claude não deve assumir a implementação.
    Se o executor for Claude, execute, mas atribua revisão a outro responsável.
+   O handoff ao reviewer contém digest, commit, diff e evidências, sempre com
+   acesso `read-only` e checkpoint estruturado para retomada.
 6. Rode todos os comandos de `verification`, os testes de regressão e os gates
    aplicáveis. Falha é bloqueante; não enfraqueça o teste.
 7. Compare o diff ao fileset, registre arquivos/evidências/riscos no handoff e

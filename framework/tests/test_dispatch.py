@@ -1,5 +1,6 @@
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -140,6 +141,31 @@ class DispatchTests(unittest.TestCase):
             with self.assertRaisesRegex(dispatch.DispatchBlocked, "illegal task transition"):
                 dispatch.dispatch(project, task_path, available={"codex"})
             self.assertEqual(validate.load(task_path)["status"], "BLOCKED")
+
+    def test_medium_risk_dispatch_transitions_inside_dedicated_worktree(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project, task_path, task = self.project(Path(temporary))
+            task["risk"]["level"] = "medium"
+            task["gates"].extend(["fileset", "worktree"])
+            self.write(task_path, task)
+            subprocess.run(["git", "init", "-b", "feat/test"], cwd=project, check=True, capture_output=True)
+            subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=project, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=project, check=True)
+            subprocess.run(["git", "add", "."], cwd=project, check=True)
+            subprocess.run(["git", "commit", "-m", "fixture"], cwd=project, check=True, capture_output=True)
+            destination = Path(temporary) / "consumer-TASK-101"
+            event = dispatch.dispatch(
+                project,
+                task_path,
+                available={"codex"},
+                worktree_destination=destination,
+            )
+            self.assertEqual(event["to"], "IN_PROGRESS")
+            self.assertEqual(
+                validate.load(destination / "tasks/TASK-101.yaml")["status"],
+                "IN_PROGRESS",
+            )
+            self.assertEqual(validate.load(task_path)["status"], "READY")
 
 
 if __name__ == "__main__":

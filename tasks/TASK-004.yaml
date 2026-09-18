@@ -1,7 +1,7 @@
 {
   "id": "TASK-004",
   "title": "Enforce worktree ownership and independent adapter handoffs",
-  "status": "IN_PROGRESS",
+  "status": "IN_REVIEW",
   "objective": "Isolate medium-or-higher risk work and exchange bounded implementation and review evidence between adapters.",
   "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/implementation/INTELLIX-CODEX-MASTER-IMPLEMENTATION-MANUAL.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
   "risk": {"level": "high", "reasons": ["Manages Git isolation and cross-adapter evidence"], "irreversible_actions": []},
@@ -13,7 +13,9 @@
       "framework/tests/test_worktrees.py",
       "framework/tests/test_adapters.py",
       "framework/schemas/reservation.schema.json",
-      "framework/schemas/checkpoint.schema.json"
+      "framework/schemas/checkpoint.schema.json",
+      "intellix-templates/root-template/.gitignore",
+      "framework/tests/fixtures/projects/valid/.gitignore"
     ],
     "modify": [
       "framework/dispatch.py",
@@ -26,6 +28,7 @@
       "framework/tests/test_distribution.py",
       "commands/execute.md",
       "intellix.lock.json",
+      ".gitignore",
       "tasks/TASK-004.yaml"
     ],
     "forbidden": [".env*", "**/.env*", ".github/**", "issues/**", "infra/production/**"]
@@ -70,6 +73,11 @@
     ,"Checkpoint blocker discovered before Git tests: runtime.records_path is .intellix/runtime but runtime artifacts are not ignored, so reservations/checkpoints make the repository dirty and may be committed accidentally; safe implementation requires fileset expansion for repository, project-template and fixture gitignore rules."
     ,"Checkpoint exact stop after blocker: worktree/adapters foundation remains validated at 48cc043; no operational Git setup, release or dispatcher integration was added after discovering the ignore gap."
     ,"Checkpoint proposed recovery action: obtain human approval to add .gitignore, intellix-templates/root-template/.gitignore and framework/tests/fixtures/projects/valid/.gitignore, then write tests proving runtime artifacts do not dirty either the repository or a fresh consumer."
+    ,"Human scope decision: the gitignore expansion was explicitly approved; generated runtime artifacts must not appear as Git changes in the repository, root template or consumer fixture."
+    ,"Implementation evidence: validate --all, sync install/check, compileall, hook validation, git diff --check and 60 unit/integration tests passed."
+    ,"Negative evidence: dirty source/reviewer writes/self-review/arbitrary destinations/destructive Git/fileset collisions are rejected; dirty worktree release preserves the worktree and reservation."
+    ,"Checkpoint exact stop for review: implementation is complete locally and awaits the focused commit, independent Claude review, push and exact-revision CI; TASK-005 has not started."
+    ,"Residual risk: reservation collision detection is local advisory coordination rather than a distributed lock; interrupted post-add confirmation leaves a reserving record and worktree for manual reconciliation by design."
   ],
   "handoff": {"required_evidence": ["dirty-worktree safety tests", "glob collision tests", "read-only reviewer handoff", "independent review"], "open_questions": []}
 }

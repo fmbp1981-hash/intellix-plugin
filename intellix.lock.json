@@ -1,6 +1,6 @@
 {
   "control_plane": {
-    "digest": "sha256:f3eb199ab3ebff3a272de1faa1d9c851a088f5ed07863c3ca91f22c824700df9",
+    "digest": "sha256:c917321d8ac72f08bcf3b406b67b1dac84ba293e28c8987a734e73b461774099",
     "files": [
       "framework/adapters.py",
       "framework/dispatch.py",

@@ -11,6 +11,8 @@ from typing import Any
 
 import runtime
 import validate
+import adapters
+import worktrees
 
 SATISFIED_DEPENDENCY_STATES = {"APPROVED", "MERGED", "VERIFIED", "RELEASED"}
 
@@ -23,10 +25,7 @@ def installed_adapters(permitted: list[str]) -> set[str]:
     return {adapter for adapter in permitted if shutil.which(adapter)}
 
 
-def same_adapter_identity(left: str | None, right: str | None) -> bool:
-    if not left or not right:
-        return False
-    return left == right or left.split("-", 1)[0] == right.split("-", 1)[0]
+same_adapter_identity = adapters.same_identity
 
 
 def resolve_executor(
@@ -87,6 +86,8 @@ def dispatch(
     current_adapter: str | None = None,
     target_state: str = "IN_PROGRESS",
     reason: str = "validated dispatch",
+    owner: str = "intellix-control-plane",
+    worktree_destination: Path | None = None,
 ) -> dict[str, Any]:
     resolved_root = validate.resolve_root(root)
     context = validate.build_context(resolved_root)
@@ -105,6 +106,8 @@ def dispatch(
     contract_errors = validate.validate_tasks(tasks_directory, context)
     dependencies = dependency_errors(task, load_tasks(tasks_directory))
     errors = project_errors + contract_errors + dependencies
+    transition_context = context
+    transition_path = task_path
     try:
         if errors:
             raise DispatchBlocked("; ".join(errors))
@@ -121,20 +124,32 @@ def dispatch(
             raise DispatchBlocked(
                 f"executor {adapter!r} is not independent from reviewer {reviewer!r}"
             )
+        if (
+            target_state == "IN_PROGRESS"
+            and task.get("status") == "READY"
+            and task.get("risk", {}).get("level") in {"medium", "high", "critical"}
+        ):
+            reservation = worktrees.prepare(
+                context, task, owner, destination=worktree_destination
+            )
+            isolated_root = Path(reservation["worktree_path"])
+            transition_context = validate.build_context(isolated_root)
+            transition_path = isolated_root / task_path.relative_to(resolved_root)
         return runtime.transition(
-            context,
-            task_path,
+            transition_context,
+            transition_path,
             target_state,
             reason=reason,
             selected_adapter=adapter,
             resolution=resolution,
         )
     except (DispatchBlocked, validate.ValidationError) as exc:
-        current = task.get("status")
-        if runtime.permitted_transition(context, current, "BLOCKED"):
+        current_task = validate.load(transition_path)
+        current = current_task.get("status") if isinstance(current_task, dict) else None
+        if runtime.permitted_transition(transition_context, current, "BLOCKED"):
             runtime.block(
-                context,
-                task_path,
+                transition_context,
+                transition_path,
                 str(exc),
                 unblock_condition="Correct the failed dispatch precondition and revalidate",
             )
@@ -149,6 +164,8 @@ def main() -> int:
     parser.add_argument("--available-adapter", action="append", default=None)
     parser.add_argument("--target-state", default="IN_PROGRESS")
     parser.add_argument("--reason", default="validated dispatch")
+    parser.add_argument("--owner", default="intellix-control-plane")
+    parser.add_argument("--worktree-destination", type=Path)
     args = parser.parse_args()
     try:
         event = dispatch(
@@ -158,6 +175,8 @@ def main() -> int:
             current_adapter=args.current_adapter,
             target_state=args.target_state,
             reason=args.reason,
+            owner=args.owner,
+            worktree_destination=args.worktree_destination,
         )
     except (OSError, validate.ValidationError) as exc:
         print(f"BLOCKED: {exc}")

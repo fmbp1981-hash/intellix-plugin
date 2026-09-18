@@ -3,3 +3,4 @@ docs/generated/
 .DS_Store
 global-config/**/__pycache__/
 framework/**/__pycache__/
+.intellix/runtime/
