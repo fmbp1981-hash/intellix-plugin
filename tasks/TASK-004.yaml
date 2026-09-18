@@ -64,6 +64,9 @@
     "Checkpoint recovery command: cd /Users/felipemaranhao/Documents/Codex/2026-09-16/referenced-chatgpt-conversation-this-is-an/work/intellix-plugin-TASK-004 && git status --short && python3 framework/validate.py --root . --all.",
     "Checkpoint ordered next actions: create reservation and checkpoint schemas; register schemas and control-plane files; update git policy and handoff schema/template; implement worktree reservations; implement adapter handoff/checkpoint; integrate dispatch/runtime; add tests; refresh lock; run all gates; obtain independent review; commit, push and verify CI.",
     "Checkpoint open risks: partial Git setup must remain fail-closed without cleanup; local identity is advisory; no CI or authenticated approval behavior may leak from TASK-005."
+    ,"Checkpoint progress at schema block: reservation/checkpoint schemas, kernel registration, control-plane pinning, Git policy, handoff schema/template and base adapters/worktrees modules are implemented; no dispatcher integration or Git worktree mutation code has been added yet."
+    ,"Checkpoint last validated execution: compileall, sync install/check, validate --all, 52 regression tests and git diff --check passed after refreshing intellix.lock.json."
+    ,"Checkpoint next implementation action: add focused test_worktrees.py and test_adapters.py first, then complete reserving-to-reserved worktree setup and release behavior under those tests before integrating dispatch."
   ],
   "handoff": {"required_evidence": ["dirty-worktree safety tests", "glob collision tests", "read-only reviewer handoff", "independent review"], "open_questions": []}
 }

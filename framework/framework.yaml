@@ -29,7 +29,9 @@
     "approval": "framework/schemas/approval.schema.json",
     "waiver": "framework/schemas/waiver.schema.json",
     "handoff": "framework/schemas/handoff.schema.json",
-    "runtime": "framework/schemas/runtime.schema.json"
+    "runtime": "framework/schemas/runtime.schema.json",
+    "reservation": "framework/schemas/reservation.schema.json",
+    "checkpoint": "framework/schemas/checkpoint.schema.json"
   },
   "control_plane": {
     "version": "1.0.0",
@@ -37,7 +39,9 @@
       "framework/validate.py",
       "framework/sync.py",
       "framework/runtime.py",
-      "framework/dispatch.py"
+      "framework/dispatch.py",
+      "framework/worktrees.py",
+      "framework/adapters.py"
     ]
   },
   "runtime": {

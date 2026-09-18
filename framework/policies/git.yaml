@@ -9,6 +9,10 @@
     "worktree_required_for_risk": ["medium", "high", "critical"],
     "atomic_commits": true,
     "force_push_protected": false,
-    "required_before_merge": ["framework-validation", "project-ci", "independent-review"]
+    "required_before_merge": ["framework-validation", "project-ci", "independent-review"],
+    "reservation_states_owning_fileset": ["reserving", "reserved"],
+    "forbidden_worktree_operations": ["force", "reset-hard", "clean", "remove-dirty"],
+    "checkpoint_before_context_loss": true,
+    "checkpoint_required_fields": ["state", "context", "last_command", "last_result", "stop_point", "open_risks", "active_plan", "next_actions", "branch", "worktree", "commit", "recovery_command", "timestamp"]
   }
 }
