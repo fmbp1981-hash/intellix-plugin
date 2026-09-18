@@ -67,6 +67,9 @@
     ,"Checkpoint progress at schema block: reservation/checkpoint schemas, kernel registration, control-plane pinning, Git policy, handoff schema/template and base adapters/worktrees modules are implemented; no dispatcher integration or Git worktree mutation code has been added yet."
     ,"Checkpoint last validated execution: compileall, sync install/check, validate --all, 52 regression tests and git diff --check passed after refreshing intellix.lock.json."
     ,"Checkpoint next implementation action: add focused test_worktrees.py and test_adapters.py first, then complete reserving-to-reserved worktree setup and release behavior under those tests before integrating dispatch."
+    ,"Checkpoint blocker discovered before Git tests: runtime.records_path is .intellix/runtime but runtime artifacts are not ignored, so reservations/checkpoints make the repository dirty and may be committed accidentally; safe implementation requires fileset expansion for repository, project-template and fixture gitignore rules."
+    ,"Checkpoint exact stop after blocker: worktree/adapters foundation remains validated at 48cc043; no operational Git setup, release or dispatcher integration was added after discovering the ignore gap."
+    ,"Checkpoint proposed recovery action: obtain human approval to add .gitignore, intellix-templates/root-template/.gitignore and framework/tests/fixtures/projects/valid/.gitignore, then write tests proving runtime artifacts do not dirty either the repository or a fresh consumer."
   ],
   "handoff": {"required_evidence": ["dirty-worktree safety tests", "glob collision tests", "read-only reviewer handoff", "independent review"], "open_questions": []}
 }
