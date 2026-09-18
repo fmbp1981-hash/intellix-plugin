@@ -151,7 +151,7 @@
     "prd": "README.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md"
   },
-  "status": "IN_PROGRESS",
+  "status": "IN_REVIEW",
   "title": "Bind exact-revision CI and prove a portable pilot",
   "verification": [
     {
