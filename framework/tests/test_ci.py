@@ -1,4 +1,5 @@
 import json
+import ssl
 import sys
 import unittest
 from pathlib import Path
@@ -65,6 +66,11 @@ class ExactRevisionCITests(unittest.TestCase):
         self.assertIn("/repos/fmbp1981-hash/intellix-plugin/commits/", request.full_url)
         self.assertIn(REVISION, request.full_url)
         self.assertEqual(request.get_header("Authorization"), "Bearer secret-for-test")
+
+    def test_tls_context_always_verifies_certificate_and_hostname(self):
+        context = ci.verified_tls_context()
+        self.assertEqual(context.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(context.check_hostname)
 
     def test_missing_required_check_blocks(self):
         evidence, _ = self.evaluate([response([])])

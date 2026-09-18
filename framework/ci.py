@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import re
+import ssl
 import sys
 import urllib.error
 import urllib.parse
@@ -26,9 +27,25 @@ class EvidenceIndeterminate(validate.ValidationError):
     """The provider could not return authoritative, parseable evidence."""
 
 
+def verified_tls_context() -> ssl.SSLContext:
+    paths = ssl.get_default_verify_paths()
+    if paths.cafile or paths.capath:
+        return ssl.create_default_context()
+    for candidate in (
+        "/etc/ssl/cert.pem",
+        "/etc/ssl/certs/ca-certificates.crt",
+        "/etc/pki/tls/certs/ca-bundle.crt",
+    ):
+        if Path(candidate).is_file():
+            return ssl.create_default_context(cafile=candidate)
+    return ssl.create_default_context()
+
+
 def github_transport(request: urllib.request.Request) -> tuple[int, dict[str, str], bytes]:
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:
+        with urllib.request.urlopen(
+            request, timeout=15, context=verified_tls_context()
+        ) as response:
             return response.status, dict(response.headers.items()), response.read()
     except urllib.error.HTTPError as exc:
         return exc.code, dict(exc.headers.items()), exc.read()
