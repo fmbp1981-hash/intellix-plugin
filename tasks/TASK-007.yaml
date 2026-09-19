@@ -1,7 +1,7 @@
 {
   "id": "TASK-007",
   "title": "Reconcile architecture decision and trust-model documentation",
-  "status": "READY",
+  "status": "IN_REVIEW",
   "objective": "Align the ADR-0001 and authority-model prose with accepted ADR-0002 without changing their approval status or the executable framework.",
   "source": {
     "prd": "README.md",
@@ -104,7 +104,10 @@
     "This task clarifies cross-document references only; it does not accept ADR-0001 or the proposed target architecture set.",
     "Do not edit README, other target architecture artifacts, kernel, code, permissions or external environments under this contract.",
     "Use the accepted ADR-0002 same-branch dedicated-worktree procedure after planning approval.",
-    "Any material architectural conflict or status change requires a separate human decision."
+    "Any material architectural conflict or status change requires a separate human decision.",
+    "Implementation diff is limited to this contract and its two named documentation files; local framework validation, 76 unit tests, hooks, compileall and diff check passed in the dedicated TASK-007 worktree.",
+    "Independent Claude review was attempted read-only, but the CLI returned 'Not logged in'; no review verdict has been recorded. Keep the task IN_REVIEW until an independent reviewer can inspect the exact committed diff.",
+    "Next actions: obtain exact-revision CI for the pushed commit; obtain independent Claude review; address any findings within this fileset; request explicit human technical-completion approval before marking APPROVED. Merge and production remain separately blocked."
   ],
   "handoff": {
     "required_evidence": [
@@ -113,6 +116,8 @@
       "independent fidelity review",
       "exact-revision CI result"
     ],
-    "open_questions": []
+    "open_questions": [
+      "When will an authenticated, read-only Claude reviewer be available to evaluate the exact TASK-007 commit?"
+    ]
   }
 }

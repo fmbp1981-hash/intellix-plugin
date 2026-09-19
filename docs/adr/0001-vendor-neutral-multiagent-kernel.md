@@ -4,6 +4,13 @@ Status: Proposed — human approval not yet recorded
 
 Date: 2026-09-16
 
+Related: ADR-0002 (Accepted, 2026-09-18)
+
+ADR-0001 remains a proposed kernel decision; no explicit human acceptance of
+this ADR has been recorded. ADR-0002 separately accepts the operational dynamic
+orchestrator and its trust boundaries. That acceptance does not change this
+ADR's status or override `framework/framework.yaml` and its referenced policies.
+
 ## Context
 
 The IntelliX method already had mature phases, skills, hooks, tests and reviews,
