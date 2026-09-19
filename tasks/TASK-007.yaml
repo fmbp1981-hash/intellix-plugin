@@ -1,0 +1,118 @@
+{
+  "id": "TASK-007",
+  "title": "Reconcile architecture decision and trust-model documentation",
+  "status": "READY",
+  "objective": "Align the ADR-0001 and authority-model prose with accepted ADR-0002 without changing their approval status or the executable framework.",
+  "source": {
+    "prd": "README.md",
+    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
+    "adrs": [
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md"
+    ]
+  },
+  "risk": {
+    "level": "medium",
+    "reasons": [
+      "Authority and approval wording can be misread as granting or denying a gate",
+      "Documentation must not silently change the status of an unaccepted decision"
+    ],
+    "irreversible_actions": []
+  },
+  "ownership": {
+    "architect": "claude",
+    "executor": "codex",
+    "reviewer": "claude-independent",
+    "domain_role": "architect"
+  },
+  "scope": {
+    "create": ["tasks/TASK-007.yaml"],
+    "modify": [
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/architecture/AUTHORITY-AND-TRUST-MODEL.md"
+    ],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      "issues/**",
+      ".github/**",
+      "framework/**",
+      "global-config/**",
+      "infra/production/**"
+    ]
+  },
+  "dependencies": ["TASK-006"],
+  "acceptance_criteria": [
+    {
+      "id": "AC-001",
+      "given": "ADR-0001 has no explicit human acceptance",
+      "when": "its status and relation to ADR-0002 are read",
+      "then": "it remains Proposed while clearly identifying ADR-0002 as the accepted operational decision"
+    },
+    {
+      "id": "AC-002",
+      "given": "the accepted local MVP trust boundary in ADR-0002",
+      "when": "the authority model describes task completion, merge and production gates",
+      "then": "local human action is limited to technical Task Contract completion and cannot claim authenticated merge or production approval"
+    },
+    {
+      "id": "AC-003",
+      "given": "the canonical kernel and accepted ADR-0002",
+      "when": "the documentation diff is reviewed",
+      "then": "no new transition, approval mechanism, credential authority or normative rule is introduced"
+    },
+    {
+      "id": "AC-004",
+      "given": "the approved fileset",
+      "when": "the changed-file inventory is inspected",
+      "then": "only this contract and the two named documents changed"
+    }
+  ],
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "All normative artifacts and Task Contracts remain valid"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "No framework regression accompanies the documentation update"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Claude adapter hooks remain valid"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The documentation diff has no whitespace errors"
+    }
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "rollback": "Revert only the focused TASK-007 documentation commit; retain ADR-0002 acceptance and all external approval boundaries.",
+  "notes": [
+    "The controlling human approved this specific plan and fileset on 2026-09-19; this is not ADR-0001 acceptance or authenticated merge approval.",
+    "This task clarifies cross-document references only; it does not accept ADR-0001 or the proposed target architecture set.",
+    "Do not edit README, other target architecture artifacts, kernel, code, permissions or external environments under this contract.",
+    "Use the accepted ADR-0002 same-branch dedicated-worktree procedure after planning approval.",
+    "Any material architectural conflict or status change requires a separate human decision."
+  ],
+  "handoff": {
+    "required_evidence": [
+      "two-document semantic diff",
+      "validated changed-file inventory",
+      "independent fidelity review",
+      "exact-revision CI result"
+    ],
+    "open_questions": []
+  }
+}
