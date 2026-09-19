@@ -1,0 +1,5 @@
+{
+  "governance_profile": "micro",
+  "minimum_gates": ["schema", "tests"],
+  "task_gates": ["schema", "lint", "tests", "independent_review"]
+}

@@ -1,0 +1,5 @@
+{
+  "governance_profile": "regulated",
+  "minimum_gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "task_gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"]
+}

@@ -1,0 +1,71 @@
+{
+  "id": "TASK-003",
+  "title": "Implement thin dispatcher and minimal lifecycle",
+  "status": "APPROVED",
+  "objective": "Route a READY Task Contract to an available permitted adapter while enforcing minimal deterministic transitions.",
+  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/architecture/TASK-CONTRACT-V1.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
+  "risk": {"level": "high", "reasons": ["Controls task progression and adapter selection"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
+  "scope": {
+    "create": [
+      "framework/dispatch.py",
+      "framework/runtime.py",
+      "framework/tests/test_dispatch.py",
+      "framework/tests/test_runtime.py",
+      "framework/schemas/runtime.schema.json"
+    ],
+    "modify": [
+      "framework/framework.yaml",
+      "framework/schemas/task.schema.json",
+      "framework/schemas/project.schema.json",
+      "framework/schemas/lock.schema.json",
+      "framework/validate.py",
+      "framework/sync.py",
+      "framework/tests/test_validate.py",
+      "framework/tests/test_distribution.py",
+      "framework/tests/fixtures/projects/valid/intellix.yaml",
+      "framework/templates/PROJECT.yaml",
+      "commands/execute.md",
+      "intellix.yaml",
+      "intellix.lock.json",
+      "intellix-templates/root-template/intellix.yaml",
+      "tasks/TASK-003.yaml"
+    ],
+    "forbidden": [".env*", "**/.env*", ".github/**", "issues/**", "infra/production/**"]
+  },
+  "dependencies": ["TASK-002"],
+  "acceptance_criteria": [
+    {"id": "AC-001", "given": "an explicit executor or project default", "when": "dispatch is requested", "then": "the resolver selects only an installed permitted adapter and records the decision"},
+    {"id": "AC-002", "given": "a legacy Claude-only project without Codex", "when": "/execute runs and project policy permits Claude", "then": "Claude continues implementing rather than producing a dead-end handoff"},
+    {"id": "AC-003", "given": "an illegal transition, dependency, fileset or gate failure", "when": "progression is requested", "then": "the task is blocked with a durable reason"},
+    {"id": "AC-004", "given": "review findings", "when": "changes are required", "then": "IN_REVIEW returns to IN_PROGRESS without inventing merge/release states"}
+  ],
+  "verification": [
+    {"command": "python3 framework/validate.py --root . --all", "proves": "Contracts and lifecycle configuration validate"},
+    {"command": "python3 framework/sync.py --source-root . --target-root . --check", "proves": "The pinned kernel and control-plane snapshot have no drift"},
+    {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Resolver, fallback and transition negative paths are covered"},
+    {"command": "python3 -m compileall -q framework", "proves": "Dispatcher and runtime compile"},
+    {"command": "git diff --check", "proves": "The scoped patch has no whitespace errors"}
+  ],
+  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "rollback": "Revert dispatcher/runtime changes and restore the previous manual command behavior while retaining Task Contracts.",
+  "notes": [
+    "The dispatcher is deterministic control code, not an autonomous agent.",
+    "Human identity is never inferred from a CLI actor string.",
+    "Human architecture decision: preserve the normative framework lifecycle and automate only READY to IN_PROGRESS, IN_PROGRESS to IN_REVIEW, IN_REVIEW to IN_PROGRESS for findings, and applicable states to BLOCKED.",
+    "Human architecture decision: APPROVED, merge, release and deploy are never automated by this task; ADR-0002 remains Proposed.",
+    "Human architecture decision: durable records live under the project-declared .intellix/runtime path; project bindings declare default and permitted adapters plus explicit current-adapter fallback policy.",
+    "Human architecture decision: installed adapter capability is detected at runtime and underscore gate IDs in the kernel are canonical for this task; role gate-name drift remains a later gap.",
+    "Human architecture decision: distributed control-plane files are pinned so consumer drift is detectable.",
+    "Implementation evidence: validate --root . --all and sync --check passed; 52 unit tests passed; compileall, hook validation and git diff --check passed.",
+    "Negative evidence: unavailable adapter, Claude self-review, unresolved dependency, fileset collision, missing gate, illegal transition, runtime path traversal, contract drift and control-plane tampering are rejected.",
+    "Independent review: Claude APPROVE with no blocking or high findings; Claude fallback requires a reviewer identity distinguishable from Claude.",
+    "Residual risk: interrupted two-file transition writes fail closed and require manual reconciliation; concurrent dispatch locking is deferred to later ownership automation; terminal states are outside this dispatcher boundary.",
+    "Human gate: TASK-003 explicitly approved after independent review and exact-revision CI passed for implementation commit 41a4391.",
+    "Checkpoint stop: implementation is complete at 41a4391; the last completed external execution was GitHub CI with framework-validation and GitGuardian passing; this approval-state commit is the only pending publication step.",
+    "Checkpoint recovery action: verify the approval commit CI, detach the TASK-003 worktree, restore the original checkout to feat/intellix-multiagent-framework, and confirm a clean synchronized branch.",
+    "Checkpoint active plan: TASK-004 is next but not started; review its Definition of Ready and exact fileset, obtain architect review for worktree ownership and bounded independent handoffs, then implement only after its planning gate. TASK-005 follows for exact-revision portable CI and the end-to-end pilot.",
+    "Checkpoint protocol: future resumable checkpoints must record current state, last completed command and result, exact stop point, unresolved risks, active implementation plan, ordered next tasks/actions, branch/worktree/commit, and the first recovery command before commit and push."
+  ],
+  "handoff": {"required_evidence": ["adapter resolution matrix tests", "Claude-only compatibility test", "transition log tests", "independent review"], "open_questions": []}
+}

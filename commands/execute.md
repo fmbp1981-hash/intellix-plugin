@@ -1,44 +1,51 @@
 ---
-description: Executa uma issue com plano aprovado, arquivo por arquivo, com ciclo de 3 estágios (agente tipado → spec review → quality review). Quarto dos 4 comandos do Epic Workflow. Uso: /execute [issue]
-argument-hint: [issue]
+description: Executa um Task Contract aprovado com fileset, evidência, revisão independente e CI. Quarto comando do Epic Workflow. Uso: /execute TASK-NNN
+argument-hint: [TASK-NNN]
 disable-model-invocation: false
 ---
 
-Use `references/four-commands.md §/execute` e `MASTER-ARCHITECTURE.md §4` como fonte de verdade para este comando.
+Task alvo: $ARGUMENTS
 
-Issue alvo: $ARGUMENTS
+1. Rode o phase gate legado e acione o dispatcher com raiz explícita:
+   - `bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/phase-gate.sh execute`
+   - `python3 ${CLAUDE_PLUGIN_ROOT}/framework/dispatch.py --root . --task tasks/$ARGUMENTS.yaml --current-adapter claude`
+2. O dispatcher valida projeto, contrato, dependências, filesets e gates; resolve
+   somente adapter instalado e permitido; registra a decisão em `runtime.records_path`.
+   Falhas movem estados aplicáveis para `BLOCKED` com motivo durável.
+   Fallback para Claude exige reviewer com identidade distinguível de Claude;
+   `claude-independent` é conservadoramente tratado como a mesma família.
+3. O dispatcher cria worktree dedicado e reserva durável do fileset para risco
+   médio/alto/crítico. Nunca force, limpe ou remova worktree suja. Estados parciais
+   `reserving` exigem reconciliação manual antes de nova execução.
+   Depois da reserva, todas as transições e correções usam `--root` apontando para
+   o worktree reservado; a raiz original responde com o caminho correto e não
+   altera sua cópia obsoleta do contrato.
+4. Leia o papel em `framework/roles`. Implemente o comportamento completo, não um
+   arquivo por agente. Não altere nada fora de `scope.create`/`scope.modify`.
+5. Se `ownership.executor` for `codex`, gere um handoff de execução contendo o
+   contrato e solicite execução no Codex; Claude não deve assumir a implementação.
+   Se o executor for Claude, execute, mas atribua revisão a outro responsável.
+   O handoff ao reviewer contém digest, commit, diff e evidências, sempre com
+   acesso `read-only` e checkpoint estruturado para retomada.
+6. Rode todos os comandos de `verification`, os testes de regressão e os gates
+   aplicáveis. Falha é bloqueante; não enfraqueça o teste.
+7. Compare o diff ao fileset, registre arquivos/evidências/riscos no handoff e
+   solicite a transição permitida:
+   - `python3 ${CLAUDE_PLUGIN_ROOT}/framework/dispatch.py --root . --task tasks/$ARGUMENTS.yaml --target-state IN_REVIEW --reason "verification and handoff complete"`
+8. O reviewer independente verifica spec, arquitetura, segurança e qualidade.
+   Gaps voltam como `CHANGES_REQUESTED`. Limite: 3 ciclos; depois escale decisão.
+9. CI é o árbitro final. Após o workflow terminar, consulte os checks configurados
+   para o SHA completo revisado e grave somente a cópia de auditoria:
+   `python3 ${CLAUDE_PLUGIN_ROOT}/framework/ci.py --root . --revision <sha-40> --output .intellix/runtime/ci/$ARGUMENTS.json`.
+   Check ausente, antigo, incompleto, indeterminado ou falho bloqueia. JSON local,
+   texto de modelo e resultado de outro repositório/SHA não são prova de CI.
+10. O dispatcher desta etapa não promove `APPROVED`, merge, release ou deploy;
+   esses gates permanecem externos e autenticados. Mesmo com CI verde, ausência
+   de aprovação humana externa e credencialmente separada mantém merge bloqueado.
+   Invocações contra estados terminais falham sem alterar o contrato; recuperação
+   de escrita interrompida e concorrência pertencem ao hardening posterior.
+   Merge, deploy e ações irreversíveis continuam sujeitos às políticas e ao
+   responsável humano.
 
-Pré-condição — não prossiga se algum item falhar.
-
-**Verificação automática (bloqueante), rode primeiro:**
-`bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/phase-gate.sh execute`
-Se sair com código 1, PARE e mostre os itens faltantes. Só prossiga se o usuário
-dispensar explicitamente um pré-requisito.
-
-**Verificação de julgamento (o script não consegue checar estas):**
-```
-[ ] issue tem plano aprovado com as 7 seções preenchidas
-[ ] references/architecture.md e DESIGN.md (raiz, se houver UI) lidos
-[ ] context window abaixo de 50%
-```
-
-Pré-execução (uma vez por issue):
-1. Extraia todos os arquivos de "Files to Create" e "Files to Modify".
-2. Para cada arquivo, identifique o agente correto pela tabela de `MASTER-ARCHITECTURE.md §4`.
-3. Registre uma task no TodoWrite por arquivo.
-
-Ciclo por arquivo (3 estágios obrigatórios, nunca pule etapas; Estágio 4 condicional em `references/four-commands.md`):
-1. **Implementação** — despache o agente tipado correto (`intellix:component-writer`, `intellix:action-writer`, `intellix:model-writer` ou `intellix:test-writer`) com a spec da issue + as listas "Files". Ele implementa, testa e faz self-review.
-2. **Spec review** — `intellix:spec-reviewer` valida Happy Path + Edge Cases + Error Cases contra o diff. ❌ GAPS → agente corrige → repete.
-3. **Quality review** — `intellix:code-quality-reviewer` valida TypeScript strict, zero `any`, Zod, naming e limites de paths. Critical/Important bloqueiam → agente corrige → repete. Minor → nota, não bloqueia.
-
-Pós-execução (checklist de conclusão da issue):
-```
-[ ] Todos os arquivos com ✅ nos dois reviews
-[ ] tsc --noEmit limpo
-[ ] Nenhum arquivo fora de "Files to NOT Touch" foi modificado
-[ ] Testes da issue passando
-[ ] Issue marcada como concluída no TodoWrite
-```
-
-> Este comando herda o modelo padrão da sessão para a orquestração (dispatch + leitura de reviews). Os agentes do plugin fixam o próprio modelo no frontmatter de `agents/*.md` — Sonnet para escrita de código sensível (component, action, model) e para os revisores, Haiku para testes. Isso é o roteamento planejamento-caro / execução-barata: `/spec` e `/plan` em Opus, execução em Sonnet/Haiku.
+Os agentes tipados existentes podem auxiliar um papel, mas não substituem o
+Task Contract nem criam aprovação própria.

@@ -1,22 +1,29 @@
 ---
-description: Quebra o SPEC.md aprovado em issues/ atômicas e ordenadas. Segundo dos 4 comandos do Epic Workflow.
+description: Decompõe o SPEC aprovado em Task Contracts atômicos, ordenados e validáveis. Segundo comando do Epic Workflow.
 disable-model-invocation: false
 ---
 
-Use `references/four-commands.md §/break` como fonte de verdade para este comando.
+Use `framework/framework.yaml`, `framework/templates/TASK.yaml` e
+`references/four-commands.md` como referências. O framework prevalece.
 
-Pré-condição: `SPEC.md` precisa existir e estar aprovado pelo usuário. Se não existir, pare e peça para rodar `/spec` primeiro.
+Pré-condição: `SPEC.md` aprovado e documentos apontados por `intellix.yaml`
+existem. Se não, pare e solicite `/spec`.
 
-Execute agora:
-1. Leia `SPEC.md` por completo.
-2. Crie um arquivo `.md` por behavior em `issues/`, seguindo a ordem obrigatória:
-   1. Protótipos de UI (páginas/componentes sem lógica, dados mockados)
-   2. Schema de banco (migrations)
-   3. Contratos e queries compartilhadas (`lib/`)
-   4. Behaviors funcionais (lógica + server actions + testes)
-   5. Integrações externas (APIs de terceiros)
-3. Cada issue neste estágio contém só título + 1-2 linhas de descrição — o `/plan` completa o detalhamento técnico depois.
-4. Se um behavior parecer grande demais para uma sessão de execução, quebre em mais de uma issue.
-5. Apresente a lista `issues/` completa e a ordem proposta ao usuário e **aguarde confirmação** antes de qualquer outra ação.
+1. Leia PRD, Architecture, ADRs e SPEC.
+2. Decomponha por comportamento verificável, não por arquivo ou por agente.
+3. Crie `tasks/TASK-NNN.yaml` a partir do template. Neste estágio use `DRAFT`,
+   objetivo, fontes, risco preliminar, domínio e critérios de aceite. Não invente
+   detalhes ausentes; registre-os em `handoff.open_questions`.
+4. Ordene por dependências: contrato/dados, domínio, integrações, UI e release.
+5. Uma task deve caber em uma sessão e, normalmente, em até 10 arquivos. Divida
+   apenas quando houver resultado independente; nunca para simular paralelismo.
+6. Leia `project.governance_profile` e os mínimos correspondentes em
+   `framework/framework.yaml`. Gates preliminares nunca podem ficar abaixo da
+   união entre perfil e risco; perfil `micro` não dispensa fileset explícito.
+7. Detecte filesets provavelmente concorrentes e não proponha execução paralela.
+8. Rode `python3 ${CLAUDE_PLUGIN_ROOT}/framework/validate.py --tasks-dir tasks`.
+9. Apresente ordem, dependências, riscos e perguntas. Aguarde aprovação antes do
+   planejamento detalhado.
 
-> Este comando herda o modelo padrão da sessão (normalmente Sonnet) — decompor uma spec já aprovada em issues é um trabalho mais mecânico que o `/spec` ou o `/plan`, não exige o tier mais caro.
+`issues/*.md` é legado: não crie novas issues salvo solicitação explícita para
+um projeto ainda não migrado.

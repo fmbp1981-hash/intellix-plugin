@@ -1,0 +1,52 @@
+{
+  "control_plane": {
+    "digest": "sha256:0ba837461b4eee73034efdb6b4d92ac1efd2f95d4370bdcb2e81d0221e2e9335",
+    "files": [
+      "framework/adapters.py",
+      "framework/ci.py",
+      "framework/dispatch.py",
+      "framework/runtime.py",
+      "framework/sync.py",
+      "framework/validate.py",
+      "framework/worktrees.py"
+    ],
+    "version": "1.0.0"
+  },
+  "kernel": {
+    "digest": "sha256:001998e6d40e9ce191a416093891254bb8062506c0d13443c59d8db3004a719c",
+    "files": [
+      "framework/framework.yaml",
+      "framework/policies/deployment.yaml",
+      "framework/policies/git.yaml",
+      "framework/policies/security.yaml",
+      "framework/policies/testing.yaml",
+      "framework/roles/accessibility-reviewer.yaml",
+      "framework/roles/architect.yaml",
+      "framework/roles/backend-engineer.yaml",
+      "framework/roles/database-engineer.yaml",
+      "framework/roles/frontend-engineer.yaml",
+      "framework/roles/integration-engineer.yaml",
+      "framework/roles/observability-reviewer.yaml",
+      "framework/roles/platform-engineer.yaml",
+      "framework/roles/product-spec-author.yaml",
+      "framework/roles/release-manager.yaml",
+      "framework/roles/security-reviewer.yaml",
+      "framework/roles/test-engineer.yaml",
+      "framework/schemas/approval.schema.json",
+      "framework/schemas/checkpoint.schema.json",
+      "framework/schemas/ci-evidence.schema.json",
+      "framework/schemas/handoff.schema.json",
+      "framework/schemas/lock.schema.json",
+      "framework/schemas/project.schema.json",
+      "framework/schemas/reservation.schema.json",
+      "framework/schemas/role.schema.json",
+      "framework/schemas/runtime.schema.json",
+      "framework/schemas/task.schema.json",
+      "framework/schemas/waiver.schema.json"
+    ],
+    "source": "framework/framework.yaml",
+    "version": "1.0.0"
+  },
+  "schema_version": "1.0.0",
+  "sync_direction": "repository_to_installation"
+}

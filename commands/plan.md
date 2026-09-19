@@ -1,30 +1,35 @@
 ---
-description: Pesquisa em 3 frentes e preenche as 7 seções técnicas de uma issue antes de qualquer código ser escrito. Terceiro dos 4 comandos do Epic Workflow. Uso: /plan [issue]
-argument-hint: [issue]
+description: Completa e revisa um Task Contract antes de qualquer implementação. Terceiro comando do Epic Workflow. Uso: /plan TASK-NNN
+argument-hint: [TASK-NNN]
 model: opus
 disable-model-invocation: false
 ---
 
-Use `references/four-commands.md §/plan` como fonte de verdade para este comando.
+Task alvo: $ARGUMENTS
 
-Issue alvo: $ARGUMENTS
+1. Rode `bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/phase-gate.sh plan` e respeite
+   bloqueios, salvo dispensa humana explícita e registrada.
+2. Leia `intellix.yaml`, a task e todos os seus artefatos `source`.
+3. Pesquise a codebase, documentação oficial atual e referências externas apenas
+   quando necessárias. Nunca duplique capacidade existente.
+4. Complete resultado, risco, ações irreversíveis, papéis, dependências, critérios
+   Given/When/Then, comandos de verificação, gates, rollback e handoff.
+5. Declare filesets exatos. `forbidden` deve incluir segredos e superfícies fora
+   do escopo. Evite globs amplos.
+6. Confirme `project.governance_profile` e aplique a união dos gates mínimos do
+   perfil e do risco. Confirme também `quality.ci.repository` e
+   `quality.ci.required_checks`; nomes de branch não substituem SHA completo.
+7. Use Codex como executor e Claude como reviewer por padrão. Escolha um papel de
+   domínio do `framework/roles`; não crie um agente permanente. Executor e
+   reviewer devem ser independentes.
+8. Para gates humanos, indique a fonte externa autenticada e separada do executor.
+   `approval.schema.json`, texto de modelo ou `actor: human` servem apenas para
+   auditoria local e nunca liberam merge.
+9. Rode:
+   `python3 ${CLAUDE_PLUGIN_ROOT}/framework/validate.py --task tasks/$ARGUMENTS.yaml`
+   e depois `--tasks-dir tasks` para detectar colisões.
+10. Mude para `READY_FOR_ARCH_REVIEW`, apresente o contrato e aguarde aprovação.
+   Após aprovação arquitetural, registre evidência e mude para `READY`.
 
-Execute agora, nesta ordem obrigatória:
-
-0. **Phase gate (bloqueante):** rode
-   `bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/phase-gate.sh plan`
-   Se sair com código 1, PARE e apresente os itens faltantes ao usuário — não
-   planeje sem os artefatos das fases anteriores. Só prossiga se o usuário
-   explicitamente dispensar um pré-requisito.
-1. Leia a issue especificada em `issues/`.
-2. **Pesquisa em 3 frentes (nunca pule):**
-   - Frente 1 — Codebase interna: glob/grep por componentes, hooks, actions e utilities já existentes. Nunca duplicar o que já existe.
-   - Frente 2 — Documentação oficial (Context7 / Perplexity conforme `~/.claude/modules/context7.md` e `~/.claude/modules/perplexity.md`): confirmar API/versão atual antes de planejar.
-   - Frente 3 — Repos de referência: se a issue envolve padrão complexo (auth, pagamentos, realtime), considerar clonar repo aberto similar para `.temp/`, absorver o padrão, deletar `.temp/` depois.
-3. Consulte `MASTER-ARCHITECTURE.md` e `DESIGN.md` (raiz do projeto, se houver UI).
-4. Preencha as 7 seções obrigatórias na issue (Functional Specification, Database Schema, Files to Create/Modify/NOT Touch, External Dependencies, Notes, Tasks) — template completo em `references/four-commands.md`.
-5. Se o plano ultrapassar 10 arquivos, sinalize ao usuário que a issue precisa ser quebrada novamente via `/break`.
-6. Apresente o plano completo e **aguarde aprovação explícita**. Não escreva código nesta etapa.
-7. Após aprovação, lembre o usuário: rode `/clear` antes de `/execute` — a pesquisa poluiu a janela de contexto, o plano aprovado já contém o que importa.
-
-> Este comando roda em Opus por padrão (`model: opus`) — é aqui que decisões de arquitetura, edge cases e escopo de arquivos são travados. Um erro de julgamento aqui custa retrabalho em todo o `/execute`. Para planejamento estratégico de nível mais alto (arquitetura de projeto/epic, não uma issue tática), use `/opus-plan`.
+Não escreva código nesta etapa. Se a task exceder 10 arquivos ou misturar
+resultados independentes, retorne ao `/break`.

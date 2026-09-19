@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "additionalProperties": false,
+  "required": ["task", "gate", "decision", "actor", "timestamp", "evidence"],
+  "properties": {"task": {"type": "string"}, "gate": {"type": "string"}, "decision": {"type": "string", "enum": ["approved", "rejected"]}, "actor": {"type": "string"}, "timestamp": {"type": "string"}, "evidence": {"type": "array", "items": {"type": "string"}}}
+}

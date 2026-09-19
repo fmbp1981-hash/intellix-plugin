@@ -1,6 +1,31 @@
 # IntelliX Engineering Plugin
 
-> Versão: ver `.claude-plugin/plugin.json`. Fases, IDs e stack: `~/.claude/metodologia.yaml` (fonte normativa).
+> Versão: ver `.claude-plugin/plugin.json`. A fonte normativa versionada é
+> `framework/framework.yaml`; `global-config/metodologia.yaml` é um adapter de
+> compatibilidade para instalações Claude Code.
+
+## Framework multiagente
+
+A partir da versão 3.1, a metodologia deixa de depender de um único agente:
+Claude Code atua por padrão como arquiteto/revisor, Codex como executor principal
+e a CI como árbitro determinístico. O trabalho é governado por Task Contracts,
+filesets, risco, gates e handoffs verificáveis — não pelo histórico do chat.
+
+- Arquitetura: [`docs/architecture/MULTIAGENT-FRAMEWORK.md`](docs/architecture/MULTIAGENT-FRAMEWORK.md)
+- Núcleo executável: [`framework/`](framework/README.md)
+- Migração: [`docs/MULTIAGENT-FRAMEWORK-MIGRATION.md`](docs/MULTIAGENT-FRAMEWORK-MIGRATION.md)
+- Decisão: [`docs/adr/0001-vendor-neutral-multiagent-kernel.md`](docs/adr/0001-vendor-neutral-multiagent-kernel.md)
+
+### Arquitetura alvo em revisão
+
+- [`INTELLIX TARGET ARCHITECTURE`](docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md)
+- [`INTELLIX WORKFLOW`](docs/architecture/INTELLIX-WORKFLOW.md)
+- [`TASK CONTRACT v1`](docs/architecture/TASK-CONTRACT-V1.md)
+- [`ROLE / EXECUTOR MATRIX`](docs/architecture/ROLE-EXECUTOR-MATRIX.md)
+- [`AUTHORITY AND TRUST MODEL`](docs/architecture/AUTHORITY-AND-TRUST-MODEL.md)
+
+Esses cinco artefatos estão em estado `Proposed`. As tasks P0 permanecem `DRAFT`
+até aprovação humana explícita deste conjunto.
 
 > **Orquestrador principal:** [`skills/master-workflow/SKILL.md`](./skills/master-workflow/SKILL.md)
 > Define o fluxo completo da ideia ao deploy — brainstorm → PRD → plano → 10 fases de execução.

@@ -3,6 +3,13 @@
 > Consulte este arquivo ao executar `/spec`, `/break`, `/plan` ou `/execute`.
 > Índice: [`MASTER-ARCHITECTURE.md §2`](../MASTER-ARCHITECTURE.md)
 
+> **Framework 3.1:** as seções históricas abaixo continuam úteis como exemplos,
+> mas `framework/framework.yaml` e os próprios arquivos em `commands/` são
+> normativos. Para novo trabalho, leia `issues/` como `tasks/TASK-NNN.yaml`, plano
+> como Task Contract e ciclo por arquivo como implementação coesa por task. Os
+> agentes tipados são papéis auxiliares; executor, reviewer e CI obedecem ao
+> contrato multiagente e à separação de funções.
+
 ---
 
 ## 2. Workflow de Implementação — Os 4 Comandos

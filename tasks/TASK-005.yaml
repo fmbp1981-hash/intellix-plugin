@@ -1,0 +1,186 @@
+{
+  "acceptance_criteria": [
+    {
+      "given": "required GitHub CI is missing, stale, incomplete, indeterminate or failed for the exact reviewed repository SHA",
+      "id": "AC-001",
+      "then": "the evaluator fails closed and progression remains blocked",
+      "when": "APPROVED or merge eligibility is evaluated"
+    },
+    {
+      "given": "a clean Linux or macOS checkout",
+      "id": "AC-002",
+      "then": "bootstrap, validation, planning, dispatch, implementation handoff, CI eligibility and review gates execute portably without relying on the shell working directory",
+      "when": "the pilot runs"
+    },
+    {
+      "given": "micro, standard and regulated governance-profile fixtures",
+      "id": "AC-003",
+      "then": "the required governance_profile enum and kernel-defined minimum gates are enforced in addition to risk gates without repurposing the project's business profile",
+      "when": "profile rules are validated"
+    },
+    {
+      "given": "the full pilot, external exact-revision CI evidence and independent findings",
+      "id": "AC-004",
+      "then": "the framework proposes merge only after green required checks and an authenticated human decision from a separately credentialed external channel, otherwise it explicitly remains blocked without performing the merge",
+      "when": "acceptance is reviewed"
+    },
+    {
+      "given": "local JSON, model output, a free-text actor, or a check result for another repository or SHA",
+      "id": "AC-005",
+      "then": "the framework rejects it and records no successful eligibility decision",
+      "when": "it is offered as authoritative CI or human-approval evidence"
+    },
+    {
+      "given": "project manifests and templates in the authorized fileset",
+      "id": "AC-006",
+      "then": "project.governance_profile is a required sibling of project.profile with exactly micro, standard or regulated as allowed values in every manifest",
+      "when": "the project schema is upgraded"
+    },
+    {
+      "given": "the GitHub evidence service is unavailable, unauthorized, malformed or rate-limited",
+      "id": "AC-007",
+      "then": "the result is indeterminate and fail-closed without exposing credentials",
+      "when": "CI eligibility is evaluated"
+    }
+  ],
+  "dependencies": [
+    "TASK-004"
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "ci",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "handoff": {
+    "open_questions": [],
+    "required_evidence": [
+      "Linux and macOS workflow results for the exact implementation SHA",
+      "GitHub CI check URLs returned for the exact repository and SHA",
+      "negative results for missing, stale, incomplete, indeterminate, failed and wrong-revision checks",
+      "micro, standard and regulated fixture results",
+      "complete clean-project pilot transcript",
+      "independent Claude review: APPROVE with no blocking/high/medium findings",
+      "authenticated human merge decision or an explicit statement that merge remains blocked"
+    ]
+  },
+  "id": "TASK-005",
+  "notes": [
+    "This task is the merge-readiness proof, not authorization to merge or deploy.",
+    "Run the pilot before proposing framework extraction to a separate repository.",
+    "project.profile remains the business/project classification; required sibling project.governance_profile is an enum of micro, standard or regulated in the root project, PROJECT template, root template and valid-project fixture.",
+    "framework.framework.yaml defines schema-validated minimum gates for each governance profile; validate.py enforces the union of governance-profile and risk gates, so a profile can never weaken a risk policy.",
+    "Required CI is queried read-only from GitHub for the exact configured repository and reviewed SHA; editable local artifacts and model statements are never authoritative CI evidence.",
+    "framework/ci.py is Python-standard-library-only, reads credentials only from the environment without logging them, supports an injectable HTTP transport for hermetic tests, and treats network, authentication, rate-limit and malformed-response failures as indeterminate and blocking.",
+    "Authenticated human approval is outside this branch unless a protected external approval by an allowlisted identity uses credentials unavailable to the executor; approval.schema.json, free-text actors and this controlling-session approval are audit context only and cannot unlock merge eligibility.",
+    "The pilot must therefore prove both outcomes: exact-revision CI can pass, while merge remains blocked when the separately credentialed authenticated human channel is unavailable.",
+    "commands/break.md and commands/plan.md are in scope so newly decomposed and planned contracts cannot undercut governance-profile minimum gates; commands/execute.md binds final CI eligibility to external evidence.",
+    "The GitHub Actions workflow uses an explicit ubuntu-latest and macos-latest matrix, checks out the pull-request head SHA explicitly, verifies HEAD equality and exposes a stable aggregate gate without granting write permissions.",
+    "At least one portability test invokes the validator, dispatcher and pilot from outside the repository working directory using explicit project roots.",
+    "The kernel lifecycle uses APPROVED rather than the non-normative DONE label.",
+    "The task intentionally exceeds the ten-file planning heuristic because schema, evidence engine, portable workflow and end-to-end fixtures form one acceptance proof; implementation should use focused internal checkpoints and commits while preserving one active fileset owner.",
+    "The human approved the expanded fileset and read-only external Claude architecture review in the controlling session on 2026-09-18.",
+    "Independent Claude architecture review returned APPROVE with no blocking, high or medium findings after the trust-boundary, profile-enforcement, stdlib transport, command-scope and portability constraints were made explicit.",
+    "Implementation commits df98759 and 20c196e passed 76 local tests, explicit-root validation, pinned snapshot verification, compileall, hook validation and diff checking.",
+    "GitHub CI for exact review SHA 986b4a06a3bb7eca74fb3c5f97a1f96c98bf09ee passed on ubuntu-latest and macos-latest; framework/ci.py returned eligible for the configured repository and required framework-validation check.",
+    "Independent Claude implementation review returned APPROVE with no blocking, high or medium findings for diff da7b889..20c196e and acknowledged 986b4a0 as a status-only commit.",
+    "The controlling human explicitly approved TASK-005 technical completion on 2026-09-18. This approval closes the Task Contract only; it is not the separately credentialed authenticated merge approval required by AC-004, so merge remains blocked."
+  ],
+  "objective": "Demonstrate the complete method on clean project fixtures while fail-closed CI eligibility is bound to the exact reviewed repository revision.",
+  "ownership": {
+    "architect": "claude",
+    "domain_role": "test-engineer",
+    "executor": "codex",
+    "reviewer": "claude-independent"
+  },
+  "risk": {
+    "irreversible_actions": [],
+    "level": "high",
+    "reasons": [
+      "Defines merge-readiness evidence and acceptance of the operating model",
+      "Introduces project governance profiles and externally sourced GitHub CI evidence",
+      "Changes the portable CI matrix and the pinned distributable framework manifest"
+    ]
+  },
+  "rollback": "Revert the focused TASK-005 commit to restore the prior workflow, project schema, kernel manifest, commands and pilot artifacts while preserving external CI and review references; never weaken branch protection or mandatory checks.",
+  "scope": {
+    "create": [
+      "framework/ci.py",
+      "framework/schemas/ci-evidence.schema.json",
+      "framework/tests/test_ci.py",
+      "framework/tests/test_pilot.py",
+      "framework/tests/fixtures/pilot/**",
+      "docs/architecture/PILOT-ACCEPTANCE.md"
+    ],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      "issues/**",
+      "infra/production/**",
+      "global-config/settings.json"
+    ],
+    "modify": [
+      ".github/workflows/framework-ci.yml",
+      "framework/framework.yaml",
+      "framework/policies/git.yaml",
+      "framework/schemas/project.schema.json",
+      "framework/validate.py",
+      "framework/tests/test_validate.py",
+      "framework/tests/test_distribution.py",
+      "framework/templates/PROJECT.yaml",
+      "framework/README.md",
+      "intellix-templates/root-template/intellix.yaml",
+      "framework/tests/fixtures/projects/valid/intellix.yaml",
+      "intellix.yaml",
+      "intellix.lock.json",
+      "commands/break.md",
+      "commands/plan.md",
+      "commands/execute.md",
+      "docs/architecture/FRAMEWORK-SPEC.md",
+      "docs/MULTIAGENT-FRAMEWORK-MIGRATION.md",
+      "tasks/TASK-005.yaml"
+    ]
+  },
+  "source": {
+    "adrs": [
+      "docs/adr/0002-operational-orchestrator.md"
+    ],
+    "architecture": "docs/architecture/INTELLIX-WORKFLOW.md",
+    "prd": "README.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md"
+  },
+  "status": "APPROVED",
+  "title": "Bind exact-revision CI and prove a portable pilot",
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "Complete repository contracts validate"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "Full framework, negative CI evidence and pilot behavior pass"
+    },
+    {
+      "command": "python3 framework/sync.py --source-root . --target-root . --check",
+      "proves": "The versioned kernel and control-plane lock remain current"
+    },
+    {
+      "command": "python3 -m compileall -q framework",
+      "proves": "The dependency-free Python control plane compiles"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Claude adapter hooks remain valid"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The final change set has no whitespace errors"
+    }
+  ]
+}

@@ -38,6 +38,18 @@ exigir_dir_nao_vazio() {
   fi
 }
 
+exigir_trabalho_planejado() {
+  # Framework 3.1 usa Task Contracts. `issues/` é aceito somente durante a
+  # migração para não quebrar projetos existentes.
+  if [[ -d "tasks" ]] && [[ -n "$(find tasks -type f -name 'TASK-*.yaml' -print -quit 2>/dev/null)" ]]; then
+    return
+  fi
+  if [[ -d "issues" ]] && [[ -n "$(find issues -type f ! -name '.*' -print -quit 2>/dev/null)" ]]; then
+    return
+  fi
+  FALHAS+=("FALTA: tasks/TASK-*.yaml — rode /break; issues/ é aceito apenas como legado")
+}
+
 case "$FASE" in
   plan)
     exigir_arquivo ".intellix-phase" \
@@ -45,8 +57,7 @@ case "$FASE" in
     exigir_arquivo "references/architecture.md" \
       "Fase 01 (architecture) nao concluida — /plan sem isso ignora as regras do projeto"
     exigir_arquitetura_definida
-    exigir_dir_nao_vazio "issues" \
-      "nenhuma issue para planejar — rode /break antes"
+    exigir_trabalho_planejado
     ;;
   execute)
     exigir_arquivo ".intellix-phase" \
@@ -54,8 +65,7 @@ case "$FASE" in
     exigir_arquivo "references/architecture.md" \
       "Fase 01 (architecture) nao concluida"
     exigir_arquitetura_definida
-    exigir_dir_nao_vazio "issues" \
-      "nenhuma issue planejada — rode /plan antes"
+    exigir_trabalho_planejado
     ;;
   deploy)
     exigir_arquivo ".intellix-phase" "projeto nao inicializado"

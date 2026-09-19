@@ -1,0 +1,52 @@
+name: IntelliX Framework
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  framework-tests:
+    name: framework-tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+      - name: Verify exact revision
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate framework and project contracts
+        run: python3 framework/validate.py --root . --all
+      - name: Verify pinned distribution
+        run: python3 framework/sync.py --source-root . --target-root . --check
+      - name: Test validator behavior
+        run: python3 -m unittest discover -s framework/tests -p 'test_*.py' -v
+      - name: Compile validator
+        run: python3 -m compileall -q framework
+      - name: Validate hooks
+        run: bash hooks/scripts/validate-hooks.sh .
+      - name: Check whitespace
+        run: git diff --check
+
+  framework-validation:
+    name: framework-validation
+    if: ${{ always() }}
+    needs: [framework-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every platform result
+        env:
+          MATRIX_RESULT: ${{ needs.framework-tests.result }}
+        run: test "$MATRIX_RESULT" = "success"
