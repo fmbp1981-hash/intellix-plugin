@@ -30,14 +30,24 @@ canonical registry or policies referenced by it; adapters cannot redefine them.
 
 ### Permitted automation
 
+These are architectural boundaries, not new executable state transitions. The
+current `framework/framework.yaml` transition registry is authoritative. A
+transition listed here but absent from that registry remains blocked until a
+separate Task Contract changes the kernel and tests.
+
 - Planning, schema validation, dependency analysis, role selection, fileset checks.
 - Worktree setup within the human-authorized repository and branch scope.
 - READY -> IN_PROGRESS only after required contract/architecture authorization.
 - IN_PROGRESS -> IN_REVIEW after verification, fileset check and complete handoff.
-- IN_REVIEW -> CHANGES_REQUESTED on independently produced findings.
+- IN_REVIEW -> CHANGES_REQUESTED on independently produced findings, only when
+  the kernel transition registry permits it; otherwise use its permitted finding
+  path and record the reason.
 - Any applicable running state -> BLOCKED, with reason and unblock condition.
-- APPROVED only after authentic current-revision CI and all required reviews and
-  human approvals; never from an adapter's self-reported success.
+- Technical Task Contract completion may be recorded as APPROVED only after
+  authentic current-revision CI, all required reviews and explicit local human
+  action when required by risk. This local action does not satisfy authenticated
+  merge or production approval, and the control plane cannot self-promote to
+  APPROVED when the kernel has no such transition.
 - No automatic merge, release, deploy, secret/permission changes or destructive
   migrations. These remain separate explicit human-authorized actions.
 
@@ -103,10 +113,12 @@ implicit production authorization; mandatory human clicks for every safe step.
 
 ## Consequences and rollback
 
-A useful operational MVP is authorized with the accepted local trust boundary.
+A useful operational MVP may operate within the accepted local trust boundary.
 Strong identity isolation still needs infrastructure and separate credentials.
 Keep the kernel dependency-free, record failures, and test negative paths.
 Revert scoped feature-branch commits to roll back; retain evidence.
 This ADR accepts the operational control-plane architecture and trust boundaries;
-it does not authorize merge, release, deploy, branch-protection changes, credential
-provisioning or production access. Those actions remain independently gated.
+it does not itself authorize further code or configuration changes. Those require
+their own validated Task Contracts. It also does not authorize merge, release,
+deploy, branch-protection changes, credential provisioning or production access.
+Those actions remain independently gated.

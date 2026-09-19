@@ -46,7 +46,9 @@
   "notes": [
     "The controlling human explicitly accepted ADR-0002 on 2026-09-18.",
     "Acceptance authorizes the architectural operating model, not merge, deploy, release, credential provisioning, branch protection or production actions.",
-    "The local human gate can close technical Task Contracts but cannot claim separately credentialed merge or production identity assurance."
+    "The local human gate can close technical Task Contracts but cannot claim separately credentialed merge or production identity assurance.",
+    "Independent Claude review approved the acceptance wording but identified ambiguities around kernel transition authority, future code authorization and local approval scope; those were clarified in ADR-0002 within this fileset.",
+    "Out-of-scope follow-up: ADR-0001 and AUTHORITY-AND-TRUST-MODEL.md still carry Proposed status or older approval wording. Do not silently change their status or meaning in TASK-006; reconcile them in a separately authorized Task Contract."
   ],
   "objective": "Record the human architectural decision for ADR-0002 without granting merge, production or credential authority.",
   "ownership": {
@@ -90,7 +92,7 @@
     "prd": "README.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md"
   },
-  "status": "IN_PROGRESS",
+  "status": "IN_REVIEW",
   "title": "Record human acceptance of the operational orchestrator ADR",
   "verification": [
     {
