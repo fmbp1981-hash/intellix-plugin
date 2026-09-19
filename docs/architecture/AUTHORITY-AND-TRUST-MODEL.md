@@ -18,7 +18,7 @@ current `framework/framework.yaml` transitions or authorize new approvals.
 | Architectural decisions | accepted project ADRs | Task Contracts and reviews |
 | Unit of implementation | `tasks/TASK-NNN.yaml` | runtime/evidence/PR |
 | Deterministic result | CI on exact commit SHA | dispatcher and protected branch |
-| Technical Task Contract approval | explicit human action in the controlling session, when required by risk and permitted by the kernel | local advisory/audit record |
+| Technical Task Contract approval | explicit human action in the controlling session, only where the kernel transition and applicable gate permit local technical completion | local advisory/audit record |
 | Merge/production approval | authenticated external action with credentials separate from the executor | local audit reference |
 | Merge/release/deploy state | GitHub and deployment provider | reports and handoff |
 
@@ -43,7 +43,7 @@ normative. A sync/doctor check must detect drift.
 
 | Level | Evidence | Permitted use |
 |---|---|---|
-| Local advisory | explicit human action in the controlling session, recorded locally | technical Task Contract completion after required CI/reviews and only when the kernel permits the transition; not proof of identity or merge/production authority |
+| Local advisory | explicit human action in the controlling session, recorded locally | technical Task Contract completion after required exact-revision CI and independent review, only when the kernel permits the transition; not proof of identity or merge/production authority |
 | GitHub authenticated | protected PR review/check from allowlisted identity | merge authorization |
 | Production authenticated | provider/IAM approval separated from executor credential | deploy, secrets, permissions, destructive operations |
 

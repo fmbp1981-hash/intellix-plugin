@@ -106,8 +106,9 @@
     "Use the accepted ADR-0002 same-branch dedicated-worktree procedure after planning approval.",
     "Any material architectural conflict or status change requires a separate human decision.",
     "Implementation diff is limited to this contract and its two named documentation files; local framework validation, 76 unit tests, hooks, compileall and diff check passed in the dedicated TASK-007 worktree.",
-    "Independent Claude review was attempted read-only, but the CLI returned 'Not logged in'; no review verdict has been recorded. Keep the task IN_REVIEW until an independent reviewer can inspect the exact committed diff.",
-    "Next actions: obtain exact-revision CI for the pushed commit; obtain independent Claude review; address any findings within this fileset; request explicit human technical-completion approval before marking APPROVED. Merge and production remain separately blocked."
+    "The first read-only Claude review attempt failed because the CLI was not logged in. After the human completed authentication, independent Claude review of e114a77 returned APPROVE with two low-severity wording suggestions; both were addressed within this fileset. The review is not a merge or production approval.",
+    "Exact-revision GitHub checks for e114a77 passed: framework-validation, Ubuntu/macOS tests and GitGuardian. Any subsequent documentation commit requires a new exact-revision CI check and independent review before technical completion.",
+    "Next actions: validate and push the wording correction; obtain exact-revision CI and independent review for its final SHA; request explicit human technical-completion approval before marking APPROVED. Merge and production remain separately blocked."
   ],
   "handoff": {
     "required_evidence": [
@@ -117,7 +118,7 @@
       "exact-revision CI result"
     ],
     "open_questions": [
-      "When will an authenticated, read-only Claude reviewer be available to evaluate the exact TASK-007 commit?"
+      "Will the final wording-correction commit pass exact-revision CI and independent review?"
     ]
   }
 }
