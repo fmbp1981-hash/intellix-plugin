@@ -1,0 +1,106 @@
+{
+  "id": "TASK-009",
+  "title": "Propose the technical-completion trust and revision protocol",
+  "status": "READY",
+  "objective": "Document a bounded, fail-closed proposal for local technical approval, exact-revision review and downstream dependency validity without changing executable rules.",
+  "source": {
+    "prd": "README.md",
+    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
+    "adrs": ["docs/adr/0002-operational-orchestrator.md"]
+  },
+  "risk": {
+    "level": "high",
+    "reasons": [
+      "The proposed approval and dependency semantics govern future implementation and human gates",
+      "Ambiguous revision binding could turn stale CI or review into a success-shaped task state"
+    ],
+    "irreversible_actions": []
+  },
+  "ownership": {
+    "architect": "claude",
+    "executor": "codex",
+    "reviewer": "claude-independent",
+    "domain_role": "architect"
+  },
+  "scope": {
+    "create": [
+      "tasks/TASK-009.yaml",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md"
+    ],
+    "modify": [],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      "issues/**",
+      ".github/**",
+      "framework/**",
+      "global-config/**",
+      "infra/production/**",
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md",
+      "tasks/TASK-008.yaml"
+    ]
+  },
+  "dependencies": ["TASK-006"],
+  "acceptance_criteria": [
+    {
+      "id": "AC-001",
+      "given": "the human selected process-level local Claude review for technical completion",
+      "when": "the proposal defines evidence assurance",
+      "then": "it labels review and controlling-session human action as local advisory evidence, never authenticated merge or production identity"
+    },
+    {
+      "id": "AC-002",
+      "given": "a completion candidate and a prior green revision",
+      "when": "the proposed revision protocol is applied",
+      "then": "it derives the current authorized worktree revision, rejects stale or uncommitted changes, binds review and live GitHub CI to that exact revision, and describes the status-commit CI boundary"
+    },
+    {
+      "id": "AC-003",
+      "given": "APPROVED releases downstream dependencies",
+      "when": "approval evidence, contract, revision or post-status CI becomes invalid",
+      "then": "the proposal requires downstream dispatch to fail closed rather than trusting an editable status label alone"
+    },
+    {
+      "id": "AC-004",
+      "given": "the current generic dispatcher and runtime transition interfaces",
+      "when": "the proposal describes implementation boundaries",
+      "then": "it forbids direct executor-requested APPROVED and reserves completion for a guarded path under the normative kernel"
+    },
+    {
+      "id": "AC-005",
+      "given": "this architectural proposal",
+      "when": "its status and diff are reviewed",
+      "then": "the ADR remains Proposed, only the two declared files changed, and no kernel, permission, credential, merge or production state changed"
+    }
+  ],
+  "verification": [
+    {"command": "python3 framework/validate.py --root . --all", "proves": "The new Task Contract and repository artifacts validate"},
+    {"command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v", "proves": "No framework behavior regressed"},
+    {"command": "bash hooks/scripts/validate-hooks.sh .", "proves": "Claude adapter hooks remain valid"},
+    {"command": "git diff --check", "proves": "The scoped documentation diff has no whitespace errors"}
+  ],
+  "gates": [
+    "schema", "fileset", "lint", "tests", "security_review",
+    "independent_review", "rollback_plan", "human_approval", "worktree"
+  ],
+  "rollback": "Revert only the focused TASK-009 proposal commits on the authorized feature branch; leave ADR-0002 Accepted and preserve review evidence.",
+  "notes": [
+    "The human approved drafting the recommended process-level local-review trust model on 2026-09-19; this is not acceptance of ADR-0003 or authorization to change the kernel.",
+    "This task creates only a proposed ADR and its own contract. It does not revise the provisional TASK-008 fileset or move TASK-007 to APPROVED.",
+    "The ADR must state that local artifacts are mutable process evidence, not cryptographic identity or independent GitHub approval.",
+    "Use the same-branch dedicated-worktree procedure before writing the ADR. Do not merge, deploy, release or change credentials or permissions."
+  ],
+  "handoff": {
+    "required_evidence": [
+      "two-file inventory",
+      "independent architecture and security fidelity review",
+      "exact-revision CI",
+      "human decision on proposed ADR"
+    ],
+    "open_questions": [
+      "Will the human accept the concrete revision and dependency-validity protocol after independent review?"
+    ]
+  }
+}
