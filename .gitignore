@@ -2,3 +2,4 @@
 docs/generated/
 .DS_Store
 global-config/**/__pycache__/
+__pycache__/
