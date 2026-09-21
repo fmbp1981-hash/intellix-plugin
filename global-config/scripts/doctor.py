@@ -123,14 +123,22 @@ def frontmatter(md: Path) -> dict[str, str]:
 
 
 def iter_files(base: Path, exts=TEXT_EXT):
-    """Arquivos autorais sob `base`, sem .git, bytecode, histórico e o próprio doctor."""
+    """Arquivos autorais sob `base`, sem .git, bytecode, histórico e o próprio doctor.
+
+    `global-config/` (dentro do intellix-plugin) também é pulado: é um espelho
+    versionado de arquivos que vivem em ~/.claude (metodologia.yaml, hooks,
+    skills globais como intellix-agent-creation), com convenção de path própria
+    (ex.: `resources/references/` em vez de `references/`) — não é conteúdo
+    carregado pelo Claude Code como parte do plugin, então não deve ser
+    validado pelas regras de convenção do plugin. Ver global-config/README.md.
+    """
     if not base.is_dir():
         return
     for p in sorted(base.rglob("*")):
         if not p.is_file() or p.suffix not in exts:
             continue
         s = str(p)
-        if "/.git/" in s or "__pycache__" in s or "/docs/plans/" in s or "/node_modules/" in s:
+        if "/.git/" in s or "__pycache__" in s or "/docs/plans/" in s or "/node_modules/" in s or "/global-config/" in s:
             continue
         if p.name in ("doctor.py", "test_doctor.py", "metodologia.yaml"):
             continue
@@ -797,6 +805,39 @@ def check_async_context_hooks() -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 21. Hook que BLOQUEIA ferramenta não pode ser julgado por LLM
+# ─────────────────────────────────────────────────────────────────────────────
+EVENTOS_BLOQUEANTES = ("PreToolUse", "PostToolUse")
+
+
+def check_prompt_blocking_hooks() -> None:
+    """Achado de 2026-09-18/20: o gate de qualidade TS era `type: prompt`.
+
+    Num hook bloqueante, o harness trata qualquer resposta que não seja o
+    literal esperado como bloqueio. Como o juiz é um LLM, ele erra: um
+    arquivo .py foi barrado por "estar fora do escopo de validação", e o
+    Write/Edit parou em TODO arquivo não-TS/JS, em todo projeto.
+
+    Regra: o que bloqueia é código determinístico (`type: command`), que
+    falha aberto. Julgamento de conteúdo por LLM pertence à revisão
+    (code-quality-reviewer, gate de pré-deploy), não ao caminho crítico de
+    cada escrita. Ver docstring de hooks/scripts/ts-quality-gate.py.
+    """
+    for o in OWNED:
+        f = owned_dir(o) / "hooks" / "hooks.json"
+        data = load_json(f)
+        if not isinstance(data, dict):
+            continue
+        for evento in EVENTOS_BLOQUEANTES:
+            for grupo in (data.get("hooks") or {}).get(evento) or []:
+                for h in grupo.get("hooks") or []:
+                    if h.get("type") == "prompt":
+                        add("HOOK", f"{rel(f)}: hook de {evento} com type:prompt — um LLM no caminho "
+                                    f"crítico de cada escrita bloqueia por engano; use type:command "
+                                    f"com script determinístico que falha aberto")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Execução — nunca deixa exceção escapar (roda em todo SessionStart)
 # ─────────────────────────────────────────────────────────────────────────────
 CHECKS = [
@@ -818,6 +859,7 @@ CHECKS = [
     ("colisão de IDs", check_id_collisions),
     ("fases do banner", check_banner_phases),
     ("hooks de contexto", check_async_context_hooks),
+    ("hooks bloqueantes", check_prompt_blocking_hooks),
 ]
 
 

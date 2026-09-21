@@ -25,8 +25,14 @@ determinístico, e já coberto em outro estágio do workflow IntelliX):
     Duplicar esse julgamento aqui, de novo via LLM, reintroduziria a
     mesma classe de bug que este arquivo corrige.
 
-Contrato de hook: exit 0 libera, exit 2 bloqueia (stderr vai para o agente).
-Qualquer erro interno = liberar (nunca travar a sessão do usuário).
+MODO AVISO (2026-09-21, decisão do usuário): roda em PostToolUse e NUNCA
+bloqueia. Ao encontrar `any` explícito, injeta um aviso no contexto do
+agente (hookSpecificOutput.additionalContext — mesmo mecanismo do
+context-monitor.py) para ele corrigir em seguida. Motivo: bloquear no
+meio da escrita interrompia o trabalho por algo que ESLint/tsc e o
+code-quality-reviewer já pegam; o custo da interrupção superava o ganho.
+
+Contrato de hook: sempre exit 0. Qualquer erro interno = silêncio.
 """
 from __future__ import annotations
 
@@ -100,23 +106,20 @@ def main() -> int:
         return 0
 
     trecho = conteudo[max(0, match.start() - 40) : match.end() + 40].strip()
-    print(
-        f"""
-═══ INTELLIX TS QUALITY GATE: BLOQUEADO ═══
-Arquivo:  {rel}
-Achado:   uso de `any` explícito — {match.group(0)!r}
-Contexto: ...{trecho}...
-
-Regra: TypeScript strict, zero `any` explícito (~/.claude/modules/dev-rules.md).
-Troque por um tipo concreto, `unknown` + narrowing, ou um generic.
-
-Se este `any` é deliberado e justificado (ex: interoperar com uma lib sem
-tipos), diga isso ao usuário e peça confirmação explícita antes de manter —
-não contorne em silêncio.
-""".strip(),
-        file=sys.stderr,
+    aviso = (
+        f"[INTELLIX TS QUALITY] Aviso (não bloqueou): `any` explícito em {rel} — "
+        f"{match.group(0)!r} em ...{trecho}...\n"
+        "Regra: TypeScript strict, zero `any` (~/.claude/modules/dev-rules.md). "
+        "Troque por tipo concreto, `unknown` + narrowing, ou generic. Se o `any` "
+        "for deliberado (ex: lib sem tipos), avise o usuário em vez de manter em silêncio."
     )
-    return 2
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PostToolUse",
+            "additionalContext": aviso,
+        }
+    }, ensure_ascii=False))
+    return 0
 
 
 if __name__ == "__main__":
