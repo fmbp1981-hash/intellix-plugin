@@ -72,7 +72,7 @@
       "id": "AC-005",
       "given": "this architectural proposal",
       "when": "its status and diff are reviewed",
-      "then": "the ADR remains Proposed, only the two declared files changed, and no kernel, permission, credential, merge or production state changed"
+      "then": "the ADR remains Proposed until an explicit human decision and may then record Accepted without changing kernel, permission, credential, merge or production state"
     }
   ],
   "verification": [
@@ -94,7 +94,9 @@
     "The contract was created in the planning commit and subsequently edited within the same task; scope.create owns this path for the full task and the validator checks the create/modify union.",
     "First independent Claude architecture/security review requested changes for dependency-satisfying states, vacuous CI eligibility, failed status-commit recovery, approval schema and invalidation inputs. The proposed ADR was revised within this fileset.",
     "Second independent Claude read-only review returned APPROVE with no blocking finding. Remaining implementation risks include choosing the enforcement point for non-empty CI checks and a guarded supersession/reopening design; these stay with TASK-008 after ADR acceptance.",
-    "Next actions: verify and publish this two-file proposal; obtain exact-revision CI; request an explicit human decision on ADR-0003. Do not promote the ADR to Accepted by model opinion."
+    "Exact-revision GitHub CI for d1a4871873e2039b0fdccba9ccfde674ce2b0bd7 passed framework-validation, Ubuntu/macOS tests and GitGuardian.",
+    "The controlling human explicitly accepted ADR-0003 on 2026-09-22. This authorizes its use as an architectural source for re-planning TASK-008, not implementation, merge, release, deploy, credentials, permissions or production actions.",
+    "TASK-009 remains IN_REVIEW because the current kernel has no guarded IN_REVIEW to APPROVED transition; do not falsify completion or bypass the transition registry."
   ],
   "handoff": {
     "required_evidence": [
@@ -103,8 +105,6 @@
       "exact-revision CI",
       "human decision on proposed ADR"
     ],
-    "open_questions": [
-      "Will the human accept the concrete revision and dependency-validity protocol after independent review?"
-    ]
+    "open_questions": []
   }
 }

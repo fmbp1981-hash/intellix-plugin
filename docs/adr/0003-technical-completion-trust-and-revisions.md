@@ -1,7 +1,8 @@
 # ADR-0003: Local technical completion and revision binding
 
-Status: Proposed — human acceptance not yet recorded
+Status: Accepted
 Date: 2026-09-19
+Accepted: 2026-09-22, by explicit human decision
 Related: ADR-0002 (Accepted); TASK-007, TASK-008 and TASK-009
 Authority: `framework/framework.yaml` and its referenced policies remain normative
 
@@ -22,7 +23,7 @@ and the later commit recording task completion cannot be the same SHA. This ADR
 proposes how to bind both revisions without pretending that local records prove
 identity. It does not add a kernel transition or authorize TASK-008 execution.
 
-## Proposed decision
+## Decision
 
 ### Assurance boundary
 
@@ -139,7 +140,8 @@ and downstream dependency release without current evidence. The proposal does
 not solve cryptographic local identity; reports must state that residual risk
 plainly.
 
-No part of this Proposed ADR overrides the current kernel, changes an approval
+No part of this ADR overrides the current kernel, changes an approval
 schema, grants production authority, authorizes merge or marks ADR-0001 or the
-target architecture set as Accepted. Human acceptance of this precise decision
-is required before TASK-008 can use it as an architectural source.
+target architecture set as Accepted. This acceptance authorizes TASK-008 to use
+the decision as an architectural source after its contract and fileset are
+re-planned and separately approved; it does not itself authorize implementation.
