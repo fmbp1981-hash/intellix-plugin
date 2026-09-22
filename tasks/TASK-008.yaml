@@ -1,19 +1,23 @@
 {
   "id": "TASK-008",
-  "title": "Gate technical task completion without self-approval",
-  "status": "DRAFT",
-  "objective": "Provide a fail-closed technical-completion path from independent review to APPROVED without allowing an executor, editable record, or model opinion to satisfy CI, review, or human gates.",
+  "title": "Harden guarded completion and CI primitives",
+  "status": "READY",
+  "objective": "Establish fail-closed kernel, runtime, dispatcher and CI primitives that make a later guarded technical-completion path safe to implement.",
   "source": {
     "prd": "README.md",
     "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": ["docs/adr/0002-operational-orchestrator.md"]
+    "adrs": [
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md"
+    ]
   },
   "risk": {
     "level": "high",
     "reasons": [
-      "Changes the normative task transition registry and technical approval gate",
-      "An unguarded completion transition could enable executor self-approval or stale CI acceptance"
+      "Changes normative lifecycle metadata and generic transition enforcement",
+      "A guard omission could expose dependency-releasing states to executor requests",
+      "An empty required-check set currently permits vacuous CI eligibility"
     ],
     "irreversible_actions": []
   },
@@ -24,17 +28,20 @@
     "domain_role": "platform-engineer"
   },
   "scope": {
-    "create": ["tasks/TASK-008.yaml"],
+    "create": [
+      "framework/tests/test_completion_guards.py"
+    ],
     "modify": [
+      "tasks/TASK-008.yaml",
       "framework/framework.yaml",
+      "framework/validate.py",
       "framework/runtime.py",
       "framework/dispatch.py",
       "framework/ci.py",
-      "framework/schemas/approval.schema.json",
-      "framework/schemas/runtime.schema.json",
       "framework/tests/test_runtime.py",
       "framework/tests/test_dispatch.py",
-      "framework/README.md"
+      "framework/README.md",
+      "intellix.lock.json"
     ],
     "forbidden": [
       ".env*",
@@ -43,48 +50,67 @@
       ".github/**",
       "global-config/**",
       "infra/production/**",
-      "docs/adr/**"
+      "docs/adr/**",
+      "framework/schemas/project.schema.json",
+      "framework/schemas/approval.schema.json",
+      "framework/schemas/handoff.schema.json",
+      "framework/schemas/runtime.schema.json"
     ]
   },
   "dependencies": ["TASK-006"],
   "acceptance_criteria": [
     {
       "id": "AC-001",
-      "given": "a task in IN_REVIEW with a complete independent reviewer handoff, eligible live GitHub CI for the exact implementation SHA, and explicit local human technical approval",
-      "when": "technical completion is requested through the bounded control-plane path",
-      "then": "the kernel-permitted transition to APPROVED is recorded with task, contract digest, revision, review and approval references"
+      "given": "the canonical kernel",
+      "when": "lifecycle policy is loaded",
+      "then": "dependency-satisfying states and guarded transition states are declared once as non-empty sets of known lifecycle states, and every dependency-satisfying state is also guarded"
     },
     {
       "id": "AC-002",
-      "given": "missing, stale, failed or indeterminate CI, absent or self-produced review, stale contract digest, or absent explicit human action",
-      "when": "technical completion is requested",
-      "then": "the task remains unapproved and a specific blocking reason is recorded without a success-shaped fallback"
+      "given": "the generic dispatcher or generic runtime transition API",
+      "when": "an executor requests APPROVED, MERGED, VERIFIED, RELEASED or any later kernel-listed guarded state",
+      "then": "the request is rejected before dependency, adapter or worktree activity even if a transition edge is present, and no transition record or task-state mutation, including BLOCKED, is written"
     },
     {
       "id": "AC-003",
-      "given": "the generic dispatcher or runtime transition interface",
-      "when": "an executor requests APPROVED directly or supplies an editable actor string or local evidence alone",
-      "then": "the request is rejected and cannot bypass the guarded completion path"
+      "given": "a dependency in a lifecycle state",
+      "when": "the dispatcher checks whether it can release downstream work",
+      "then": "it reads the dependency-satisfying set from the canonical kernel, and an absent, empty or malformed registry blocks without a duplicated code fallback"
     },
     {
       "id": "AC-004",
-      "given": "technical task completion succeeds",
-      "when": "merge, production, secrets, permissions or destructive operations are considered",
-      "then": "APPROVED remains local technical state only and no external authenticated gate is treated as satisfied"
+      "given": "CI evaluation receives an empty, malformed or unavailable required-check set despite normal project validation",
+      "when": "eligibility executes",
+      "then": "the result is indeterminate and blocking without querying GitHub or returning eligible"
     },
     {
       "id": "AC-005",
-      "given": "the approved fileset and existing ADR-0002 trust boundary",
-      "when": "the diff and negative tests are reviewed",
-      "then": "no adapter, schema, CLI flag or model output is promoted into independent normative or authenticated-human authority"
+      "given": "the accepted ADR-0003",
+      "when": "the TASK-008 diff is reviewed",
+      "then": "no IN_REVIEW to APPROVED edge, approval record, local-human CLI shortcut, merge authority or production authority is introduced"
     }
   ],
   "verification": [
-    {"command": "python3 framework/validate.py --root . --all", "proves": "The modified kernel and all Task Contracts validate"},
-    {"command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v", "proves": "Positive and negative completion-gate paths and regressions pass"},
-    {"command": "python3 -m compileall -q framework", "proves": "The Python control plane compiles"},
-    {"command": "bash hooks/scripts/validate-hooks.sh .", "proves": "Claude adapter hooks remain valid"},
-    {"command": "git diff --check", "proves": "The scoped diff has no whitespace defects"}
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "Kernel registries, project bindings and all Task Contracts remain valid"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "Positive and negative guard paths and all regressions pass"
+    },
+    {
+      "command": "python3 -m compileall -q framework",
+      "proves": "The Python control plane compiles"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Claude adapter hooks remain valid"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The scoped diff has no whitespace defects"
+    }
   ],
   "gates": [
     "schema",
@@ -97,33 +123,30 @@
     "human_approval",
     "worktree"
   ],
-  "rollback": "Revert only the focused TASK-008 implementation commits on the authorized feature branch; preserve review, CI, approval and runtime evidence. Do not rewrite history or alter external permissions.",
+  "rollback": "Revert only the focused TASK-008 implementation commits on the authorized feature branch and regenerate the lock from the restored kernel; preserve review and CI evidence. Do not rewrite history or alter external permissions.",
   "notes": [
-    "Planning authorization was given on 2026-09-19; this DRAFT is not approval to change the kernel.",
-    "ADR-0002 accepts local controlling-session human action for technical Task Contract completion as advisory evidence only. It does not authenticate merge or production approval.",
-    "TASK-007 remains IN_REVIEW because the current kernel does not permit IN_REVIEW to APPROVED. This task must not depend on TASK-007, or it would deadlock the prerequisite it is intended to provide.",
-    "The generic dispatcher currently accepts target_state; merely adding a kernel transition without guard checks would be unsafe.",
-    "Re-use framework/ci.py exact-revision GitHub evaluation and existing handoff independence checks where possible. Do not treat editable local JSON as authenticated identity or CI.",
-    "Independent read-only Claude architecture review on 2026-09-19 found three high-severity blockers: an unguarded dispatcher would permit direct APPROVED, caller-supplied revision could replay older green CI, and editable handoff JSON cannot prove reviewer provenance. Do not promote this task to READY on the current design.",
-    "The provisional fileset may be insufficient for trusted revision derivation and evidence binding. Resolve the design first, then split the work or explicitly revise and reapprove the fileset; never expand it silently.",
-    "APPROVED satisfies downstream dependencies, so a false positive has effects beyond a task status label. Failed completion must remain visibly blocked and must not release dependent tasks.",
-    "Before READY, resolve the precise local human-action capture, independent-review provenance, final-SHA binding, revocation semantics and approval-evidence location with architecture and security review. Do not add a CLI --actor human shortcut.",
-    "Use a dedicated same-branch worktree for implementation after the plan is explicitly approved. No merge, release, deploy, secrets, permission or production action is in scope."
+    "The original draft attempted to add guarded completion in one task. Independent review found that direct target-state dispatch, caller-selected stale revisions and forgeable local review records made that unsafe.",
+    "ADR-0003 was explicitly accepted on 2026-09-22 and is now the architectural source for this narrower prerequisite task.",
+    "The revised TASK-008 plan and exact fileset were explicitly approved by the human owner on 2026-09-22.",
+    "This task deliberately does not add IN_REVIEW to APPROVED, approval evidence storage or evidence-aware dependency release. Those controls must land atomically in a later contract after these primitives exist.",
+    "The kernel will own both dependency-satisfying states and guarded transition states; every dependency-satisfying state must be guarded. Missing, empty or malformed registries are blocking and have no code fallback.",
+    "Runtime is defense in depth; the dispatcher must reject guarded targets before dependency, adapter or worktree activity and must not translate that rejection into a BLOCKED transition.",
+    "CI evaluation itself must reject an empty required-check list even when invoked with a context that bypassed normal project validation; project.schema.json already enforces a non-empty set and is intentionally outside this fileset.",
+    "Updating framework/framework.yaml or control-plane files requires regenerating intellix.lock.json within this fileset; do not hand-edit a digest.",
+    "Ten implementation/test files are in scope in addition to this contract. The cross-cutting size is justified because registry, both enforcement layers, CI validation, documentation and lock integrity must change together.",
+    "The later completion task must use a distinct internal guarded API that is not reachable through the generic dispatcher CLI, and must cover versioned evidence, status-revision CI and evidence-aware dependency eligibility without weakening these guards.",
+    "Use the accepted ADR-0002 same-branch dedicated-worktree procedure only after this revised plan is explicitly approved. No merge, release, deploy, secrets, permission or production action is in scope."
   ],
   "handoff": {
     "required_evidence": [
-      "independent architecture and security review of the gate design",
-      "positive and negative transition tests",
-      "validated fileset inventory",
+      "kernel registry and validation diff",
+      "negative tests for generic guarded transitions",
+      "negative tests for empty required checks",
+      "validated fileset inventory and regenerated lock",
+      "independent architecture and security review",
       "exact-revision GitHub CI",
       "explicit local human technical decision"
     ],
-    "open_questions": [
-      "How will an explicit controlling-session human action be referenced and bound to task digest and implementation SHA without presenting the editable local record as authenticated identity?",
-      "What is the accepted assurance level for independent Claude review: a process-level local review with explicit limits, or an externally authenticated reviewer identity?",
-      "How will the control plane derive and verify the current implementation SHA against the reviewed branch tip instead of trusting a caller-supplied older SHA?",
-      "Should an invalidated APPROVED state be revocable or cause downstream dependency checks to block, and where will that rule be normative?",
-      "Which additional files and possibly separate architecture-decision task are required before this provisional fileset can become executable?"
-    ]
+    "open_questions": []
   }
 }
