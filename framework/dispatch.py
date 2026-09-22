@@ -14,8 +14,6 @@ import validate
 import adapters
 import worktrees
 
-SATISFIED_DEPENDENCY_STATES = {"APPROVED", "MERGED", "VERIFIED", "RELEASED"}
-
 
 class DispatchBlocked(validate.ValidationError):
     """A deterministic dispatch precondition was not met."""
@@ -55,14 +53,16 @@ def resolve_executor(
 
 
 def dependency_errors(
-    task: dict[str, Any], tasks: dict[str, dict[str, Any]]
+    task: dict[str, Any],
+    tasks: dict[str, dict[str, Any]],
+    satisfying_states: set[str],
 ) -> list[str]:
     errors: list[str] = []
     for dependency in task.get("dependencies", []):
         candidate = tasks.get(dependency)
         if candidate is None:
             errors.append(f"unknown dependency {dependency!r}")
-        elif candidate.get("status") not in SATISFIED_DEPENDENCY_STATES:
+        elif candidate.get("status") not in satisfying_states:
             errors.append(
                 f"dependency {dependency!r} is {candidate.get('status')!r}, not satisfied"
             )
@@ -95,6 +95,19 @@ def dispatch(
     task = validate.load(task_path)
     if not isinstance(task, dict):
         raise DispatchBlocked("task must be an object")
+    try:
+        guarded_states = runtime.guarded_transition_states(context)
+    except validate.ValidationError as exc:
+        raise DispatchBlocked(str(exc)) from exc
+    if target_state in guarded_states:
+        raise DispatchBlocked(
+            f"guarded task transition requires a dedicated completion path: "
+            f"{task.get('status')} -> {target_state}"
+        )
+    try:
+        satisfying_states = runtime.dependency_satisfying_states(context)
+    except validate.ValidationError as exc:
+        raise DispatchBlocked(str(exc)) from exc
     existing_reservation = worktrees.active_reservation(context, task.get("id", ""))
     if existing_reservation:
         raise DispatchBlocked(
@@ -110,7 +123,9 @@ def dispatch(
         expect="directory",
     )
     contract_errors = validate.validate_tasks(tasks_directory, context)
-    dependencies = dependency_errors(task, load_tasks(tasks_directory))
+    dependencies = dependency_errors(
+        task, load_tasks(tasks_directory), satisfying_states
+    )
     errors = project_errors + contract_errors + dependencies
     transition_context = context
     transition_path = task_path

@@ -83,6 +83,41 @@ def permitted_transition(
     return target in configured.get(current, [])
 
 
+def runtime_state_registry(
+    context: validate.ValidationContext, name: str
+) -> set[str]:
+    runtime_policy = context.framework.get("runtime")
+    configured = runtime_policy.get(name) if isinstance(runtime_policy, dict) else None
+    lifecycle = context.framework.get("task_lifecycle")
+    if (
+        not isinstance(configured, list)
+        or not configured
+        or any(not isinstance(state, str) or not state for state in configured)
+        or len(configured) != len(set(configured))
+        or not isinstance(lifecycle, list)
+        or any(state not in lifecycle for state in configured)
+    ):
+        raise validate.ValidationError(
+            f"runtime.{name} must be a unique non-empty array of known lifecycle states"
+        )
+    return set(configured)
+
+
+def guarded_transition_states(context: validate.ValidationContext) -> set[str]:
+    return runtime_state_registry(context, "guarded_transition_states")
+
+
+def dependency_satisfying_states(context: validate.ValidationContext) -> set[str]:
+    satisfying = runtime_state_registry(context, "dependency_satisfying_states")
+    guarded = guarded_transition_states(context)
+    if not satisfying.issubset(guarded):
+        raise validate.ValidationError(
+            "runtime.dependency_satisfying_states must be a subset of "
+            "runtime.guarded_transition_states"
+        )
+    return satisfying
+
+
 def transition(
     context: validate.ValidationContext,
     task_path: Path,
@@ -99,6 +134,11 @@ def transition(
     if not isinstance(task, dict):
         raise validate.ValidationError(f"{task_path}: task must be an object")
     current = task.get("status")
+    if target in guarded_transition_states(context):
+        raise validate.ValidationError(
+            f"guarded task transition requires a dedicated completion path: "
+            f"{current} -> {target}"
+        )
     if not permitted_transition(context, current, target):
         raise validate.ValidationError(f"illegal task transition: {current} -> {target}")
 

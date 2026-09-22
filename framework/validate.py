@@ -564,8 +564,44 @@ def validate_framework(context: ValidationContext | None = None) -> list[str]:
                     f"{context.framework_path}: governance profile {profile!r} "
                     "must contain one unique non-empty minimum_gates array"
                 )
-    transitions = canonical.get("runtime", {}).get("transitions", {})
+    runtime_policy = canonical.get("runtime", {})
+    if not isinstance(runtime_policy, dict):
+        errors.append(f"{context.framework_path}: runtime must be an object")
+        runtime_policy = {}
+    transitions = runtime_policy.get("transitions", {})
     lifecycle = set(canonical.get("task_lifecycle", []))
+    registries: dict[str, set[str]] = {}
+    for registry_name in (
+        "dependency_satisfying_states",
+        "guarded_transition_states",
+    ):
+        states = runtime_policy.get(registry_name)
+        if (
+            not isinstance(states, list)
+            or not states
+            or any(not isinstance(state, str) or not state for state in states)
+            or len(states) != len(set(states))
+        ):
+            errors.append(
+                f"{context.framework_path}: runtime.{registry_name} must be a "
+                "unique non-empty array of lifecycle states"
+            )
+            registries[registry_name] = set()
+            continue
+        registries[registry_name] = set(states)
+        for state in states:
+            if state not in lifecycle:
+                errors.append(
+                    f"{context.framework_path}: runtime.{registry_name} contains "
+                    f"unknown lifecycle state {state!r}"
+                )
+    if not registries.get("dependency_satisfying_states", set()).issubset(
+        registries.get("guarded_transition_states", set())
+    ):
+        errors.append(
+            f"{context.framework_path}: runtime.dependency_satisfying_states must "
+            "be a subset of runtime.guarded_transition_states"
+        )
     if not isinstance(transitions, dict):
         errors.append(f"{context.framework_path}: runtime.transitions must be an object")
         transitions = {}

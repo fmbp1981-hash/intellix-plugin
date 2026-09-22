@@ -47,6 +47,8 @@
     ]
   },
   "runtime": {
+    "dependency_satisfying_states": ["APPROVED", "MERGED", "VERIFIED", "RELEASED"],
+    "guarded_transition_states": ["APPROVED", "MERGED", "VERIFIED", "RELEASED"],
     "transitions": {
       "READY": ["IN_PROGRESS", "BLOCKED"],
       "IN_PROGRESS": ["IN_REVIEW", "BLOCKED"],

@@ -1,7 +1,7 @@
 {
   "id": "TASK-008",
   "title": "Harden guarded completion and CI primitives",
-  "status": "READY",
+  "status": "IN_REVIEW",
   "objective": "Establish fail-closed kernel, runtime, dispatcher and CI primitives that make a later guarded technical-completion path safe to implement.",
   "source": {
     "prd": "README.md",
@@ -135,6 +135,8 @@
     "Updating framework/framework.yaml or control-plane files requires regenerating intellix.lock.json within this fileset; do not hand-edit a digest.",
     "Ten implementation/test files are in scope in addition to this contract. The cross-cutting size is justified because registry, both enforcement layers, CI validation, documentation and lock integrity must change together.",
     "The later completion task must use a distinct internal guarded API that is not reachable through the generic dispatcher CLI, and must cover versioned evidence, status-revision CI and evidence-aware dependency eligibility without weakening these guards.",
+    "Implementation completed in the dedicated TASK-008 same-branch worktree on 2026-09-22; full validation passed with 84 tests, including seven focused completion-guard tests.",
+    "Independent read-only Claude architecture and security review returned APPROVE on 2026-09-22 with no blocking, high, medium or low findings; this model review is process evidence only and is not authenticated CI or human approval.",
     "Use the accepted ADR-0002 same-branch dedicated-worktree procedure only after this revised plan is explicitly approved. No merge, release, deploy, secrets, permission or production action is in scope."
   ],
   "handoff": {

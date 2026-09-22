@@ -142,6 +142,23 @@ class DispatchTests(unittest.TestCase):
                 dispatch.dispatch(project, task_path, available={"codex"})
             self.assertEqual(validate.load(task_path)["status"], "BLOCKED")
 
+    def test_guarded_transition_does_not_mutate_or_block_task(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project, task_path, _ = self.project(Path(temporary))
+            with self.assertRaisesRegex(
+                dispatch.DispatchBlocked, "dedicated completion path"
+            ):
+                dispatch.dispatch(
+                    project,
+                    task_path,
+                    available=set(),
+                    target_state="APPROVED",
+                )
+            self.assertEqual(validate.load(task_path)["status"], "READY")
+            self.assertFalse(
+                (project / ".intellix/runtime/TASK-101.json").exists()
+            )
+
     def test_medium_risk_dispatch_transitions_inside_dedicated_worktree(self):
         with tempfile.TemporaryDirectory() as temporary:
             project, task_path, task = self.project(Path(temporary))

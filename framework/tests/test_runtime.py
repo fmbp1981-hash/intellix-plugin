@@ -55,7 +55,7 @@ class RuntimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             context, task_path = self.project(Path(temporary))
             with self.assertRaisesRegex(validate.ValidationError, "illegal task transition"):
-                runtime.transition(context, task_path, "RELEASED", reason="forbidden")
+                runtime.transition(context, task_path, "IN_REVIEW", reason="forbidden")
             self.assertFalse(
                 (Path(temporary) / "consumer/.intellix/runtime/TASK-101.json").exists()
             )

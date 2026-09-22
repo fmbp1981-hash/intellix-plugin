@@ -50,6 +50,21 @@ query; hand-authored JSON and model statements are not authoritative evidence.
 CI success does not satisfy the human gate. Without a protected approval from a
 separately credentialed external identity, merge eligibility remains blocked.
 
+## Guarded lifecycle states
+
+The canonical kernel declares both `runtime.dependency_satisfying_states` and
+`runtime.guarded_transition_states`. They are validated as non-empty sets of
+known lifecycle states, and every state that can release dependent work must be
+guarded. The generic runtime and dispatcher interfaces reject guarded targets;
+they cannot approve, merge, verify or release a task, even if a transition edge
+is accidentally configured. Missing or malformed registries block execution
+without a hardcoded fallback.
+
+These guards are prerequisites, not a technical-completion implementation. A
+later, separately contracted control-plane path must bind review, CI and human
+decision evidence to the exact contract and revision. Generic dispatch remains
+incapable of supplying that authority.
+
 ## Validate
 
 ```bash

@@ -177,6 +177,9 @@ def evaluate(
         ci_config.get("provider") != "github"
         or not isinstance(repository, str)
         or not isinstance(required, list)
+        or not required
+        or any(not isinstance(name, str) or not name.strip() for name in required)
+        or len(required) != len(set(required))
     ):
         evidence["reasons"] = ["project GitHub CI configuration is invalid"]
         return evidence
