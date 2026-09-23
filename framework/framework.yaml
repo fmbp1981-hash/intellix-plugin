@@ -27,6 +27,7 @@
     "project": "framework/schemas/project.schema.json",
     "lock": "framework/schemas/lock.schema.json",
     "approval": "framework/schemas/approval.schema.json",
+    "review_evidence": "framework/schemas/review-evidence.schema.json",
     "waiver": "framework/schemas/waiver.schema.json",
     "handoff": "framework/schemas/handoff.schema.json",
     "runtime": "framework/schemas/runtime.schema.json",
@@ -43,7 +44,8 @@
       "framework/dispatch.py",
       "framework/worktrees.py",
       "framework/adapters.py",
-      "framework/ci.py"
+      "framework/ci.py",
+      "framework/completion.py"
     ]
   },
   "runtime": {
@@ -52,7 +54,7 @@
     "transitions": {
       "READY": ["IN_PROGRESS", "BLOCKED"],
       "IN_PROGRESS": ["IN_REVIEW", "BLOCKED"],
-      "IN_REVIEW": ["IN_PROGRESS", "BLOCKED"],
+      "IN_REVIEW": ["IN_PROGRESS", "BLOCKED", "APPROVED"],
       "CHANGES_REQUESTED": ["IN_PROGRESS", "BLOCKED"],
       "DRAFT": ["BLOCKED"],
       "READY_FOR_ARCH_REVIEW": ["BLOCKED"]

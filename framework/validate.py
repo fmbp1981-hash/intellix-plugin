@@ -770,6 +770,59 @@ def validate_tasks(
     return errors
 
 
+def validate_completion_evidence(
+    directory: Path, context: ValidationContext
+) -> list[str]:
+    """Validate versioned completion records that are portable across checkouts."""
+    evidence = directory / "evidence"
+    if not evidence.exists():
+        return []
+    errors: list[str] = []
+    review_schema = declared_path(context, "schemas", "review_evidence")
+    approval_schema = declared_path(context, "schemas", "approval")
+    seen: dict[str, set[str]] = {}
+    completion_fields = {
+        "schema_version", "phase_base", "reviewed_revision", "branch",
+        "pre_contract_digest", "post_contract_digest", "fileset_digest",
+        "project_digest", "source_digest", "kernel_digest", "review_ref",
+        "review_digest", "human_decision", "review_ci",
+    }
+    for path in sorted(evidence.glob("*.json")):
+        match = re.fullmatch(r"(TASK-[0-9]{3,})\.(review|approval)\.json", path.name)
+        if not match:
+            errors.append(f"{path}: unrecognized completion evidence filename")
+            continue
+        task_id, kind = match.groups()
+        value, file_errors = validate_file(
+            path, review_schema if kind == "review" else approval_schema
+        )
+        errors.extend(file_errors)
+        if isinstance(value, dict) and value.get("task") != task_id:
+            errors.append(f"{path}: task identity does not match filename")
+        if kind == "approval" and isinstance(value, dict):
+            missing = sorted(completion_fields - set(value))
+            if missing:
+                errors.append(
+                    f"{path}: completion approval fields missing {missing}"
+                )
+        seen.setdefault(task_id, set()).add(kind)
+    for task_id, kinds in seen.items():
+        if kinds != {"review", "approval"}:
+            errors.append(
+                f"{evidence}: {task_id} requires paired review and approval evidence"
+            )
+        task_path = directory / f"{task_id}.yaml"
+        try:
+            task = load(task_path)
+            if not isinstance(task, dict) or task.get("status") != "APPROVED":
+                errors.append(
+                    f"{task_path}: versioned completion evidence requires APPROVED status"
+                )
+        except ValidationError as exc:
+            errors.append(str(exc))
+    return errors
+
+
 def _scalar_from_adapter(text: str, key: str) -> str | None:
     match = re.search(rf"(?m)^{re.escape(key)}:\s*([^#\n]+?)\s*$", text)
     if not match:
@@ -833,6 +886,7 @@ def main() -> int:
                 root, tasks_value, "project documents.tasks", expect="directory"
             )
             errors.extend(validate_tasks(tasks_directory, context))
+            errors.extend(validate_completion_evidence(tasks_directory, context))
             errors.extend(validate_authority(context))
     except ValidationError as exc:
         errors.append(str(exc))

@@ -1,9 +1,10 @@
 {
   "control_plane": {
-    "digest": "sha256:941c0d917b890681b011f432a5079cc5f6e854a57676788d697b8bd86d652b3a",
+    "digest": "sha256:ec7d7203e87222f2107e2d51815af224c0a402602c939904258da646db346c65",
     "files": [
       "framework/adapters.py",
       "framework/ci.py",
+      "framework/completion.py",
       "framework/dispatch.py",
       "framework/runtime.py",
       "framework/sync.py",
@@ -13,7 +14,7 @@
     "version": "1.0.0"
   },
   "kernel": {
-    "digest": "sha256:3db5f6feca55fb11a70d8264960d4c9173db5ef0e7dfe6664d7d3c24b13da803",
+    "digest": "sha256:6d484114ba1d4060a0d6433fd4cf39e827a36340ad3603b7316923e4b395e8ea",
     "files": [
       "framework/framework.yaml",
       "framework/policies/deployment.yaml",
@@ -39,6 +40,7 @@
       "framework/schemas/lock.schema.json",
       "framework/schemas/project.schema.json",
       "framework/schemas/reservation.schema.json",
+      "framework/schemas/review-evidence.schema.json",
       "framework/schemas/role.schema.json",
       "framework/schemas/runtime.schema.json",
       "framework/schemas/task.schema.json",

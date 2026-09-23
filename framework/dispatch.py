@@ -12,6 +12,7 @@ from typing import Any
 import runtime
 import validate
 import adapters
+import completion
 import worktrees
 
 
@@ -53,6 +54,7 @@ def resolve_executor(
 
 
 def dependency_errors(
+    context: validate.ValidationContext,
     task: dict[str, Any],
     tasks: dict[str, dict[str, Any]],
     satisfying_states: set[str],
@@ -65,6 +67,13 @@ def dependency_errors(
         elif candidate.get("status") not in satisfying_states:
             errors.append(
                 f"dependency {dependency!r} is {candidate.get('status')!r}, not satisfied"
+            )
+        else:
+            errors.extend(
+                f"dependency {dependency!r} evidence is not satisfied: {reason}"
+                for reason in completion.dependency_eligibility(
+                    context, candidate, completion.dependency_token()
+                )
             )
     return errors
 
@@ -123,8 +132,12 @@ def dispatch(
         expect="directory",
     )
     contract_errors = validate.validate_tasks(tasks_directory, context)
-    dependencies = dependency_errors(
-        task, load_tasks(tasks_directory), satisfying_states
+    dependencies = (
+        dependency_errors(
+            context, task, load_tasks(tasks_directory), satisfying_states
+        )
+        if target_state == "IN_PROGRESS"
+        else []
     )
     errors = project_errors + contract_errors + dependencies
     transition_context = context

@@ -62,12 +62,15 @@ class FrameworkDistributionTests(unittest.TestCase):
             self.assertIn("framework/worktrees.py", lock["control_plane"]["files"])
             self.assertIn("framework/adapters.py", lock["control_plane"]["files"])
             self.assertIn("framework/ci.py", lock["control_plane"]["files"])
+            self.assertIn("framework/completion.py", lock["control_plane"]["files"])
             self.assertTrue((target / "framework/dispatch.py").is_file())
             self.assertTrue((target / "framework/runtime.py").is_file())
             self.assertTrue((target / "framework/worktrees.py").is_file())
             self.assertTrue((target / "framework/adapters.py").is_file())
             self.assertTrue((target / "framework/ci.py").is_file())
+            self.assertTrue((target / "framework/completion.py").is_file())
             self.assertTrue((target / "framework/schemas/ci-evidence.schema.json").is_file())
+            self.assertTrue((target / "framework/schemas/review-evidence.schema.json").is_file())
             self.assertIn(
                 ".intellix/runtime/",
                 (validate.CODE_ROOT / "intellix-templates/root-template/.gitignore").read_text(encoding="utf-8"),

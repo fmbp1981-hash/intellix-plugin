@@ -118,7 +118,7 @@ def dependency_satisfying_states(context: validate.ValidationContext) -> set[str
     return satisfying
 
 
-def transition(
+def _record_transition(
     context: validate.ValidationContext,
     task_path: Path,
     target: str,
@@ -129,12 +129,13 @@ def transition(
     resolution: str | None = None,
     outcome: str = "transitioned",
     unblock_condition: str | None = None,
+    allow_guarded: bool = False,
 ) -> dict[str, Any]:
     task = validate.load(task_path)
     if not isinstance(task, dict):
         raise validate.ValidationError(f"{task_path}: task must be an object")
     current = task.get("status")
-    if target in guarded_transition_states(context):
+    if target in guarded_transition_states(context) and not allow_guarded:
         raise validate.ValidationError(
             f"guarded task transition requires a dedicated completion path: "
             f"{current} -> {target}"
@@ -185,6 +186,63 @@ def transition(
         # The durable event remains evidence of an incomplete state write.
         raise
     return event
+
+
+def transition(
+    context: validate.ValidationContext,
+    task_path: Path,
+    target: str,
+    *,
+    reason: str,
+    actor: str = "intellix-control-plane",
+    selected_adapter: str | None = None,
+    resolution: str | None = None,
+    outcome: str = "transitioned",
+    unblock_condition: str | None = None,
+) -> dict[str, Any]:
+    """Apply only an unguarded lifecycle transition.
+
+    Guarded states deliberately remain unreachable through this generic API.
+    """
+    return _record_transition(
+        context,
+        task_path,
+        target,
+        reason=reason,
+        actor=actor,
+        selected_adapter=selected_adapter,
+        resolution=resolution,
+        outcome=outcome,
+        unblock_condition=unblock_condition,
+    )
+
+
+def _complete_technical_approval(
+    context: validate.ValidationContext,
+    task_path: Path,
+    *,
+    reason: str,
+) -> dict[str, Any]:
+    """Internal sink used only after completion.py validates all approval gates."""
+    task = validate.load(task_path)
+    if not isinstance(task, dict) or task.get("status") != "IN_REVIEW":
+        current = task.get("status") if isinstance(task, dict) else None
+        raise validate.ValidationError(
+            f"guarded technical approval requires IN_REVIEW, got {current!r}"
+        )
+    if "APPROVED" not in dependency_satisfying_states(context):
+        raise validate.ValidationError(
+            "APPROVED must remain a guarded dependency-satisfying state"
+        )
+    return _record_transition(
+        context,
+        task_path,
+        "APPROVED",
+        reason=reason,
+        actor="intellix-guarded-completion",
+        resolution="versioned-review-human-decision-and-exact-revision-ci",
+        allow_guarded=True,
+    )
 
 
 def block(
