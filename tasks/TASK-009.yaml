@@ -1,7 +1,7 @@
 {
   "id": "TASK-009",
   "title": "Propose the technical-completion trust and revision protocol",
-  "status": "IN_PROGRESS",
+  "status": "IN_REVIEW",
   "objective": "Document a bounded, fail-closed proposal for local technical approval, exact-revision review and downstream dependency validity without changing executable rules.",
   "source": {
     "prd": "README.md",
