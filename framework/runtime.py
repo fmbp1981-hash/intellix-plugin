@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import tempfile
+import copy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -145,6 +146,8 @@ def _record_transition(
 
     record_file = record_path(context, task["id"])
     record = load_record(record_file, task)
+    previous_record = copy.deepcopy(record)
+    record_existed = record_file.exists()
     event = {
         "sequence": len(record.get("events", [])) + 1,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -183,7 +186,11 @@ def _record_transition(
     try:
         atomic_json(task_path, updated_task)
     except BaseException:
-        # The durable event remains evidence of an incomplete state write.
+        # Do not leave a durable APPROVED event when the task write failed.
+        if record_existed:
+            atomic_json(record_file, previous_record)
+        else:
+            record_file.unlink(missing_ok=True)
         raise
     return event
 
@@ -234,6 +241,19 @@ def _complete_technical_approval(
         raise validate.ValidationError(
             "APPROVED must remain a guarded dependency-satisfying state"
         )
+    tasks = validate.resolve_contract_path(
+        context.root,
+        context.project.get("documents", {}).get("tasks"),
+        "project documents.tasks",
+        expect="directory",
+    )
+    evidence_dir = tasks / "evidence"
+    for suffix in ("review.json", "approval.json"):
+        evidence = evidence_dir / f"{task['id']}.{suffix}"
+        if not evidence.is_file():
+            raise validate.ValidationError(
+                "guarded technical approval requires versioned review and approval evidence"
+            )
     return _record_transition(
         context,
         task_path,

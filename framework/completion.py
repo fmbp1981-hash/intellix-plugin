@@ -107,7 +107,12 @@ def _load_at(root: Path, revision: str, relative: str) -> dict[str, Any]:
 def _manifest_digest_at(root: Path, revision: str, relatives: list[str]) -> str:
     digest = hashlib.sha256()
     for relative in sorted(set(relatives)):
-        content = _git_bytes(root, "show", f"{revision}:{relative}")
+        try:
+            content = _git_bytes(root, "show", f"{revision}:{relative}")
+        except validate.ValidationError as exc:
+            if "exists" not in str(exc).lower() and "path" not in str(exc).lower():
+                raise
+            content = b"<deleted>"
         name = relative.encode("utf-8")
         digest.update(len(name).to_bytes(8, "big"))
         digest.update(name)
@@ -165,11 +170,16 @@ def derive_phase_base(
 ) -> str:
     relative = _relative(context, task_path)
     commits = _git(
-        context.root, "log", "--format=%H", reviewed_revision, "--", relative
+        context.root, "log", "--reverse", "--format=%H", reviewed_revision, "--", relative
     ).splitlines()
+    review_ref = f"tasks/evidence/{task_path.stem}.review.json"
+    approval_ref = f"tasks/evidence/{task_path.stem}.approval.json"
     for commit in commits:
         candidate = _load_at(context.root, commit, relative)
         if candidate.get("status") != "IN_PROGRESS":
+            continue
+        create = set(candidate.get("scope", {}).get("create", []))
+        if {review_ref, approval_ref} - create:
             continue
         parent_status: str | None = None
         try:
@@ -179,7 +189,7 @@ def derive_phase_base(
         if parent_status != "IN_PROGRESS":
             return commit
     raise validate.ValidationError(
-        "could not derive the committed IN_REVIEW to IN_PROGRESS phase base"
+        "could not derive the first committed completion-phase base"
     )
 
 
@@ -307,6 +317,14 @@ def _validate_review(
         raise validate.ValidationError(
             "versioned completion evidence must not exist in reviewed revision R"
         )
+    for evidence_path in (review_ref, approval_ref):
+        try:
+            _git_bytes(context.root, "cat-file", "-e", f"{revision}:{_relative(context, evidence_path)}")
+        except validate.ValidationError:
+            continue
+        raise validate.ValidationError(
+            "versioned completion evidence must not exist in reviewed revision R"
+        )
     if unauthorized:
         raise validate.ValidationError(
             "reviewed revision changes files outside the Task Contract: "
@@ -393,6 +411,8 @@ def complete_technical_approval(
         raise validate.ValidationError("human decision must occur after independent review")
     if decided_at > datetime.now(timezone.utc) + MAX_DECISION_SKEW:
         raise validate.ValidationError("human decision timestamp is too far in the future")
+    if decided_at < datetime.now(timezone.utc) - timedelta(hours=24):
+        raise validate.ValidationError("human decision timestamp is stale")
     ci_schema = validate.load(validate.declared_path(context, "schemas", "ci_evidence"))
     ci_errors = validate.validate_schema(reviewed_ci, ci_schema)
     ci_config = context.project.get("quality", {}).get("ci", {})
@@ -557,6 +577,10 @@ def dependency_eligibility(
             reasons.append("approval decision is not technical completion approved")
         if review.get("decision") != "approved":
             reasons.append("independent review is not approved")
+        if review.get("task") != task_id or approval.get("task") != task_id:
+            reasons.append("completion evidence task identity mismatch")
+        if approval.get("review_ref") != review_relative:
+            reasons.append("approval review_ref does not bind the versioned review evidence")
         if adapters.same_identity(
             str(review.get("executor_identity")), str(review.get("reviewer_identity"))
         ) or adapters.same_identity(
@@ -575,6 +599,8 @@ def dependency_eligibility(
             reasons.append("review, CI and human decision ordering is invalid")
         if decided_at > datetime.now(timezone.utc) + MAX_DECISION_SKEW:
             reasons.append("human decision timestamp is too far in the future")
+        if decided_at < datetime.now(timezone.utc) - timedelta(hours=24):
+            reasons.append("human decision timestamp is stale")
         status_revision = _derive_status_revision(context, approval_relative)
         _git(context.root, "merge-base", "--is-ancestor", revision, status_revision)
         _git(context.root, "merge-base", "--is-ancestor", status_revision, "HEAD")
@@ -602,6 +628,11 @@ def dependency_eligibility(
             reasons.append("review and approval branches differ")
         if review.get("phase_base") != approval["phase_base"]:
             reasons.append("review and approval phase bases differ")
+        if not set(review.get("reviewed_files", [])).issubset(
+            set(task.get("scope", {}).get("create", []))
+            | set(task.get("scope", {}).get("modify", []))
+        ):
+            reasons.append("reviewed files exceed the Task Contract fileset")
         _git(context.root, "merge-base", "--is-ancestor", approval["phase_base"], revision)
         if changed_files(context.root, approval["phase_base"], revision) != review.get(
             "reviewed_files"
@@ -634,13 +665,20 @@ def dependency_eligibility(
             context.root, control_plane_paths(context)
         ) != approval["control_plane_digest"]:
             reasons.append("control-plane implementation drift")
+        ci_config = context.project.get("quality", {}).get("ci", {})
         completion_ci = approval.get("completion_ci", {})
         if (
             completion_ci.get("revision") != revision
             or completion_ci.get("decision") != "eligible"
+            or completion_ci.get("repository") != ci_config.get("repository")
+            or completion_ci.get("required_checks") != ci_config.get("required_checks")
         ):
             reasons.append("completion-time live CI evidence is invalid")
-        ci_config = context.project.get("quality", {}).get("ci", {})
+        completion_ci_at = _parse_time(
+            completion_ci.get("queried_at"), "completion CI queried_at"
+        )
+        if completion_ci_at < decided_at or completion_ci_at > datetime.now(timezone.utc) + MAX_DECISION_SKEW:
+            reasons.append("completion CI and human decision ordering is invalid")
         recorded_ci = approval["review_ci"]
         if (
             recorded_ci.get("repository") != ci_config.get("repository")

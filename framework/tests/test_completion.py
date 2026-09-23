@@ -224,6 +224,27 @@ class CompletionTests(unittest.TestCase):
             )
             self.assertEqual(reasons, [])
 
+    def test_phase_base_stays_at_first_completion_cycle(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            worktree, context, task_path, phase_base, _ = self.repository(
+                Path(temporary)
+            )
+            task = validate.load(task_path)
+            task["status"] = "IN_PROGRESS"
+            self.write(task_path, task)
+            self.git(worktree, "add", "tasks/TASK-101.yaml")
+            self.git(worktree, "commit", "-m", "start second completion cycle")
+            task["status"] = "IN_REVIEW"
+            self.write(task_path, task)
+            self.git(worktree, "add", "tasks/TASK-101.yaml")
+            self.git(worktree, "commit", "-m", "review second completion cycle")
+            second_revision = self.git(worktree, "rev-parse", "HEAD")
+            self.git(worktree, "push", "origin", "feat/test")
+            self.assertEqual(
+                completion.derive_phase_base(context, task_path, second_revision),
+                phase_base,
+            )
+
     def test_dirty_worktree_and_self_review_block_without_writes(self):
         with tempfile.TemporaryDirectory() as temporary:
             worktree, context, task_path, phase_base, revision = self.repository(
