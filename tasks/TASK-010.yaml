@@ -83,9 +83,15 @@
     },
     {
       "id": "AC-006",
-      "given": "the engine is proposed for decisions inside the IntelliX development workflow",
-      "when": "the proposal defines where it may run",
-      "then": "it is advisory only, never in a blocking path or the authority chain, may only ratchet warnings and risk upward, fails open to the existing rule within a fixed time budget, and runs locally by default"
+      "given": "the engine was considered for decisions inside the IntelliX development workflow",
+      "when": "the proposal decides its use there",
+      "then": "it records non-adoption with the rationale and lists the invariants any future proposal must satisfy: advisory only, never in a blocking path or the authority chain, ratchet upward only, fail open within a fixed time budget, local by default"
+    },
+    {
+      "id": "AC-007",
+      "given": "a new or existing project reaching PRD, architecture or agent-creation",
+      "when": "the phase runs",
+      "then": "the proposal requires an explicit evaluation of the decision layer with its outcome recorded, including 'not applicable', so the evaluation cannot be skipped silently"
     }
   ],
   "verification": [
@@ -120,7 +126,8 @@
     "Engine facts come from the Laya model cards and the TypeSafe documentation as read on 2026-09-23; performance numbers from either vendor are treated as unverified claims.",
     "The identifier TASK-010 and ADR number 0004 must be re-checked against the framework branch before merge in case the executor allocated them concurrently.",
     "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope.",
-    "A Portuguese handoff with the development-workflow phases, the risk matrix and the queue order accompanies this proposal: INTELLIX_CAMADA_DE_DECISAO_NO_PROCESSO_HANDOFF_CODEX.md (operator's documentation folder, not committed)."
+    "A Portuguese handoff with the conclusion, the risk matrix, the phase-step drafts and the queue order accompanies this proposal: INTELLIX_CAMADA_DE_DECISAO_NO_PROCESSO_HANDOFF_CODEX.md (operator's documentation folder, not committed).",
+    "Revised on 2026-09-23 after human review: in-workflow use is not adopted; per-project evaluation wiring becomes the first implementation item; kernel changes wait for TASK-008 and a first adopting project."
   ],
   "handoff": {
     "required_evidence": [

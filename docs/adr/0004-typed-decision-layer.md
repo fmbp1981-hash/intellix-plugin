@@ -129,39 +129,43 @@ committed, and pilot outputs are written to the gitignored runtime path.
 | Security | Injection, data residency, runtime exposure, `devsecops` gate |
 | Tests | Labeled set as a scheduled regression suite, not a per-PR check |
 
-### 8. Use inside the IntelliX development workflow
+### 8. Not adopted inside the IntelliX development workflow
 
-The workflow itself makes repeated semantic decisions through keyword rules that
-misfire (skill routing, external-research and library-documentation triggers).
-The engine may be used there only under these invariants, each to be enforced by
-a test or validator rule:
+The engines are **not** adopted for decisions the IntelliX workflow itself makes
+(skill routing, research triggers, review or CI triage, task risk). The workflow
+makes tens of such decisions per week, an LLM is already reading the same context,
+and the decisions that matter most (risk, gates, approval, completion) must stay
+outside any engine. Expected benefit is small and the dominant residual risk is
+maintenance cost exceeding that benefit. Keyword-rule misfires are addressed by
+improving the rules themselves.
 
-1. **Never in a blocking path.** No `PreToolUse` hook, gate or kernel step waits
-   on the engine.
-2. **Fail open to current behavior.** The existing rule always runs and is the
-   default answer; engine absence, error, version mismatch or a 400 ms budget
-   overrun returns that answer silently.
-3. **Ratchet up only.** The engine may add a suggestion, a warning or a higher
-   risk; it may never remove a warning, waive a gate or lower a risk.
-4. **Outside the authority chain.** Engine output is never review, approval or
-   completion evidence (ADR-0003).
-5. **Local by default.** The development workflow uses the local Laya runtime;
-   an external engine requires an explicit per-point exception with no customer
-   content or secret.
-6. **Pinned and reversible.** Package, weights and thresholds are pinned; a
-   kill switch disables the engine without code changes.
+Any future proposal to use an engine in the workflow must be a new ADR and must
+satisfy these invariants, each enforced by a test or validator rule:
 
-Adoption is phased: measure the current rules with local decision logs and
-implicit labels (no engine), then shadow, then advisory above a calibrated
-threshold. Each phase has a stop criterion; failing it leaves the current
-rules in place. Gates, approvals, security and secret or personal-data
-detection are permanently excluded.
+1. never in a blocking path (no `PreToolUse` hook, gate or kernel step waits on it);
+2. fail open to the existing rule within a fixed time budget;
+3. ratchet up only: it may add a warning or raise risk, never remove or lower;
+4. outside the authority chain: never review, approval or completion evidence
+   (ADR-0003);
+5. local by default, with no customer content or secret sent externally;
+6. pinned versions and a kill switch that needs no code change.
 
-Risk assessment (architect estimate, probability x impact on 1-5 scales): without
-these invariants, process blocking scores 20 and control downgrade 15; with them,
-all residual risks are 6 or lower, the highest being maintenance cost exceeding
-benefit. The full analysis and queue plan are in the accompanying handoff
-document.
+### 9. Mandatory evaluation in project phases
+
+The capability is evaluated per project, not assumed. The evaluation already
+exists in the methodology but no phase invokes it, so it can be skipped silently.
+The phase skills gain a conditional step:
+
+- PRD: when requirements mention automated decisions over text at volume, in
+  real time or on sensitive data, record "evaluate decision layer" as an open
+  decision;
+- Architecture (phase 01): apply the adoption checklist and engine selection and
+  record the outcome, adopted or not, in the project's architecture ADR;
+- Agent creation (phase 03b): when the blueprint classifies intent, stage or
+  scores with the LLM's structured output, evaluate whether those fields belong
+  to the decision layer.
+
+A project that does not meet the conditions records "not applicable" in one line.
 
 ## Consequences
 
@@ -194,14 +198,15 @@ document.
 This ADR authorizes nothing by itself. After acceptance, implementation is split
 into separate Task Contracts, each with its own review and CI:
 
-1. development-workflow phase 0: decision port, local decision log and implicit
-   labels for the existing rules, with no engine;
+1. **first and independent of any engine:** the conditional evaluation step in the
+   PRD, architecture and agent-creation phase skills (section 9);
 2. neutral reference and skill-to-reference pointer;
-3. `intellix.yaml` schema extension, registry schema and validator rules with tests;
-4. pilot harness and pilot-evidence schema with tests;
-5. toolchain check (read-only);
-6. runtime provisioning procedure, executed only with explicit human
-   authorization for downloads and credentials.
+3. `intellix.yaml` schema extension, registry schema and validator rules with
+   tests — after TASK-008 and only when a first real project adopts the capability;
+4. pilot harness and pilot-evidence schema with tests — same trigger;
+5. read-only toolchain check;
+6. runtime provisioning for that project's pilot, executed only with explicit
+   human authorization for downloads and credentials.
 
 ## Open questions
 
