@@ -1,7 +1,7 @@
 {
   "id": "TASK-007",
   "title": "Reconcile architecture decision and trust-model documentation",
-  "status": "IN_PROGRESS",
+  "status": "IN_REVIEW",
   "objective": "Align the ADR-0001 and authority-model prose with accepted ADR-0002 without changing their approval status or the executable framework.",
   "source": {
     "prd": "README.md",
