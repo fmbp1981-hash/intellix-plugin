@@ -1,7 +1,7 @@
 {
   "id": "TASK-007",
   "title": "Reconcile architecture decision and trust-model documentation",
-  "status": "IN_REVIEW",
+  "status": "IN_PROGRESS",
   "objective": "Align the ADR-0001 and authority-model prose with accepted ADR-0002 without changing their approval status or the executable framework.",
   "source": {
     "prd": "README.md",
@@ -9,7 +9,8 @@
     "spec": "docs/architecture/FRAMEWORK-SPEC.md",
     "adrs": [
       "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
-      "docs/adr/0002-operational-orchestrator.md"
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/architecture/AUTHORITY-AND-TRUST-MODEL.md"
     ]
   },
   "risk": {
@@ -27,8 +28,13 @@
     "domain_role": "architect"
   },
   "scope": {
-    "create": ["tasks/TASK-007.yaml"],
+    "create": [
+      "tasks/TASK-007.yaml",
+      "tasks/evidence/TASK-007.review.json",
+      "tasks/evidence/TASK-007.approval.json"
+    ],
     "modify": [
+      "tasks/TASK-007.yaml",
       "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
       "docs/architecture/AUTHORITY-AND-TRUST-MODEL.md"
     ],
@@ -66,7 +72,7 @@
       "id": "AC-004",
       "given": "the approved fileset",
       "when": "the changed-file inventory is inspected",
-      "then": "only this contract and the two named documents changed"
+      "then": "implementation remains limited to this contract and the two named documents, while the completion commit contains only this contract and its two evidence records"
     }
   ],
   "verification": [
@@ -108,17 +114,20 @@
     "Implementation diff is limited to this contract and its two named documentation files; local framework validation, 76 unit tests, hooks, compileall and diff check passed in the dedicated TASK-007 worktree.",
     "The first read-only Claude review attempt failed because the CLI was not logged in. After the human completed authentication, independent Claude review of e114a77 returned APPROVE with two low-severity wording suggestions; both were addressed within this fileset. The review is not a merge or production approval.",
     "Exact-revision GitHub checks for e114a77 passed: framework-validation, Ubuntu/macOS tests and GitGuardian. Any subsequent documentation commit requires a new exact-revision CI check and independent review before technical completion.",
-    "Next actions: validate and push the wording correction; obtain exact-revision CI and independent review for its final SHA; request explicit human technical-completion approval before marking APPROVED. Merge and production remain separately blocked."
+    "The controlling human approved a legacy-closure phase on 2026-09-23 so the already-reviewed documentation can use the guarded completion protocol introduced by TASK-008.",
+    "The closure phase may modify only this contract and create its two evidence records; it must bind the current authority-model and ADR sources without rewriting their content.",
+    "Next actions: record the closure review candidate; obtain exact-revision CI and independent review; request explicit human technical-completion approval before marking APPROVED. Merge and production remain separately blocked."
   ],
   "handoff": {
     "required_evidence": [
       "two-document semantic diff",
       "validated changed-file inventory",
       "independent fidelity review",
-      "exact-revision CI result"
+      "exact-revision CI result",
+      "versioned guarded-completion evidence"
     ],
     "open_questions": [
-      "Will the final wording-correction commit pass exact-revision CI and independent review?"
+      "Will the legacy-closure revision pass exact-revision CI and independent review?"
     ]
   }
 }
