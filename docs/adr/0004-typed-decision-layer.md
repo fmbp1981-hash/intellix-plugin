@@ -129,6 +129,40 @@ committed, and pilot outputs are written to the gitignored runtime path.
 | Security | Injection, data residency, runtime exposure, `devsecops` gate |
 | Tests | Labeled set as a scheduled regression suite, not a per-PR check |
 
+### 8. Use inside the IntelliX development workflow
+
+The workflow itself makes repeated semantic decisions through keyword rules that
+misfire (skill routing, external-research and library-documentation triggers).
+The engine may be used there only under these invariants, each to be enforced by
+a test or validator rule:
+
+1. **Never in a blocking path.** No `PreToolUse` hook, gate or kernel step waits
+   on the engine.
+2. **Fail open to current behavior.** The existing rule always runs and is the
+   default answer; engine absence, error, version mismatch or a 400 ms budget
+   overrun returns that answer silently.
+3. **Ratchet up only.** The engine may add a suggestion, a warning or a higher
+   risk; it may never remove a warning, waive a gate or lower a risk.
+4. **Outside the authority chain.** Engine output is never review, approval or
+   completion evidence (ADR-0003).
+5. **Local by default.** The development workflow uses the local Laya runtime;
+   an external engine requires an explicit per-point exception with no customer
+   content or secret.
+6. **Pinned and reversible.** Package, weights and thresholds are pinned; a
+   kill switch disables the engine without code changes.
+
+Adoption is phased: measure the current rules with local decision logs and
+implicit labels (no engine), then shadow, then advisory above a calibrated
+threshold. Each phase has a stop criterion; failing it leaves the current
+rules in place. Gates, approvals, security and secret or personal-data
+detection are permanently excluded.
+
+Risk assessment (architect estimate, probability x impact on 1-5 scales): without
+these invariants, process blocking scores 20 and control downgrade 15; with them,
+all residual risks are 6 or lower, the highest being maintenance cost exceeding
+benefit. The full analysis and queue plan are in the accompanying handoff
+document.
+
 ## Consequences
 
 - Semantic decisions become declared, reviewable and testable artifacts instead
@@ -160,11 +194,13 @@ committed, and pilot outputs are written to the gitignored runtime path.
 This ADR authorizes nothing by itself. After acceptance, implementation is split
 into separate Task Contracts, each with its own review and CI:
 
-1. neutral reference and skill-to-reference pointer;
-2. `intellix.yaml` schema extension, registry schema and validator rules with tests;
-3. pilot harness and pilot-evidence schema with tests;
-4. toolchain check (read-only);
-5. runtime provisioning procedure, executed only with explicit human
+1. development-workflow phase 0: decision port, local decision log and implicit
+   labels for the existing rules, with no engine;
+2. neutral reference and skill-to-reference pointer;
+3. `intellix.yaml` schema extension, registry schema and validator rules with tests;
+4. pilot harness and pilot-evidence schema with tests;
+5. toolchain check (read-only);
+6. runtime provisioning procedure, executed only with explicit human
    authorization for downloads and credentials.
 
 ## Open questions

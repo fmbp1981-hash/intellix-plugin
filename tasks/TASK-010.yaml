@@ -7,7 +7,9 @@
     "prd": "README.md",
     "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": ["docs/adr/0001-vendor-neutral-multiagent-kernel.md"]
+    "adrs": [
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md"
+    ]
   },
   "risk": {
     "level": "high",
@@ -78,16 +80,38 @@
       "given": "this architectural proposal",
       "when": "its status and diff are reviewed",
       "then": "the ADR remains Proposed until an explicit human decision and changes no kernel, schema, policy, credential, merge or production state"
+    },
+    {
+      "id": "AC-006",
+      "given": "the engine is proposed for decisions inside the IntelliX development workflow",
+      "when": "the proposal defines where it may run",
+      "then": "it is advisory only, never in a blocking path or the authority chain, may only ratchet warnings and risk upward, fails open to the existing rule within a fixed time budget, and runs locally by default"
     }
   ],
   "verification": [
-    {"command": "python3 framework/validate.py --root . --all", "proves": "The new Task Contract and repository artifacts validate"},
-    {"command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v", "proves": "No framework behavior regressed"},
-    {"command": "git diff --check", "proves": "The scoped documentation diff has no whitespace errors"}
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "The new Task Contract and repository artifacts validate"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "No framework behavior regressed"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The scoped documentation diff has no whitespace errors"
+    }
   ],
   "gates": [
-    "schema", "fileset", "lint", "tests", "security_review",
-    "independent_review", "rollback_plan", "human_approval", "worktree"
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
   ],
   "rollback": "Revert only the focused TASK-010 proposal commit on its proposal branch; ADR-0001 to ADR-0003 and all other contracts stay unchanged.",
   "notes": [
@@ -95,7 +119,8 @@
     "Claude is executor for this proposal, so Codex is the independent reviewer; Claude must not approve it.",
     "Engine facts come from the Laya model cards and the TypeSafe documentation as read on 2026-09-23; performance numbers from either vendor are treated as unverified claims.",
     "The identifier TASK-010 and ADR number 0004 must be re-checked against the framework branch before merge in case the executor allocated them concurrently.",
-    "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope."
+    "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope.",
+    "A Portuguese handoff with the development-workflow phases, the risk matrix and the queue order accompanies this proposal: INTELLIX_CAMADA_DE_DECISAO_NO_PROCESSO_HANDOFF_CODEX.md (operator's documentation folder, not committed)."
   ],
   "handoff": {
     "required_evidence": [
