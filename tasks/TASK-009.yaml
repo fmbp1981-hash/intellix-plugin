@@ -1,13 +1,16 @@
 {
   "id": "TASK-009",
   "title": "Propose the technical-completion trust and revision protocol",
-  "status": "IN_REVIEW",
+  "status": "IN_PROGRESS",
   "objective": "Document a bounded, fail-closed proposal for local technical approval, exact-revision review and downstream dependency validity without changing executable rules.",
   "source": {
     "prd": "README.md",
     "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": ["docs/adr/0002-operational-orchestrator.md"]
+    "adrs": [
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md"
+    ]
   },
   "risk": {
     "level": "high",
@@ -26,9 +29,11 @@
   "scope": {
     "create": [
       "tasks/TASK-009.yaml",
-      "docs/adr/0003-technical-completion-trust-and-revisions.md"
+      "docs/adr/0003-technical-completion-trust-and-revisions.md",
+      "tasks/evidence/TASK-009.review.json",
+      "tasks/evidence/TASK-009.approval.json"
     ],
-    "modify": [],
+    "modify": ["tasks/TASK-009.yaml"],
     "forbidden": [
       ".env*",
       "**/.env*",
@@ -96,14 +101,17 @@
     "Second independent Claude read-only review returned APPROVE with no blocking finding. Remaining implementation risks include choosing the enforcement point for non-empty CI checks and a guarded supersession/reopening design; these stay with TASK-008 after ADR acceptance.",
     "Exact-revision GitHub CI for d1a4871873e2039b0fdccba9ccfde674ce2b0bd7 passed framework-validation, Ubuntu/macOS tests and GitGuardian.",
     "The controlling human explicitly accepted ADR-0003 on 2026-09-22. This authorizes its use as an architectural source for re-planning TASK-008, not implementation, merge, release, deploy, credentials, permissions or production actions.",
-    "TASK-009 remains IN_REVIEW because the current kernel has no guarded IN_REVIEW to APPROVED transition; do not falsify completion or bypass the transition registry."
+    "TASK-009 remained IN_REVIEW until TASK-008 introduced the guarded IN_REVIEW to APPROVED completion path.",
+    "The controlling human approved a legacy-closure phase on 2026-09-23 so the accepted ADR can use the guarded completion protocol introduced by TASK-008.",
+    "The closure phase may modify only this contract and create its two evidence records; it must bind the accepted ADR-0003 source without rewriting its content."
   ],
   "handoff": {
     "required_evidence": [
       "two-file inventory",
       "independent architecture and security fidelity review",
       "exact-revision CI",
-      "human decision on proposed ADR"
+      "human decision on proposed ADR",
+      "versioned guarded-completion evidence"
     ],
     "open_questions": []
   }
