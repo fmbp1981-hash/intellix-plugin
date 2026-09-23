@@ -1,0 +1,41 @@
+{
+  "access": "read-only",
+  "branch": "feat/intellix-multiagent-framework",
+  "control_plane_digest": "sha256:7b912261cb6356c76bed9272a1ac30dbb642601a102b7249d106024386b951ee",
+  "decision": "approved",
+  "diff_ref": "d54300ae15b8b854fc23977da4d9e4d1d948d767..5a98908c7257ebcf0fff8a98a05f55a3e8fcd475",
+  "evidence": [
+    "Independent Claude read-only review returned APPROVED for d54300a..5a98908 after prior findings were resolved."
+  ],
+  "executor_identity": "codex",
+  "fileset_digest": "sha256:21b6b1c80c69ecd0b51140581ff615a321fffacd0ddec0746277dc7a3acaebbb",
+  "kernel_digest": "sha256:82d538fc4be868fbe64e2669a8ffceaceb00c9fcc523716c6430998ffc0dc8a5",
+  "limitations": [
+    "Reviewer had read-only file tools and did not independently execute tests or CI.",
+    "Local reviewer identity is forgeable process evidence, not authentication."
+  ],
+  "phase_base": "d54300ae15b8b854fc23977da4d9e4d1d948d767",
+  "project_digest": "sha256:31eaf68436c8291fd2652730b1a7e0c2c866d751ed71629418a3fcf0a919cbc1",
+  "reviewed_at": "2026-09-23T17:25:00+00:00",
+  "reviewed_files": [
+    "framework/README.md",
+    "framework/completion.py",
+    "framework/dispatch.py",
+    "framework/framework.yaml",
+    "framework/runtime.py",
+    "framework/schemas/approval.schema.json",
+    "framework/schemas/review-evidence.schema.json",
+    "framework/tests/test_completion.py",
+    "framework/tests/test_distribution.py",
+    "framework/validate.py",
+    "intellix.lock.json",
+    "tasks/TASK-008.yaml"
+  ],
+  "reviewed_revision": "5a98908c7257ebcf0fff8a98a05f55a3e8fcd475",
+  "reviewer_assignment": "claude-independent",
+  "reviewer_identity": "claude-independent-read-only-final-5a98908",
+  "schema_version": "1.0.0",
+  "source_digest": "sha256:39b4eab1a2f7b4aac518db315968746dc49e75edfd1ba97108064bd789f07b3e",
+  "task": "TASK-008",
+  "task_digest": "sha256:0a5a762b297ee2c0497fda3f418aaa35635825ee703056faafa054935e7eaf09"
+}

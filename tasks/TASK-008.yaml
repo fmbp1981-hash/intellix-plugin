@@ -152,7 +152,7 @@
     "prd": "README.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md"
   },
-  "status": "IN_REVIEW",
+  "status": "APPROVED",
   "title": "Implement guarded technical completion and dependency evidence",
   "verification": [
     {
