@@ -107,12 +107,17 @@ def _load_at(root: Path, revision: str, relative: str) -> dict[str, Any]:
 def _manifest_digest_at(root: Path, revision: str, relatives: list[str]) -> str:
     digest = hashlib.sha256()
     for relative in sorted(set(relatives)):
-        try:
-            content = _git_bytes(root, "show", f"{revision}:{relative}")
-        except validate.ValidationError as exc:
-            if "exists" not in str(exc).lower() and "path" not in str(exc).lower():
-                raise
-            content = b"<deleted>"
+        _git_bytes(root, "rev-parse", "--verify", f"{revision}^{{commit}}")
+        probe = subprocess.run(
+            ["git", "-C", str(root), "cat-file", "-e", f"{revision}:{relative}"],
+            capture_output=True,
+            check=False,
+        )
+        content = (
+            _git_bytes(root, "show", f"{revision}:{relative}")
+            if probe.returncode == 0
+            else b"<deleted>"
+        )
         name = relative.encode("utf-8")
         digest.update(len(name).to_bytes(8, "big"))
         digest.update(name)
@@ -599,11 +604,14 @@ def dependency_eligibility(
             reasons.append("review, CI and human decision ordering is invalid")
         if decided_at > datetime.now(timezone.utc) + MAX_DECISION_SKEW:
             reasons.append("human decision timestamp is too far in the future")
-        if decided_at < datetime.now(timezone.utc) - timedelta(hours=24):
-            reasons.append("human decision timestamp is stale")
         status_revision = _derive_status_revision(context, approval_relative)
         _git(context.root, "merge-base", "--is-ancestor", revision, status_revision)
         _git(context.root, "merge-base", "--is-ancestor", status_revision, "HEAD")
+        parents = _git(
+            context.root, "rev-list", "--parents", "-n", "1", status_revision
+        ).split()
+        if len(parents) != 2 or parents[1] != revision:
+            reasons.append("status revision A must be a direct child of reviewed revision R")
         completion_diff = changed_files(context.root, revision, status_revision)
         permitted = sorted([task_relative, review_relative, approval_relative])
         if completion_diff != permitted:

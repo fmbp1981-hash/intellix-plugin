@@ -245,6 +245,49 @@ class CompletionTests(unittest.TestCase):
                 phase_base,
             )
 
+    def test_historical_approval_remains_dependency_eligible(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            worktree, context, task_path, phase_base, revision = self.repository(
+                Path(temporary)
+            )
+            review = self.review(context, task_path, phase_base, revision)
+            completion.complete_technical_approval(
+                context,
+                task_path,
+                review,
+                reviewed_ci_evidence(revision),
+                self.human_decision(),
+                "test-token",
+                transport=FakeTransport([check_response(revision)]),
+            )
+            review_path, approval_path = completion.evidence_paths(context, "TASK-101")
+            review = validate.load(review_path)
+            review["reviewed_at"] = (
+                datetime.now(timezone.utc) - timedelta(days=3)
+            ).isoformat()
+            self.write(review_path, review)
+            approval = validate.load(approval_path)
+            approval["review_digest"] = completion.digest_value(review)
+            approval["review_ci"]["queried_at"] = (
+                datetime.now(timezone.utc) - timedelta(days=2, hours=1)
+            ).isoformat()
+            approval["human_decision"]["decided_at"] = (
+                datetime.now(timezone.utc) - timedelta(days=2)
+            ).isoformat()
+            self.write(approval_path, approval)
+            self.git(worktree, "add", "tasks/TASK-101.yaml", "tasks/evidence")
+            status_revision = self.git(worktree, "commit", "-m", "record historical approval")
+            self.git(worktree, "push", "origin", "feat/test")
+            reasons = completion.dependency_eligibility(
+                context,
+                validate.load(task_path),
+                "test-token",
+                transport=FakeTransport(
+                    [check_response(revision), check_response(status_revision)]
+                ),
+            )
+            self.assertFalse(any("stale" in reason for reason in reasons))
+
     def test_dirty_worktree_and_self_review_block_without_writes(self):
         with tempfile.TemporaryDirectory() as temporary:
             worktree, context, task_path, phase_base, revision = self.repository(
