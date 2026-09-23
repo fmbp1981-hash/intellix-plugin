@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -58,7 +59,7 @@ def reviewed_ci_evidence(revision: str):
         ],
         "decision": "eligible",
         "reasons": [],
-        "queried_at": "2026-09-23T12:07:00+00:00",
+        "queried_at": (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat(),
     }
 
 
@@ -171,7 +172,7 @@ class CompletionTests(unittest.TestCase):
             "control_plane_digest": completion._manifest_digest_at(
                 context.root, revision, completion.control_plane_paths(context)
             ),
-            "reviewed_at": "2026-09-23T12:05:00+00:00",
+            "reviewed_at": (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat(),
             "evidence": ["independent read-only review approved R"],
             "limitations": ["Local reviewer identity is forgeable process evidence."],
         }
@@ -181,7 +182,7 @@ class CompletionTests(unittest.TestCase):
         return {
             "origin": "controlling-session",
             "reference": "explicit human technical-completion decision after R review and CI",
-            "decided_at": "2099-09-23T12:10:00+00:00",
+            "decided_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
             "limitations": "Technical completion only; no merge, release or production authority.",
         }
 

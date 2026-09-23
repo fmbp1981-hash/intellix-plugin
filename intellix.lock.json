@@ -1,6 +1,6 @@
 {
   "control_plane": {
-    "digest": "sha256:d512596081c397cd2c8dee9f979cddb83f2f1336916859d23dbd8a014e0d9b51",
+    "digest": "sha256:b29a3e7cf140dfbe5a44def54e555ca41bfe9569e3f6b92aec41bcf635ed44a4",
     "files": [
       "framework/adapters.py",
       "framework/ci.py",
@@ -14,7 +14,7 @@
     "version": "1.0.0"
   },
   "kernel": {
-    "digest": "sha256:4bfa3decbc690996858adffe89ee08b7c034cf99bdda7462290075803024a34f",
+    "digest": "sha256:82d538fc4be868fbe64e2669a8ffceaceb00c9fcc523716c6430998ffc0dc8a5",
     "files": [
       "framework/framework.yaml",
       "framework/policies/deployment.yaml",

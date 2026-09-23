@@ -785,7 +785,7 @@ def validate_completion_evidence(
         "schema_version", "phase_base", "reviewed_revision", "branch",
         "pre_contract_digest", "post_contract_digest", "fileset_digest",
         "project_digest", "source_digest", "kernel_digest", "control_plane_digest", "review_ref",
-        "review_digest", "human_decision", "review_ci",
+        "review_digest", "human_decision", "review_ci", "completion_ci",
     }
     for path in sorted(evidence.glob("*.json")):
         match = re.fullmatch(r"(TASK-[0-9]{3,})\.(review|approval)\.json", path.name)

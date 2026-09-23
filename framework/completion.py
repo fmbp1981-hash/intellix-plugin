@@ -14,7 +14,7 @@ import json
 import os
 import re
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +25,7 @@ import validate
 
 
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+MAX_DECISION_SKEW = timedelta(minutes=5)
 
 
 def digest_bytes(value: bytes) -> str:
@@ -150,8 +151,13 @@ def control_plane_paths(context: validate.ValidationContext) -> list[str]:
 
 
 def changed_files(root: Path, start: str, end: str) -> list[str]:
-    output = _git(root, "diff", "--name-only", "--diff-filter=ACDMRT", f"{start}..{end}")
-    return sorted(line for line in output.splitlines() if line)
+    output = _git_bytes(
+        root, "diff", "--no-renames", "--name-only", "--diff-filter=ACDMRT", "-z", f"{start}..{end}"
+    )
+    try:
+        return sorted(item.decode("utf-8") for item in output.split(b"\0") if item)
+    except UnicodeDecodeError as exc:
+        raise validate.ValidationError("Git fileset contains invalid UTF-8") from exc
 
 
 def derive_phase_base(
@@ -293,6 +299,14 @@ def _validate_review(
     mismatches = [key for key, value in expected.items() if review.get(key) != value]
     if review.get("reviewed_files") != reviewed_files:
         mismatches.append("reviewed_files")
+    review_ref, approval_ref = evidence_paths(context, task["id"])
+    if set(reviewed_files) & {
+        _relative(context, review_ref),
+        _relative(context, approval_ref),
+    }:
+        raise validate.ValidationError(
+            "versioned completion evidence must not exist in reviewed revision R"
+        )
     if unauthorized:
         raise validate.ValidationError(
             "reviewed revision changes files outside the Task Contract: "
@@ -333,6 +347,7 @@ def _completion_required_fields(approval: dict[str, Any]) -> list[str]:
         "review_digest",
         "human_decision",
         "review_ci",
+        "completion_ci",
     }
     return sorted(required - set(approval))
 
@@ -376,6 +391,8 @@ def complete_technical_approval(
     decided_at = _parse_time(human_decision.get("decided_at"), "decided_at")
     if decided_at <= reviewed_at:
         raise validate.ValidationError("human decision must occur after independent review")
+    if decided_at > datetime.now(timezone.utc) + MAX_DECISION_SKEW:
+        raise validate.ValidationError("human decision timestamp is too far in the future")
     ci_schema = validate.load(validate.declared_path(context, "schemas", "ci_evidence"))
     ci_errors = validate.validate_schema(reviewed_ci, ci_schema)
     ci_config = context.project.get("quality", {}).get("ci", {})
@@ -443,6 +460,7 @@ def complete_technical_approval(
             "decision": reviewed_ci["decision"],
             "queried_at": reviewed_ci["queried_at"],
         },
+        "completion_ci": live_ci,
     }
     schema = validate.load(validate.declared_path(context, "schemas", "approval"))
     errors = validate.validate_schema(approval, schema)
@@ -451,13 +469,18 @@ def complete_technical_approval(
             "invalid approval evidence: " + "; ".join(errors + _completion_required_fields(approval))
         )
     review_path.parent.mkdir(parents=True, exist_ok=True)
-    runtime.atomic_json(review_path, review)
-    runtime.atomic_json(approval_path, approval)
-    runtime._complete_technical_approval(
-        context,
-        task_path,
-        reason="versioned review, explicit human decision and live exact-R CI passed",
-    )
+    try:
+        runtime.atomic_json(review_path, review)
+        runtime.atomic_json(approval_path, approval)
+        runtime._complete_technical_approval(
+            context,
+            task_path,
+            reason="versioned review, explicit human decision and live exact-R CI passed",
+        )
+    except BaseException:
+        review_path.unlink(missing_ok=True)
+        approval_path.unlink(missing_ok=True)
+        raise
     return approval
 
 
@@ -530,8 +553,31 @@ def dependency_eligibility(
     task_relative = _relative(context, task_path)
     revision = approval["reviewed_revision"]
     try:
+        if approval.get("decision") != "approved" or approval.get("gate") != "technical_completion":
+            reasons.append("approval decision is not technical completion approved")
+        if review.get("decision") != "approved":
+            reasons.append("independent review is not approved")
+        if adapters.same_identity(
+            str(review.get("executor_identity")), str(review.get("reviewer_identity"))
+        ) or adapters.same_identity(
+            str(review.get("executor_identity")), str(review.get("reviewer_assignment"))
+        ):
+            reasons.append("reviewer is not independent from executor")
+        human = approval.get("human_decision", {})
+        if human.get("origin") != "controlling-session":
+            reasons.append("human decision is not from the controlling session")
+        reviewed_at = _parse_time(review.get("reviewed_at"), "reviewed_at")
+        review_ci_at = _parse_time(
+            approval["review_ci"].get("queried_at"), "review CI queried_at"
+        )
+        decided_at = _parse_time(human.get("decided_at"), "human decision decided_at")
+        if not reviewed_at < review_ci_at < decided_at:
+            reasons.append("review, CI and human decision ordering is invalid")
+        if decided_at > datetime.now(timezone.utc) + MAX_DECISION_SKEW:
+            reasons.append("human decision timestamp is too far in the future")
         status_revision = _derive_status_revision(context, approval_relative)
         _git(context.root, "merge-base", "--is-ancestor", revision, status_revision)
+        _git(context.root, "merge-base", "--is-ancestor", status_revision, "HEAD")
         completion_diff = changed_files(context.root, revision, status_revision)
         permitted = sorted([task_relative, review_relative, approval_relative])
         if completion_diff != permitted:
@@ -556,6 +602,14 @@ def dependency_eligibility(
             reasons.append("review and approval branches differ")
         if review.get("phase_base") != approval["phase_base"]:
             reasons.append("review and approval phase bases differ")
+        _git(context.root, "merge-base", "--is-ancestor", approval["phase_base"], revision)
+        if changed_files(context.root, approval["phase_base"], revision) != review.get(
+            "reviewed_files"
+        ):
+            reasons.append("reviewed files are not the derived phase-base-to-R fileset")
+        for key in ("project_digest", "source_digest", "kernel_digest", "control_plane_digest"):
+            if review.get(key) != approval.get(key):
+                reasons.append(f"review and approval {key} values differ")
         if review.get("fileset_digest") != approval["fileset_digest"]:
             reasons.append("review and approval fileset digests differ")
         if review.get("control_plane_digest") != approval["control_plane_digest"]:
@@ -580,6 +634,12 @@ def dependency_eligibility(
             context.root, control_plane_paths(context)
         ) != approval["control_plane_digest"]:
             reasons.append("control-plane implementation drift")
+        completion_ci = approval.get("completion_ci", {})
+        if (
+            completion_ci.get("revision") != revision
+            or completion_ci.get("decision") != "eligible"
+        ):
+            reasons.append("completion-time live CI evidence is invalid")
         ci_config = context.project.get("quality", {}).get("ci", {})
         recorded_ci = approval["review_ci"]
         if (
