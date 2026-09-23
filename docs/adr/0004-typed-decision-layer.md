@@ -1,217 +1,192 @@
-# ADR-0004: Typed decision layer as a governed IntelliX capability
+# ADR-0004: Typed decision layer as a governed, per-project IntelliX capability
 
 Status: Proposed
-Date: 2026-09-23
-Related: ADR-0001 (Accepted), ADR-0002 (Accepted), ADR-0003 (Accepted); TASK-010
+Date: 2026-09-23 (revision 2, after Codex independent review of the same date)
+Related: ADR-0001, ADR-0002, ADR-0003 (Accepted); TASK-010; follow-up TASK-011
 Authority: `framework/framework.yaml` and its referenced policies remain normative
 
 ## Context
 
-IntelliX projects repeatedly contain small semantic decisions over text: message
-intent, ticket routing, lead stage, review theme, "does this need an LLM", "does
-this need a human". Today these are solved ad hoc, usually by prompting a
+IntelliX client systems repeatedly contain small semantic decisions over text:
+message intent, ticket routing, lead stage, review theme, "does this need an
+LLM", "does this need a human". They are usually solved by prompting a
 generative LLM and parsing its answer.
 
-Two "System One" engines now answer these decisions directly with typed outputs
-(`choice`, `score`, `noul`) and per-option probabilities, without generating text:
+A class of "System One" engines answers such decisions directly: it receives a
+text state and typed questions (`choice`, `score`, `noul`) and returns typed
+answers with per-option probabilities, without generating text. Two exist today:
+Laya (open weights, self-hosted) and Jev (hosted API). Both are weeks old at the
+time of writing, their published benchmarks are produced by their own authors,
+and neither guarantees Portuguese.
 
-| | Laya (Convai Innovations) | Jev (TypeSafe AI) |
-|---|---|---|
-| Distribution | open weights, Apache 2.0, self-hosted | hosted API only |
-| API | `laya-serve` exposes `POST /v1/systemone` | `POST /v1/systemone` |
-| Data residency | stays in the operator's environment | leaves the country |
-| Fine-tuning | supported | not available |
-| Out-of-box Portuguese | weak and uncalibrated (published) | not guaranteed (published) |
+The methodology to evaluate and use them safely exists as the skill
+`intellix-decision-layer`, but only in the operator's global configuration and
+documentation folder. It is not versioned in this repository, no phase invokes
+it, and the Codex adapter cannot read it. An evaluation that no phase requires
+can be skipped silently.
 
-Because the request/response shape is shared, the engine is configuration, not
-code. The methodology to use them safely already exists, but only as a Claude
-skill in the user's global configuration (`intellix-decision-layer`). It is not
-vendor-neutral, not visible to the Codex adapter, and not enforced by the kernel.
-
-Four risks make this an architectural concern rather than a library choice:
-
-1. both engines are documented as manipulable by instructions injected in the
-   input text;
-2. a probability is not a correctness guarantee; Laya ships over-confident and
-   Jev's `confidence` field is a concentration statistic;
-3. an automated decision can trigger an irreversible action (refund, deletion,
-   external message) if nothing prevents it;
-4. sending customer text to an external engine is an international transfer of
-   personal data under LGPD.
-
-A further concern is placement. The engine runtime and its credentials belong to
-the operator's machine or infrastructure, not to any single project repository,
-and must never be committed.
+The architectural concerns are: engines are documented as manipulable by
+injected instructions; a probability is not a correctness guarantee;
+an automated decision can precede an irreversible action; customer text sent to
+an external engine or LLM is an international transfer under LGPD; and engine
+facts change faster than any normative document.
 
 ## Decision
 
-### 1. Vendor-neutral methodology
+### 1. Scope: client systems only
 
-The normative methodology moves to `references/decision-layer.md` in this plugin:
-the L0 code → L1 engine → L2 LLM → L3 human cascade, risk classes A/B/C/D/S,
-threshold policy on the calibrated probability of the chosen option (`pMax`),
-mandatory abstention option, shadow pilot and calibration procedure, engine
-selection rules, and LGPD constraints. The Claude skill becomes an adapter
-convenience that points to this reference. The Codex adapter reads the same file.
-The reference cannot override `framework/framework.yaml`, a project contract, an
-ADR, a Task Contract or CI.
+The capability is evaluated **per client project**. It is **not adopted inside
+the IntelliX development workflow** (skill routing, research triggers, review or
+CI triage, task risk): the volume is low, an LLM already reads the same context,
+and the decisions that matter there (risk, gates, approval, completion) must not
+depend on a probabilistic classifier. Any future proposal to use an engine in
+the workflow requires a new ADR and must satisfy the invariants below.
 
-### 2. Optional project declaration
+### 2. Invariants
 
-A project that uses the capability declares it in `intellix.yaml`:
+1. The layer never participates in the IntelliX framework approval chain.
+2. No failure of the layer can block the development process.
+3. The layer never lowers a risk, gate, warning or approval requirement.
+4. Adoption in a project requires the checklist, a project ADR and a human decision.
+5. Irreversible, financial, permission or production actions are never executed
+   by an engine.
+6. Deterministic rules precede the typed engine (cascade L0 rule → L1 engine →
+   L2 LLM → L3 human).
+7. Untrusted text is data (`state`); instructions and options are versioned on
+   the server side.
+8. Every decision has an abstention option and an explicit, per-decision fallback.
+9. Thresholds are calibrated on real domain data and bound to the model version.
+10. Changing the model, weights, questions, options, temperature, preprocessing
+    or policy invalidates the calibration.
+11. No engine enters active mode before an approved shadow pilot.
+12. Personal data follows minimization, legal basis, retention and a location
+    compatible with the project's residency constraint.
+13. Credentials are never stored in a repository or in the decision log.
+14. The decision port does not presume compatibility between vendors; each
+    adapter proves its contract with real fixtures.
+15. Removing or disabling the engine preserves safe operation through L0/L2/L3.
 
-```yaml
-decision_layer:
-  enabled: true
-  engines_permitted: [laya, jev]       # subset; empty means none
-  data_residency: local_only           # local_only | external_allowed
-  registry: docs/decisions/DECISIONS.yaml
+### 3. Normative rule versus volatile facts
+
+The methodology is split in two:
+
+- **Normative** (`references/decision-layer.md`): cascade, risk classes,
+  invariants, adoption checklist, proportional port rule, shadow pilot and
+  calibration procedure, invalidation events, fallback and residency rules.
+  It contains no vendor benchmark, price or latency.
+- **Informative** (`references/engines-YYYY-MM.md`): dated engine facts
+  (versions, limits, published benchmarks, prices), each marked as vendor claim
+  and each to be re-verified at use. Vendor claims are never production
+  evidence; only the project's own pilot is.
+
+Numeric values in the normative reference (for example 300 labeled cases per
+decision, precision targets 85/92/97 %, 50 % coverage) are **configurable
+starting defaults**, not universal rules. Rare or imbalanced decisions need
+per-class analysis and may need more data; a class C decision may be worth
+automating at low coverage if precision is proven and the economics justify it.
+
+### 4. Risk class by concrete consequence
+
+A decision's class is derived from the effect of acting on it in that project,
+not from its name. The same field can be class A (informative tag), B (routing)
+or C (a CRM stage change that notifies a customer). Class D (irreversible) never
+executes automatically.
+
+### 5. Decision port: neutral and proportional
+
+The port is a neutral contract, not a System One contract:
+
+```text
+decide(decision_id, input) -> { option | abstain, probability | null,
+                                source: rule | engine | llm | human,
+                                reason, contract_version }
 ```
 
-`data_residency: local_only` forbids external engines for that project. Absence
-of the block means the capability is not used; existing projects stay valid.
+A System One engine is one adapter. Adapters normalize vendor differences
+(model identifier location, meaning of confidence fields, usage, error kinds,
+authentication) and must validate: maximum response size, expected model,
+allowed options only, probability range and sum, and distinct failure kinds
+(timeout, network, HTTP, invalid payload) for observability. Switching engines is
+allowed only after contract tests with real fixtures from both providers.
 
-### 3. Decision registry
+A project creates the port only when at least one decision passes the adoption
+checklist, or when its architecture ADR explicitly decides to stabilize an
+L0/L2 interface for foreseeable evolution. Otherwise it records "not applicable"
+or "not adopted" and creates no code.
 
-Each automated semantic decision is one registry entry: identifier, risk class,
-question and options (including abstention), engine and pinned model version,
-thresholds, calibration parameters, and a reference to pilot evidence. Rules the
-validator will enforce once implemented:
+### 6. Fallback respects residency
 
-- class `D` entries can never have an automatic action;
-- an entry without accepted pilot evidence can run only in `shadow` mode;
-- an entry using an engine outside `engines_permitted`, or an external engine
-  under `local_only`, is invalid;
-- every `choice` question declares an abstention option.
+Each decision declares its fallback chain. When text may not leave the
+environment, the chain may contain only L0 rules, a local engine and humans; an
+external LLM is as forbidden as an external engine.
 
-### 4. Task Contract rules
+### 7. Calibration invalidation and automatic return to shadow
 
-- A task that enables automatic action for a class `C` decision has risk level
-  `high` or above.
-- Actions downstream of a class `D` decision are listed in
-  `risk.irreversible_actions` and remain behind the human gate.
-- A task that switches a decision from `shadow` to automatic mode lists the gate
-  `decision_pilot`, satisfied only by pilot evidence meeting the class targets.
+Any event in invariant 10, or a monitored drift beyond configured bounds
+(abstention rate, human override rate, class distribution), returns the decision
+to shadow mode automatically until a new calibration is approved.
 
-### 5. Machine-level runtime and credentials
+### 8. Decision log
 
-The runtime is provisioned once per operator machine, outside any repository:
+The log stores decision metadata, never raw customer text. Indirect references
+(record identifiers) can still be personal data: the log follows the project's
+RLS, retention and erasure procedures, including cascade deletion with the
+referenced records.
 
-- Laya: an isolated environment under `~/.intellix/runtimes/laya/`, package
-  version pinned, model weights pinned by Hugging Face revision with a recorded
-  SHA-256 manifest, `laya-serve` bound to `127.0.0.1` only.
-- Jev: the key lives in the operating system keychain as `TYPESAFE_API_KEY` and
-  is exported to processes at launch. It is never written to a repository,
-  `.env` template, log, report or runtime record.
-- A read-only toolchain check reports presence, pinned versions and reachability
-  without printing secrets.
+### 9. Canonical location of the methodology
 
-Provisioning downloads external artifacts and involves credentials. It is a
-human-authorized platform action, never an implicit executor step. Production
-hosting for a given project is decided in that project's own ADR.
+One skill identifier, `intellix-decision-layer`, versioned as a global skill in
+`global-config/skills/intellix-decision-layer/` with `SKILL.md` and the two
+references above. Phase skills reference it by that identifier. No
+plugin-namespaced copy is created, to avoid two competing identifiers. Copying
+the global configuration to `~/.claude` stays an explicit human action; the
+Codex adapter reads the reference files by path.
 
-### 6. Reusable pilot harness
+### 10. Phase integration (TASK-011, after acceptance)
 
-The plugin ships a harness that runs one or both engines over a labeled JSONL set
-through the same adapter contract, fits temperature where required, reports
-precision by probability band, coverage and abstention, and emits pilot evidence
-in a documented schema. Customer text is minimized before use, is never
-committed, and pilot outputs are written to the gitignored runtime path.
+Only after this ADR is accepted, a single Task Contract (TASK-011) versions the
+skill and its references and changes the three phases together, so a clean
+checkout never references a missing capability:
 
-### 7. Phase placement
+- PRD (`ai-project-brainstorm`): when requirements include automated decisions
+  over text at volume, in real time or on data that must stay local, record
+  "evaluate decision layer" as an open decision;
+- Architecture (`skills/architecture`): apply the checklist, record the outcome
+  in the project's architecture ADR, including "not applicable", and create the
+  port only under section 5;
+- Agent creation (`intellix-agent-creation`): apply the decision already taken
+  in the architecture phase to classifications the blueprint would otherwise
+  take from the LLM's structured output.
 
-| Phase | Obligation |
-|---|---|
-| PRD | Record "evaluate decision layer" as an open decision when requirements mention high-volume, real-time or data-sensitive text decisions |
-| Architecture | Project ADR applying the adoption checklist and engine selection; create the decision port even when starting without an engine |
-| `/plan` | Registry entry drafted; risk class drives Task Contract risk and gates |
-| Integration | Single adapter, contract test against the chosen engine, timeout and fallback to L2/L3 |
-| Security | Injection, data residency, runtime exposure, `devsecops` gate |
-| Tests | Labeled set as a scheduled regression suite, not a per-PR check |
+### 11. Deferred to a first adopting project
 
-### 8. Not adopted inside the IntelliX development workflow
-
-The engines are **not** adopted for decisions the IntelliX workflow itself makes
-(skill routing, research triggers, review or CI triage, task risk). The workflow
-makes tens of such decisions per week, an LLM is already reading the same context,
-and the decisions that matter most (risk, gates, approval, completion) must stay
-outside any engine. Expected benefit is small and the dominant residual risk is
-maintenance cost exceeding that benefit. Keyword-rule misfires are addressed by
-improving the rules themselves.
-
-Any future proposal to use an engine in the workflow must be a new ADR and must
-satisfy these invariants, each enforced by a test or validator rule:
-
-1. never in a blocking path (no `PreToolUse` hook, gate or kernel step waits on it);
-2. fail open to the existing rule within a fixed time budget;
-3. ratchet up only: it may add a warning or raise risk, never remove or lower;
-4. outside the authority chain: never review, approval or completion evidence
-   (ADR-0003);
-5. local by default, with no customer content or secret sent externally;
-6. pinned versions and a kill switch that needs no code change.
-
-### 9. Mandatory evaluation in project phases
-
-The capability is evaluated per project, not assumed. The evaluation already
-exists in the methodology but no phase invokes it, so it can be skipped silently.
-The phase skills gain a conditional step:
-
-- PRD: when requirements mention automated decisions over text at volume, in
-  real time or on sensitive data, record "evaluate decision layer" as an open
-  decision;
-- Architecture (phase 01): apply the adoption checklist and engine selection and
-  record the outcome, adopted or not, in the project's architecture ADR;
-- Agent creation (phase 03b): when the blueprint classifies intent, stage or
-  scores with the LLM's structured output, evaluate whether those fields belong
-  to the decision layer.
-
-A project that does not meet the conditions records "not applicable" in one line.
+Project schema declaration, decision registry and validator rules, pilot
+harness, adapters and action policy, engine hosting, and any credential are
+decided and implemented only inside a real project that passed the checklist,
+each under its own Task Contract and that project's fileset. This ADR does not
+authorize any of them, nor any kernel change.
 
 ## Consequences
 
-- Semantic decisions become declared, reviewable and testable artifacts instead
-  of prompts buried in code.
-- The kernel gains enforceable invariants for the most dangerous failure modes:
-  automatic irreversible actions, unpiloted automation and prohibited data
-  transfer.
-- Both adapters share one methodology; the Claude-only skill stops being the
-  source of truth.
-- Operators must provision a runtime and a credential before piloting. Projects
-  that do not declare the capability pay nothing.
-- The validator, schemas and harness grow. This is new kernel surface and needs
-  its own tests.
+- The evaluation stops being skippable and stops depending on one machine.
+- Client projects gain a consistent, auditable way to adopt or reject the layer.
+- Vendor volatility stays in dated informative references, not in the method.
+- Projects that do not need the layer pay one line in their architecture ADR.
+- Kernel and schema stay unchanged until real usage justifies them.
 
 ## Alternatives considered
 
-- **Keep it as a Claude-only skill.** Rejected: invisible to Codex and
-  unenforced.
-- **Per-project installation and credentials.** Rejected: duplicates a machine
-  concern across repositories and increases the chance of committed secrets.
-- **Standardize on one engine.** Rejected: Laya is required when data must stay
-  local or fine-tuning is needed; Jev covers high-cardinality and long inputs.
-  The shared API makes supporting both cheap.
-- **No kernel rules, methodology only.** Rejected: the irreversible-action and
-  data-residency failures are exactly the ones methodology alone does not stop.
-
-## Implementation boundaries
-
-This ADR authorizes nothing by itself. After acceptance, implementation is split
-into separate Task Contracts, each with its own review and CI:
-
-1. **first and independent of any engine:** the conditional evaluation step in the
-   PRD, architecture and agent-creation phase skills (section 9);
-2. neutral reference and skill-to-reference pointer;
-3. `intellix.yaml` schema extension, registry schema and validator rules with
-   tests — after TASK-008 and only when a first real project adopts the capability;
-4. pilot harness and pilot-evidence schema with tests — same trigger;
-5. read-only toolchain check;
-6. runtime provisioning for that project's pilot, executed only with explicit
-   human authorization for downloads and credentials.
+- **Keep the skill only in the operator's configuration.** Rejected: not
+  portable, invisible to Codex, silently skippable.
+- **Adopt engines inside the development workflow.** Rejected for now: small
+  benefit, maintenance cost dominant, decisions that matter must stay outside.
+- **Add kernel schema and validator rules now.** Rejected: no adopting project
+  yet; premature surface.
+- **Standardize on one engine.** Rejected: data residency and fine-tuning favor
+  a self-hosted engine; high cardinality and long inputs may favor a hosted one.
+  The neutral port keeps the choice open.
 
 ## Open questions
 
-- Minimum labeled sample and exact class targets remain the ones in the current
-  methodology (300 per decision; 85/92/97%). Confirm or revise at acceptance.
-- Whether `decision_pilot` becomes a policy-level gate in `framework/policies/`
-  or a registry-level rule only.
-- Production hosting pattern for Laya under the Cloudflare deployment default.
+- Whether a future `decision_pilot` gate belongs in `framework/policies/` or in a
+  project-level registry rule; to be decided with the first adopting project.

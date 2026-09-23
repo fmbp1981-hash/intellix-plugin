@@ -1,22 +1,24 @@
 {
   "id": "TASK-010",
-  "title": "Propose the typed decision layer as a governed IntelliX capability",
+  "title": "Decide the typed decision layer as a governed, per-project IntelliX capability",
   "status": "DRAFT",
-  "objective": "Document a proposed ADR that makes the typed decision layer (Laya or Jev) a vendor-neutral, optional and kernel-governed IntelliX capability, with machine-level runtime and credentials, without changing executable rules.",
+  "objective": "Record a proposed ADR that decides scope, invariants, normative-versus-informative split, proportional decision port, residency-aware fallback, calibration invalidation, canonical skill location and the follow-up phase integration for the typed decision layer, without changing phases, kernel, schema or runtime.",
   "source": {
     "prd": "README.md",
     "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md",
     "adrs": [
-      "docs/adr/0001-vendor-neutral-multiagent-kernel.md"
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md"
     ]
   },
   "risk": {
     "level": "high",
     "reasons": [
-      "The proposal defines future kernel invariants for automated decisions that can precede irreversible actions",
-      "It sets where engine runtimes and credentials live, which affects secret handling on every operator machine",
-      "It constrains transfer of customer text to an external engine under LGPD"
+      "The decision fixes invariants that future client projects must satisfy before any automated semantic decision precedes an action",
+      "It sets the canonical location of a methodology read by both adapters",
+      "It constrains transfer of customer text to external engines and LLMs under LGPD"
     ],
     "irreversible_actions": []
   },
@@ -45,53 +47,73 @@
       "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
       "docs/adr/0002-operational-orchestrator.md",
       "docs/adr/0003-technical-completion-trust-and-revisions.md",
+      "tasks/TASK-001.yaml",
+      "tasks/TASK-002.yaml",
+      "tasks/TASK-003.yaml",
+      "tasks/TASK-004.yaml",
+      "tasks/TASK-005.yaml",
+      "tasks/TASK-006.yaml",
+      "tasks/TASK-007.yaml",
       "tasks/TASK-008.yaml",
-      "tasks/TASK-009.yaml"
+      "tasks/TASK-009.yaml",
+      "tasks/evidence/**"
     ]
   },
   "dependencies": [],
   "acceptance_criteria": [
     {
       "id": "AC-001",
-      "given": "the decision-layer methodology exists only as a Claude skill in the operator's global configuration",
-      "when": "the proposal defines the source of truth",
-      "then": "it places the normative methodology in a vendor-neutral plugin reference that both adapters read and that cannot override the kernel, project contract, ADRs, Task Contracts or CI"
+      "given": "the methodology exists only in the operator's configuration and documentation folder",
+      "when": "the ADR defines its canonical location",
+      "then": "it names one skill identifier versioned under global-config with normative and informative references, forbids a competing plugin-namespaced copy, and keeps copying to ~/.claude a human action"
     },
     {
       "id": "AC-002",
-      "given": "an automated decision whose downstream action is irreversible",
-      "when": "the proposed registry and Task Contract rules are applied",
-      "then": "no engine output can trigger that action automatically and the action stays behind the human gate"
+      "given": "phase skills would invoke the methodology",
+      "when": "the ADR orders the work",
+      "then": "phase changes happen only after acceptance and in the same Task Contract that versions the skill, so a clean checkout never references a missing capability"
     },
     {
       "id": "AC-003",
-      "given": "a project that declares local-only data residency",
-      "when": "a decision entry selects an external engine",
-      "then": "the proposal defines that entry as invalid"
+      "given": "vendor benchmarks, prices and latencies change between versions",
+      "when": "the ADR splits the method",
+      "then": "the normative reference contains no vendor number, dated engine facts live in an informative reference marked as claims, and numeric thresholds are configurable starting defaults"
     },
     {
       "id": "AC-004",
-      "given": "engine runtimes and credentials",
-      "when": "the proposal defines their placement",
-      "then": "they live at machine level outside any repository, the key is held in the OS keychain, nothing secret is written to repository, log or runtime record, and provisioning requires explicit human authorization"
+      "given": "two engines declare the same HTTP shape",
+      "when": "the ADR defines the decision port",
+      "then": "the port is vendor-neutral, adapters normalize and validate responses, and switching engines requires contract tests with real fixtures"
     },
     {
       "id": "AC-005",
-      "given": "this architectural proposal",
-      "when": "its status and diff are reviewed",
-      "then": "the ADR remains Proposed until an explicit human decision and changes no kernel, schema, policy, credential, merge or production state"
+      "given": "a small project with a semantic decision but no adoption signal",
+      "when": "the architecture phase applies the ADR",
+      "then": "no port or code is created and the outcome is recorded as not applicable or not adopted"
     },
     {
       "id": "AC-006",
-      "given": "the engine was considered for decisions inside the IntelliX development workflow",
-      "when": "the proposal decides its use there",
-      "then": "it records non-adoption with the rationale and lists the invariants any future proposal must satisfy: advisory only, never in a blocking path or the authority chain, ratchet upward only, fail open within a fixed time budget, local by default"
+      "given": "a decision whose text must stay in the environment",
+      "when": "its fallback chain is defined",
+      "then": "only L0 rules, a local engine and humans are allowed; an external LLM is forbidden like an external engine"
     },
     {
       "id": "AC-007",
-      "given": "a new or existing project reaching PRD, architecture or agent-creation",
-      "when": "the phase runs",
-      "then": "the proposal requires an explicit evaluation of the decision layer with its outcome recorded, including 'not applicable', so the evaluation cannot be skipped silently"
+      "given": "a calibrated decision",
+      "when": "the model, weights, questions, options, temperature, preprocessing or policy change, or monitored drift exceeds bounds",
+      "then": "the decision returns to shadow mode until a new calibration is approved"
+    },
+    {
+      "id": "AC-008",
+      "given": "the IntelliX development workflow",
+      "when": "the ADR decides engine use there",
+      "then": "it records non-adoption with rationale and requires a new ADR under the stated invariants for any future proposal"
+    },
+    {
+      "id": "AC-009",
+      "given": "this architectural proposal",
+      "when": "its status and diff are reviewed",
+      "then": "the ADR remains Proposed until an explicit human decision and changes no phase, kernel, schema, policy, credential, runtime, merge or production state"
     }
   ],
   "verification": [
@@ -119,27 +141,24 @@
     "human_approval",
     "worktree"
   ],
-  "rollback": "Revert only the focused TASK-010 proposal commit on its proposal branch; ADR-0001 to ADR-0003 and all other contracts stay unchanged.",
+  "rollback": "Revert only the TASK-010 proposal commits on proposal/decision-layer-adr; ADR-0001 to ADR-0003 and all other contracts stay unchanged.",
   "notes": [
-    "Drafted by Claude on 2026-09-23 at the human's request to bring the decision layer into the global IntelliX workflow rather than a single project.",
-    "Claude is executor for this proposal, so Codex is the independent reviewer; Claude must not approve it.",
-    "Engine facts come from the Laya model cards and the TypeSafe documentation as read on 2026-09-23; performance numbers from either vendor are treated as unverified claims.",
-    "The identifier TASK-010 and ADR number 0004 must be re-checked against the framework branch before merge in case the executor allocated them concurrently.",
-    "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope.",
-    "A Portuguese handoff with the conclusion, the risk matrix, the phase-step drafts and the queue order accompanies this proposal: INTELLIX_CAMADA_DE_DECISAO_NO_PROCESSO_HANDOFF_CODEX.md (operator's documentation folder, not committed).",
-    "Revised on 2026-09-23 after human review: in-workflow use is not adopted; per-project evaluation wiring becomes the first implementation item; kernel changes wait for TASK-008 and a first adopting project."
+    "Drafted by Claude on 2026-09-23 at the human's request; Claude is executor, Codex is the independent reviewer and Claude must not approve it.",
+    "Revision 2 addresses Codex review INTELLIX_REVISAO_CODEX_CAMADA_DE_DECISAO_HANDOFF.md (objections O-01 to O-07, non-blocking points 1-7, invariants section 7).",
+    "O-01: the branch was pushed after the review started; it is now rebased on af8241b (TASK-009 approved).",
+    "Phase integration and skill versioning are TASK-011 after acceptance; schema, registry, harness, adapters, hosting and credentials are deferred to a first adopting project.",
+    "Vendor facts were read on 2026-09-23 from the Laya model cards, PyPI and TypeSafe documentation; they belong to the informative reference, not to this decision.",
+    "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope."
   ],
   "handoff": {
     "required_evidence": [
       "two-file inventory",
-      "independent architecture and security review by Codex",
+      "independent architecture, security and LGPD review by Codex",
       "exact-revision CI",
       "human decision on proposed ADR-0004"
     ],
     "open_questions": [
-      "Confirm minimum labeled sample and class precision targets",
-      "Policy-level gate versus registry-level rule for decision_pilot",
-      "Production hosting pattern for Laya under the Cloudflare default"
+      "Policy-level gate versus project registry rule for a future decision_pilot gate"
     ]
   }
 }
