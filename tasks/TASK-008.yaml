@@ -1,47 +1,121 @@
 {
-  "id": "TASK-008",
-  "title": "Harden guarded completion and CI primitives",
-  "status": "IN_REVIEW",
-  "objective": "Establish fail-closed kernel, runtime, dispatcher and CI primitives that make a later guarded technical-completion path safe to implement.",
-  "source": {
-    "prd": "README.md",
-    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
-    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": [
-      "docs/adr/0002-operational-orchestrator.md",
-      "docs/adr/0003-technical-completion-trust-and-revisions.md"
+  "acceptance_criteria": [
+    {
+      "given": "a final implementation and review candidate in the authorized TASK-008 worktree",
+      "id": "AC-001",
+      "then": "it requires a clean worktree on the authorized branch, derives R from HEAD, verifies R equals the live remote branch tip, and never accepts a caller-selected revision as authority",
+      "when": "the guarded completion path derives reviewed revision R"
+    },
+    {
+      "given": "review, approval and project inputs for R",
+      "id": "AC-002",
+      "then": "versioned schema-valid evidence binds the task ID, phase base and reviewed revisions, pre-completion contract and fileset digests, project binding, normative kernel and policy digests, independent reviewer assignment, review result, explicit controlling-session human-decision reference and a fresh live exact-R GitHub CI result",
+      "when": "technical completion is evaluated"
+    },
+    {
+      "given": "the generic dispatcher or generic runtime transition API",
+      "id": "AC-003",
+      "then": "the existing early rejection remains effective with no adapter, worktree, dependency, task or runtime-record mutation",
+      "when": "an executor requests APPROVED or any other kernel-guarded state"
+    },
+    {
+      "given": "all R gates and the later explicit human technical decision are valid",
+      "id": "AC-004",
+      "then": "only IN_REVIEW to APPROVED is permitted, no generic dispatcher CLI or actor-string shortcut reaches it, and the API writes only the declared task status plus versioned review and approval evidence needed for status revision A",
+      "when": "the dedicated internal completion API runs"
+    },
+    {
+      "given": "status revision A has been committed after the guarded completion edit",
+      "id": "AC-005",
+      "then": "the checker derives A from Git history, verifies R is its ancestor, restricts the R-to-A diff to permitted completion metadata, validates current pre/post contract and evidence bindings, and queries configured GitHub checks live for both R and A",
+      "when": "a dependent task evaluates TASK-008"
+    },
+    {
+      "given": "an APPROVED task with missing, stale, changed, malformed, failed or indeterminate evidence",
+      "id": "AC-006",
+      "then": "the historical approval remains recorded but downstream work is blocked with an explicit reason and no automatic status revocation or silent evidence rewrite",
+      "when": "dependency eligibility is checked"
+    },
+    {
+      "given": "a caller attempts stale R, a wrong branch or worktree, dirty state, self-review, changed fileset, task, project, kernel or CI configuration, a hand-edited APPROVED label, a non-ancestor A, forbidden completion diff, absent credential, or failed CI",
+      "id": "AC-007",
+      "then": "the operation fails closed and comprehensive negative tests prove that no dependent task is released",
+      "when": "completion or dependency eligibility executes"
+    },
+    {
+      "given": "local review and controlling-session human-decision records",
+      "id": "AC-008",
+      "then": "they are explicitly identified as forgeable process evidence rather than authenticated identity, and no merge, release, deploy, credential, permission or production authority is granted",
+      "when": "reports or documentation describe their assurance"
+    }
+  ],
+  "dependencies": [
+    "TASK-006"
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "handoff": {
+    "open_questions": [],
+    "required_evidence": [
+      "validated phase-base-to-R fileset inventory and regenerated lock",
+      "versioned schema-valid independent review record bound to R",
+      "fresh live exact-revision GitHub CI for R",
+      "explicit post-review controlling-session human technical decision reference",
+      "guarded R-to-A completion metadata diff and derived A",
+      "fresh live exact-revision GitHub CI for A before dependency release",
+      "negative-test matrix covering every ADR-0003 fail-closed case",
+      "residual-risk statement that local identity evidence is forgeable and grants no merge or production authority"
     ]
   },
-  "risk": {
-    "level": "high",
-    "reasons": [
-      "Changes normative lifecycle metadata and generic transition enforcement",
-      "A guard omission could expose dependency-releasing states to executor requests",
-      "An empty required-check set currently permits vacuous CI eligibility"
-    ],
-    "irreversible_actions": []
-  },
+  "id": "TASK-008",
+  "notes": [
+    "Phase 1 completed at 7bef528 on 2026-09-22: canonical guarded-state registries, early generic dispatcher/runtime rejection and non-vacuous CI primitives passed 84 local tests, independent read-only Claude review and exact-revision GitHub checks. That evidence remains process/history context and does not authorize phase 2.",
+    "The human owner explicitly approved this revised phase-2 exact fileset and acceptance criteria on 2026-09-23, authorizing implementation but not the later technical-completion decision, merge, release, deploy or production action.",
+    "ADR-0003 is the accepted source of truth. The earlier one-time waiver and manual APPROVED-edit alternatives remain rejected because they bypass the guard being implemented.",
+    "After plan approval, use the existing legal IN_REVIEW to IN_PROGRESS transition in this same dedicated worktree, commit that transition before implementation and bind the resulting phase base revision into the later review evidence.",
+    "The completion API will be a control-plane library surface in framework/completion.py, not a target exposed by the generic dispatcher CLI. It may grant only APPROVED and only from IN_REVIEW after every gate passes; MERGED, VERIFIED and RELEASED remain outside this path.",
+    "Versioned completion evidence is stored under tasks/evidence/ so a fresh checkout can validate it without adding a second configurable path. The review and approval records are created only after R is clean, pushed, independently reviewed and green; they are permitted completion metadata for A, not part of the executable implementation reviewed at R.",
+    "R is derived from clean HEAD in the authorized worktree and must equal the live remote branch tip. A is never self-declared in its own content; downstream evaluation derives A from Git history after the guarded metadata commit and checks its exact live CI.",
+    "The phase base to R diff must equal the reviewed implementation inventory and remain within this contract's create/modify files, excluding only the later task status and two versioned evidence records permitted in R-to-A.",
+    "Current dependency eligibility revalidates schema, task pre/post digests, fileset digest, project binding, normative kernel/policy digest, Git ancestry and live configured CI for both R and A. Changed or unevaluable inputs block explicitly while preserving historical approval.",
+    "Local Claude review and the controlling-session human decision remain forgeable process evidence. The control plane validates structure, ordering and assignment separation but must not claim cryptographic identity or authenticated GitHub approval from local records.",
+    "Fourteen files are in the phase-2 fileset. The size is accepted for planning as a single cross-cutting security change because schema, kernel registration, validator, guarded runtime entry, dependency enforcement, portable distribution, focused tests, documentation, versioned evidence and generated lock must land atomically; implementation approval may still require splitting if review finds an independently safe boundary.",
+    "framework/schemas/project.schema.json, runtime/handoff schemas, project manifests, templates, adapters and CI transport remain unchanged deliberately: evidence paths derive from documents.tasks, the existing runtime event shape is sufficient, completion reuses the existing live CI evaluator, and no new configuration source is introduced.",
+    "Regenerate intellix.lock.json from the validated framework; never hand-edit its digest. No merge, release, deploy, credential provisioning, permissions, secrets, production action or additional branch is in scope."
+  ],
+  "objective": "Complete the guarded technical-approval protocol by binding review, human-decision and live exact-revision CI evidence to reviewed revision R and status revision A before APPROVED can release dependencies.",
   "ownership": {
     "architect": "claude",
+    "domain_role": "platform-engineer",
     "executor": "codex",
-    "reviewer": "claude-independent",
-    "domain_role": "platform-engineer"
+    "reviewer": "claude-independent"
   },
+  "risk": {
+    "irreversible_actions": [],
+    "level": "high",
+    "reasons": [
+      "Introduces the only internal path permitted to write the dependency-releasing APPROVED state",
+      "Incorrect revision, digest or evidence binding could release downstream work from stale or forged local metadata",
+      "Dependency eligibility now requires live GitHub evidence for two exact revisions and must fail closed under every indeterminate condition"
+    ]
+  },
+  "rollback": "Before A, revert only the focused phase-2 implementation commits and regenerate the lock from the restored kernel. After A, preserve all review and approval evidence and use a separately approved guarded supersession or reopening contract; never rewrite history, silently revoke approval, or alter external permissions.",
   "scope": {
     "create": [
-      "framework/tests/test_completion_guards.py"
-    ],
-    "modify": [
-      "tasks/TASK-008.yaml",
-      "framework/framework.yaml",
-      "framework/validate.py",
-      "framework/runtime.py",
-      "framework/dispatch.py",
-      "framework/ci.py",
-      "framework/tests/test_runtime.py",
-      "framework/tests/test_dispatch.py",
-      "framework/README.md",
-      "intellix.lock.json"
+      "framework/completion.py",
+      "framework/schemas/review-evidence.schema.json",
+      "framework/tests/test_completion.py",
+      "tasks/evidence/TASK-008.review.json",
+      "tasks/evidence/TASK-008.approval.json"
     ],
     "forbidden": [
       ".env*",
@@ -52,52 +126,46 @@
       "infra/production/**",
       "docs/adr/**",
       "framework/schemas/project.schema.json",
-      "framework/schemas/approval.schema.json",
       "framework/schemas/handoff.schema.json",
-      "framework/schemas/runtime.schema.json"
+      "framework/schemas/runtime.schema.json",
+      "intellix.yaml",
+      "intellix-templates/**"
+    ],
+    "modify": [
+      "tasks/TASK-008.yaml",
+      "framework/framework.yaml",
+      "framework/schemas/approval.schema.json",
+      "framework/validate.py",
+      "framework/runtime.py",
+      "framework/dispatch.py",
+      "framework/README.md",
+      "framework/tests/test_distribution.py",
+      "intellix.lock.json"
     ]
   },
-  "dependencies": ["TASK-006"],
-  "acceptance_criteria": [
-    {
-      "id": "AC-001",
-      "given": "the canonical kernel",
-      "when": "lifecycle policy is loaded",
-      "then": "dependency-satisfying states and guarded transition states are declared once as non-empty sets of known lifecycle states, and every dependency-satisfying state is also guarded"
-    },
-    {
-      "id": "AC-002",
-      "given": "the generic dispatcher or generic runtime transition API",
-      "when": "an executor requests APPROVED, MERGED, VERIFIED, RELEASED or any later kernel-listed guarded state",
-      "then": "the request is rejected before dependency, adapter or worktree activity even if a transition edge is present, and no transition record or task-state mutation, including BLOCKED, is written"
-    },
-    {
-      "id": "AC-003",
-      "given": "a dependency in a lifecycle state",
-      "when": "the dispatcher checks whether it can release downstream work",
-      "then": "it reads the dependency-satisfying set from the canonical kernel, and an absent, empty or malformed registry blocks without a duplicated code fallback"
-    },
-    {
-      "id": "AC-004",
-      "given": "CI evaluation receives an empty, malformed or unavailable required-check set despite normal project validation",
-      "when": "eligibility executes",
-      "then": "the result is indeterminate and blocking without querying GitHub or returning eligible"
-    },
-    {
-      "id": "AC-005",
-      "given": "the accepted ADR-0003",
-      "when": "the TASK-008 diff is reviewed",
-      "then": "no IN_REVIEW to APPROVED edge, approval record, local-human CLI shortcut, merge authority or production authority is introduced"
-    }
-  ],
+  "source": {
+    "adrs": [
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md"
+    ],
+    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
+    "prd": "README.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md"
+  },
+  "status": "IN_PROGRESS",
+  "title": "Implement guarded technical completion and dependency evidence",
   "verification": [
     {
       "command": "python3 framework/validate.py --root . --all",
       "proves": "Kernel registries, project bindings and all Task Contracts remain valid"
     },
     {
+      "command": "python3 -m unittest framework.tests.test_completion -v",
+      "proves": "Guarded completion, revision binding, invalidation and dependency release have focused positive and negative coverage"
+    },
+    {
       "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
-      "proves": "Positive and negative guard paths and all regressions pass"
+      "proves": "All control-plane and distribution regressions pass"
     },
     {
       "command": "python3 -m compileall -q framework",
@@ -111,52 +179,5 @@
       "command": "git diff --check",
       "proves": "The scoped diff has no whitespace defects"
     }
-  ],
-  "gates": [
-    "schema",
-    "fileset",
-    "lint",
-    "tests",
-    "security_review",
-    "independent_review",
-    "rollback_plan",
-    "human_approval",
-    "worktree"
-  ],
-  "rollback": "Revert only the focused TASK-008 implementation commits on the authorized feature branch and regenerate the lock from the restored kernel; preserve review and CI evidence. Do not rewrite history or alter external permissions.",
-  "notes": [
-    "The original draft attempted to add guarded completion in one task. Independent review found that direct target-state dispatch, caller-selected stale revisions and forgeable local review records made that unsafe.",
-    "ADR-0003 was explicitly accepted on 2026-09-22 and is now the architectural source for this narrower prerequisite task.",
-    "The revised TASK-008 plan and exact fileset were explicitly approved by the human owner on 2026-09-22.",
-    "This task deliberately does not add IN_REVIEW to APPROVED, approval evidence storage or evidence-aware dependency release. Those controls must land atomically in a later contract after these primitives exist.",
-    "The kernel will own both dependency-satisfying states and guarded transition states; every dependency-satisfying state must be guarded. Missing, empty or malformed registries are blocking and have no code fallback.",
-    "Runtime is defense in depth; the dispatcher must reject guarded targets before dependency, adapter or worktree activity and must not translate that rejection into a BLOCKED transition.",
-    "CI evaluation itself must reject an empty required-check list even when invoked with a context that bypassed normal project validation; project.schema.json already enforces a non-empty set and is intentionally outside this fileset.",
-    "Updating framework/framework.yaml or control-plane files requires regenerating intellix.lock.json within this fileset; do not hand-edit a digest.",
-    "Ten implementation/test files are in scope in addition to this contract. The cross-cutting size is justified because registry, both enforcement layers, CI validation, documentation and lock integrity must change together.",
-    "The later completion task must use a distinct internal guarded API that is not reachable through the generic dispatcher CLI, and must cover versioned evidence, status-revision CI and evidence-aware dependency eligibility without weakening these guards.",
-    "Implementation completed in the dedicated TASK-008 same-branch worktree on 2026-09-22; full validation passed with 84 tests, including seven focused completion-guard tests.",
-    "Independent read-only Claude architecture and security review returned APPROVE on 2026-09-22 with no blocking, high, medium or low findings; this model review is process evidence only and is not authenticated CI or human approval.",
-    "SESSION CHECKPOINT 2026-09-22T23:32:16-03:00: branch feat/intellix-multiagent-framework is owned by worktree /Users/felipemaranhao/Documents/Codex/2026-09-16/referenced-chatgpt-conversation-this-is-an/work/intellix-plugin-TASK-008 at implementation commit 7bef52867dcaa9b1ffd16f6fa2ef734e36ce2b44; the original intellix-plugin checkout is intentionally detached at aff0f07 under the accepted same-branch worktree procedure.",
-    "Checkpoint last completed execution: TASK-008 primitive implementation is IN_REVIEW; local validation passed 84 tests plus compileall, hooks and diff checks; independent Claude review returned APPROVE with no findings; GitHub PR 1 exact head 7bef528 passed framework-validation, Ubuntu, macOS and GitGuardian checks.",
-    "Checkpoint last command/result: a read-only Claude bootstrap architecture review evaluated how to continue after the guarded primitives; it recommended re-planning TASK-008 itself as an explicitly authorized phase 2 and rejected manual APPROVED edits or a one-time waiver as direct guard bypasses.",
-    "Checkpoint stop point: no phase-2 Task Contract edit or implementation has started. The next action requires an explicit human decision authorizing re-planning TASK-008 with a new exact fileset; do not infer that authorization from the earlier implementation approval or from this checkpoint request.",
-    "Checkpoint active plan: after explicit authorization, revise TASK-008 for the guarded technical-completion phase, obtain approval of its expanded exact fileset, then use the legal IN_REVIEW to IN_PROGRESS transition, implement in this existing dedicated worktree, run fresh independent review and exact-revision CI for reviewed revision R, capture a subsequent explicit human technical decision, create status revision A only through the guarded path, and require exact CI on A before downstream dependency release.",
-    "Checkpoint minimum phase-2 scope to plan: versioned approval and review evidence schemas/storage; clean authorized-worktree and remote-tip revision R derivation; guarded APPROVED-only internal API unreachable from generic dispatch; live exact-revision CI for R; contract/fileset/kernel/project digest binding; status-commit A derivation; evidence-aware dependency eligibility with live CI on A; invalidation without silent revocation; comprehensive negative tests and regenerated lock. No merge, release, deploy, credentials, permissions or production authority.",
-    "Checkpoint open risks: TASK-008 currently owns the colliding kernel/runtime/dispatcher fileset while IN_REVIEW; a separate active task cannot safely claim it. Local Claude review and controlling-session human decisions remain forgeable process evidence rather than authenticated identity. The phase-2 design is likely larger than ten files and must be narrowed or explicitly accepted as a justified cross-cutting security change.",
-    "Checkpoint recovery command: cd /Users/felipemaranhao/Documents/Codex/2026-09-16/referenced-chatgpt-conversation-this-is-an/work/intellix-plugin-TASK-008 && git status --short && git branch --show-current && git log -3 --oneline && python3 framework/validate.py --root . --all. Read this TASK-008 notes section and ADR-0003 before any edit.",
-    "Use the accepted ADR-0002 same-branch dedicated-worktree procedure only after this revised plan is explicitly approved. No merge, release, deploy, secrets, permission or production action is in scope."
-  ],
-  "handoff": {
-    "required_evidence": [
-      "kernel registry and validation diff",
-      "negative tests for generic guarded transitions",
-      "negative tests for empty required checks",
-      "validated fileset inventory and regenerated lock",
-      "independent architecture and security review",
-      "exact-revision GitHub CI",
-      "explicit local human technical decision"
-    ],
-    "open_questions": []
-  }
+  ]
 }
