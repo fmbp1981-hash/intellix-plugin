@@ -784,7 +784,7 @@ def validate_completion_evidence(
     completion_fields = {
         "schema_version", "phase_base", "reviewed_revision", "branch",
         "pre_contract_digest", "post_contract_digest", "fileset_digest",
-        "project_digest", "source_digest", "kernel_digest", "review_ref",
+        "project_digest", "source_digest", "kernel_digest", "control_plane_digest", "review_ref",
         "review_digest", "human_decision", "review_ci",
     }
     for path in sorted(evidence.glob("*.json")):

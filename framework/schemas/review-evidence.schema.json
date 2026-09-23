@@ -20,6 +20,7 @@
     "project_digest",
     "source_digest",
     "kernel_digest",
+    "control_plane_digest",
     "reviewed_at",
     "evidence",
     "limitations"
@@ -47,6 +48,7 @@
     "project_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "source_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "kernel_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "control_plane_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "reviewed_at": {"type": "string", "minLength": 1},
     "evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
     "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}

@@ -168,6 +168,9 @@ class CompletionTests(unittest.TestCase):
             "kernel_digest": completion._manifest_digest_at(
                 context.root, revision, completion.kernel_paths(context)
             ),
+            "control_plane_digest": completion._manifest_digest_at(
+                context.root, revision, completion.control_plane_paths(context)
+            ),
             "reviewed_at": "2026-09-23T12:05:00+00:00",
             "evidence": ["independent read-only review approved R"],
             "limitations": ["Local reviewer identity is forgeable process evidence."],
@@ -268,6 +271,26 @@ class CompletionTests(unittest.TestCase):
                 ),
             )
             self.assertTrue(any("source drift" in reason for reason in drift))
+            (worktree / "SPEC.md").write_text(
+                "# Specification\n\nThe consumer project validates against its own pinned framework source.\n",
+                encoding="utf-8",
+            )
+            control_plane = worktree / "framework/ci.py"
+            control_plane.write_text(
+                control_plane.read_text(encoding="utf-8") + "\n# drift\n",
+                encoding="utf-8",
+            )
+            control_drift = completion.dependency_eligibility(
+                context,
+                validate.load(task_path),
+                "test-token",
+                transport=FakeTransport(
+                    [check_response(revision), check_response(status_revision)]
+                ),
+            )
+            self.assertTrue(
+                any("control-plane implementation drift" in reason for reason in control_drift)
+            )
 
     def test_hand_edited_approved_label_without_evidence_is_blocking(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -307,6 +330,7 @@ class CompletionTests(unittest.TestCase):
                 "fileset_digest": "sha256:" + ("0" * 64),
                 "project_digest": "sha256:" + ("0" * 64),
                 "kernel_digest": "sha256:" + ("0" * 64),
+                "control_plane_digest": "sha256:" + ("0" * 64),
             }
             for field, value in cases.items():
                 with self.subTest(field=field):

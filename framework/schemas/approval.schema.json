@@ -18,6 +18,7 @@
     "project_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "source_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "kernel_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "control_plane_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "review_ref": {"type": "string", "minLength": 1},
     "review_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "human_decision": {

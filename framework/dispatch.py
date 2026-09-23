@@ -136,7 +136,7 @@ def dispatch(
         dependency_errors(
             context, task, load_tasks(tasks_directory), satisfying_states
         )
-        if target_state == "IN_PROGRESS"
+        if target_state == "IN_PROGRESS" and task.get("status") == "READY"
         else []
     )
     errors = project_errors + contract_errors + dependencies

@@ -71,14 +71,20 @@ R. The resulting review and approval records are versioned under
 
 That metadata commit is status revision A. A dependent task is not released by
 the `APPROVED` label alone: the dispatcher derives A from Git history, verifies
-the R-to-A diff and ancestry, rechecks contract, fileset, source, project and
-kernel bindings, and queries configured GitHub checks live for both R and A.
+the R-to-A diff and ancestry, rechecks contract, fileset, source, project,
+normative-kernel and executable-control-plane bindings, and queries configured
+GitHub checks live for both R and A.
 Missing, changed, failed or indeterminate inputs block dependency eligibility
 without silently revoking the historical approval.
 
 The local review identity and controlling-session decision remain forgeable
 process evidence for technical completion, not authenticated identity. They grant
 no merge, release, deploy, credential, permission or production authority.
+The authorized branch is inferred from the derived task-worktree convention and
+its matching `origin/<branch>` upstream rather than an authenticated branch field.
+Git URL rewriting such as `insteadOf` can redirect `ls-remote`; this weakens that
+standalone remote-tip signal but cannot replace the independent live GitHub API
+queries required for R and A.
 
 ## Validate
 

@@ -143,6 +143,12 @@ def kernel_paths(context: validate.ValidationContext) -> list[str]:
     return [_relative(context, path) for path in validate.kernel_manifest(context)]
 
 
+def control_plane_paths(context: validate.ValidationContext) -> list[str]:
+    return [
+        _relative(context, path) for path in validate.control_plane_manifest(context)
+    ]
+
+
 def changed_files(root: Path, start: str, end: str) -> list[str]:
     output = _git(root, "diff", "--name-only", "--diff-filter=ACDMRT", f"{start}..{end}")
     return sorted(line for line in output.splitlines() if line)
@@ -280,6 +286,9 @@ def _validate_review(
         "kernel_digest": _manifest_digest_at(
             context.root, revision, kernel_paths(context)
         ),
+        "control_plane_digest": _manifest_digest_at(
+            context.root, revision, control_plane_paths(context)
+        ),
     }
     mismatches = [key for key, value in expected.items() if review.get(key) != value]
     if review.get("reviewed_files") != reviewed_files:
@@ -319,6 +328,7 @@ def _completion_required_fields(approval: dict[str, Any]) -> list[str]:
         "project_digest",
         "source_digest",
         "kernel_digest",
+        "control_plane_digest",
         "review_ref",
         "review_digest",
         "human_decision",
@@ -421,6 +431,7 @@ def complete_technical_approval(
         "project_digest": bindings["project_digest"],
         "source_digest": bindings["source_digest"],
         "kernel_digest": bindings["kernel_digest"],
+        "control_plane_digest": bindings["control_plane_digest"],
         "review_ref": review_ref,
         "review_digest": digest_value(review),
         "human_decision": human_decision,
@@ -547,6 +558,8 @@ def dependency_eligibility(
             reasons.append("review and approval phase bases differ")
         if review.get("fileset_digest") != approval["fileset_digest"]:
             reasons.append("review and approval fileset digests differ")
+        if review.get("control_plane_digest") != approval["control_plane_digest"]:
+            reasons.append("review and approval control-plane digests differ")
         if _manifest_digest_at(
             context.root, revision, review.get("reviewed_files", [])
         ) != approval["fileset_digest"]:
@@ -563,6 +576,10 @@ def dependency_eligibility(
             context.root, kernel_paths(context)
         ) != approval["kernel_digest"]:
             reasons.append("normative kernel or policy drift")
+        if _manifest_digest_worktree(
+            context.root, control_plane_paths(context)
+        ) != approval["control_plane_digest"]:
+            reasons.append("control-plane implementation drift")
         ci_config = context.project.get("quality", {}).get("ci", {})
         recorded_ci = approval["review_ci"]
         if (
