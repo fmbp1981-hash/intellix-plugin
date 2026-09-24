@@ -1,7 +1,8 @@
 # ADR-0004: Typed decision layer as a governed, per-project IntelliX capability
 
-Status: Proposed
+Status: Accepted
 Date: 2026-09-24 (revision 3, after Codex independent review of revision 2)
+Accepted: 2026-09-24, by explicit human decision after Codex review and exact-revision CI (8763e556a12ca4ca3974deac1858b8d26f5ffc2f)
 Related: ADR-0001, ADR-0002, ADR-0003 (Accepted); TASK-010; follow-up TASK-011
 Authority: `framework/framework.yaml` and its referenced policies remain normative
 

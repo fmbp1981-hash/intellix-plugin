@@ -1,8 +1,8 @@
 {
   "id": "TASK-010",
   "title": "Decide the typed decision layer as a governed, per-project IntelliX capability",
-  "status": "DRAFT",
-  "objective": "Record a proposed ADR that decides scope, invariants, normative-versus-informative split, proportional decision port, residency-aware fallback, calibration invalidation, canonical skill location and the follow-up phase integration for the typed decision layer, without changing phases, kernel, schema or runtime.",
+  "status": "READY",
+  "objective": "Record ADR-0004 (proposed for review, now Accepted) that decides scope, invariants, normative-versus-informative split, proportional decision port, residency-aware fallback, calibration invalidation, canonical skill location and the follow-up phase integration for the typed decision layer, without changing phases, kernel, schema or runtime.",
   "source": {
     "prd": "README.md",
     "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
@@ -133,9 +133,9 @@
     },
     {
       "id": "AC-009",
-      "given": "this architectural proposal",
+      "given": "this architectural decision",
       "when": "its status and diff are reviewed",
-      "then": "the ADR remains Proposed until an explicit human decision and changes no phase, kernel, schema, policy, credential, runtime, merge or production state"
+      "then": "the ADR stayed Proposed as a historical gate until the explicit human decision and is now Accepted, and it still changes no phase, kernel, schema, policy, credential, runtime, merge or production state"
     }
   ],
   "verification": [
@@ -170,16 +170,18 @@
     "O-01: the branch was pushed after the review started; it is now rebased on af8241b (TASK-009 approved).",
     "Phase integration and skill versioning are TASK-011 after acceptance; schema, registry, harness, adapters, hosting and credentials are deferred to a first adopting project.",
     "Revision 3 addresses Codex review INTELLIX_REVISAO_CODEX_TASK010_ADR0004_REV2.md: B-01 (scope now permits the legal lifecycle and exactly TASK-010 review/approval evidence; other tasks' evidence stays forbidden by exact paths), A-02 (dependencies TASK-008 and TASK-009), A-03 (conditional LGPD wording), A-04 (no volatile vendor facts in the normative ADR) and A-05 (invariant 15 residency-compatible).",
-    "The task stays DRAFT during proposal correction; review and approval evidence are produced only after the exact revision R is reviewed, CI passes on R and the human decides.",
+    "The task remained DRAFT during proposal correction and is now READY; review and approval evidence remain deferred until R review, exact-R CI and the later human technical decision.",
     "Vendor facts belong to the dated informative reference created later by TASK-011, not to this decision.",
-    "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope."
+    "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope.",
+    "Plan acceptance on 2026-09-24: the human replied 'Sim' after Codex APPROVED review and green CI for revision 8763e556a12ca4ca3974deac1858b8d26f5ffc2f; this binds READY to that revision and ADR-0004 Accepted. It authorizes lifecycle execution only and is not the later post-R technical-completion decision."
   ],
   "handoff": {
     "required_evidence": [
       "two-file inventory",
       "independent architecture, security and LGPD review by Codex",
       "exact-revision CI",
-      "human decision on proposed ADR-0004"
+      "human acceptance of ADR-0004 (already recorded; no further evidence required for it)",
+      "later post-R human technical-completion decision (still required)"
     ],
     "open_questions": [
       "Policy-level gate versus project registry rule for a future decision_pilot gate"
