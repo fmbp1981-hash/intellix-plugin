@@ -30,8 +30,6 @@
   },
   "scope": {
     "create": [
-      "tasks/TASK-010.yaml",
-      "docs/adr/0004-typed-decision-layer.md",
       "tasks/evidence/TASK-010.review.json",
       "tasks/evidence/TASK-010.approval.json"
     ],
@@ -173,7 +171,8 @@
     "The task remained DRAFT during proposal correction and is now READY; review and approval evidence remain deferred until R review, exact-R CI and the later human technical decision.",
     "Vendor facts belong to the dated informative reference created later by TASK-011, not to this decision.",
     "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope.",
-    "Plan acceptance on 2026-09-24: the human replied 'Sim' after Codex APPROVED review and green CI for revision 8763e556a12ca4ca3974deac1858b8d26f5ffc2f; this binds READY to that revision and ADR-0004 Accepted. It authorizes lifecycle execution only and is not the later post-R technical-completion decision."
+    "Plan acceptance on 2026-09-24: the human replied 'Sim' after Codex APPROVED review and green CI for revision 8763e556a12ca4ca3974deac1858b8d26f5ffc2f; this binds READY to that revision and ADR-0004 Accepted. It authorizes lifecycle execution only and is not the later post-R technical-completion decision.",
+    "The first dispatch attempt failed closed before worktree creation because task and ADR paths appeared in both create and modify. They already exist at this completion phase base, so the corrected fileset keeps both only in modify and reserves create for the two later evidence records."
   ],
   "handoff": {
     "required_evidence": [
