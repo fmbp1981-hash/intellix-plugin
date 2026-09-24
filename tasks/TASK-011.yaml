@@ -1,0 +1,315 @@
+{
+  "acceptance_criteria": [
+    {
+      "given": "a clean checkout or fresh worktree of the reviewed revision R, with no ~/.claude installation and no untracked files",
+      "id": "AC-001",
+      "then": "global-config/skills/intellix-decision-layer/SKILL.md, references/decision-layer.md and references/engines-2026-09.md exist and are tracked by git (git ls-files), and every repository path cited by the three changed phase skills resolves inside that checkout",
+      "when": "the three integrated phase skills and the methodology are inspected"
+    },
+    {
+      "given": "ADR-0004 section 9 fixes one skill identifier and forbids a competing copy",
+      "id": "AC-002",
+      "then": "the skill lives only at global-config/skills/intellix-decision-layer/, its SKILL.md frontmatter name equals the folder name, no plugin-namespaced copy or alias exists (no skills/intellix-decision-layer, no intellix:intellix-decision-layer), phase skills cite it by the identifier intellix-decision-layer plus its repository path so the Codex adapter can read it by path, and copying to ~/.claude is documented in global-config/README.md as an explicit human action that this task neither performs nor scripts",
+      "when": "the canonical location is verified"
+    },
+    {
+      "given": "ADR-0004 sections 2 to 8 are the normative source",
+      "id": "AC-003",
+      "then": "references/decision-layer.md states the L0 rule, L1 engine, L2 LLM, L3 human cascade; risk class derived from the concrete consequence with irreversible decisions never executed by an engine, using exactly the four classes A, B, C and D accepted by ADR-0004 and no additional class (in particular no class S; a security or moderation decision is classified A to D by its concrete consequence, and adding any class requires a future accepted ADR); the adoption checklist with vetoes and signals; the neutral proportional port rule; shadow pilot and calibration procedure; the calibration invalidation events and automatic return to shadow; fallback and residency rules; the decision-log rule that stores metadata and never raw customer text; and all 15 ADR-0004 invariants without weakening any of them",
+      "when": "the normative reference is reviewed against ADR-0004"
+    },
+    {
+      "given": "vendor facts change faster than the method",
+      "id": "AC-004",
+      "then": "SKILL.md and references/decision-layer.md contain no vendor or product name, model identifier, version, benchmark, price, latency, or vendor URL; every numeric threshold there (for example 300 labeled cases, precision targets 85/92/97 percent, 50 percent coverage) is labeled a configurable starting default and not a universal rule; references/engines-2026-09.md carries the dated engine facts and may include a dated, non-prescriptive vendor comparison, each fact marked as vendor claim or official documentation, states that each must be re-verified at use and that vendor claims are never production evidence, contains no ordered, ranked or recommended engine-selection table and no engine choice rule, and is referenced from the normative text by path only",
+      "when": "the normative and informative references are compared"
+    },
+    {
+      "given": "ADR-0004 section 11 defers adapters, hosting, credentials, pilot harness and action policy to a first adopting project",
+      "id": "AC-005",
+      "then": "the skill and references contain methodology text only: no executable adapter, policy or client code, no hosting or deployment recipe, no credential or environment-variable name, no secret-management command and no database DDL for the decision log; the source skill's code, hosting and DDL sections are not carried over as implementation guidance",
+      "when": "the versioned skill is derived from /Users/felipemaranhao/.claude/skills/intellix-decision-layer/SKILL.md"
+    },
+    {
+      "given": "ADR-0004 section 1 limits the capability to client systems",
+      "id": "AC-006",
+      "then": "the skill states that it applies per client project, that it is not adopted inside the IntelliX development workflow, that it never participates in the framework approval chain or lowers any risk, gate, warning or approval, and that any workflow use requires a new ADR",
+      "when": "the scope of the skill is read"
+    },
+    {
+      "given": "a PRD whose requirements include automated decisions over text at volume, in real time, or on data that must stay local",
+      "id": "AC-007",
+      "then": "global-config/skills/ai-project-brainstorm/SKILL.md instructs recording 'evaluate decision layer' as an open decision referencing intellix-decision-layer, and does not run the evaluation, choose an engine or pick thresholds in the PRD phase; PRDs without that signal are unchanged",
+      "when": "the PRD phase skill runs"
+    },
+    {
+      "given": "the architecture phase (Phase 01)",
+      "id": "AC-008",
+      "then": "skills/architecture/SKILL.md applies the adoption checklist, records the outcome in the project's architecture ADR (including 'not applicable' and 'not adopted' with the reason), creates the decision port only under the proportional rule, and leaves the existing schema, RLS, repository, service and LLM-layer steps unchanged",
+      "when": "a project has at least one automated decision over text or the PRD carries the open decision"
+    },
+    {
+      "given": "a small project with a semantic decision but no adoption signal, or with a checklist veto",
+      "id": "AC-009",
+      "then": "the architecture phase records one line ('not applicable' or 'not adopted' plus the reason) in the architecture ADR and creates no port, code, file, dependency or schema",
+      "when": "the architecture phase applies the checklist"
+    },
+    {
+      "given": "a blueprint whose LLM structured output would classify intent, stage, sentiment, escalation or similar text decisions",
+      "id": "AC-010",
+      "then": "global-config/skills/intellix-agent-creation/SKILL.md applies the decision already recorded in the architecture ADR to those classifications; when the ADR is absent, 'not applicable' or 'not adopted' the blueprint keeps the LLM structured output unchanged; the agent-creation phase never selects an engine, calibrates thresholds or creates the port itself",
+      "when": "the agent creation phase generates a blueprint"
+    },
+    {
+      "given": "a decision whose text must stay in the authorized environment under the project's documented privacy, residency or transfer assessment",
+      "id": "AC-011",
+      "then": "only the canonical normative reference global-config/skills/intellix-decision-layer/references/decision-layer.md states the full fallback and residency rule (the fallback chain admits only L0 rules, a compatible local engine and authorized humans; an external LLM is forbidden exactly like an external engine; removing or disabling the engine keeps a residency-compatible safe fallback, which may be L0 to L3); the edits to the three phase skills only reference the intellix-decision-layer skill and the architecture-ADR decision for that rule, do not copy or paraphrase it, and neither weaken nor redefine it",
+      "when": "the fallback chain is defined"
+    },
+    {
+      "given": "the decision port is neutral and proportional under ADR-0004 section 5",
+      "id": "AC-012",
+      "then": "the normative reference defines the vendor-neutral decide contract (option or abstain, probability or null, source, reason, contract version), requires adapters to normalize vendor differences and validate response size, expected model, allowed options, probability range and sum and distinct failure kinds, requires contract tests with real fixtures before switching engines, and allows creating the port only when a decision passes the checklist or the architecture ADR explicitly decides to stabilize an L0/L2 interface",
+      "when": "the port rule is reviewed"
+    },
+    {
+      "given": "the complete diff from the phase base to R",
+      "id": "AC-013",
+      "then": "it touches only the create and modify paths of this contract (exact whitelist) and contains no runtime adapter, project schema, decision registry, validator rule, credential, hosting, pilot harness, vendor SDK or dependency, framework runtime, kernel or policy change, ADR change, version change other than the 3.1.0 to 3.2.0 metadata of AC-017, or write to ~/.claude",
+      "when": "the fileset is checked"
+    },
+    {
+      "given": "global-config/metodologia.yaml is the normative adapter policed by scripts/doctor.py",
+      "id": "AC-014",
+      "then": "the skill is listed in skills_autorais_globais and is not added to dependencias_globais, so the doctor polices it without turning red on machines where the human copy has not happened; a new test file framework/tests/test_decision_layer_integration.py, added without modifying any framework runtime or kernel code, asserts AC-001, AC-002, AC-004, AC-005 and the phase-skill references from repository files alone, and asserts that a doctor --strict run against a fixture root containing the real skill directory exits 0 with no PATH, name-equals-folder, legacy-name or accidental-file finding",
+      "when": "the doctor and tests validate the change"
+    },
+    {
+      "given": "the existing suites and repository CI checks",
+      "id": "AC-015",
+      "then": "framework validation, framework tests, distribution check, hook validation and git diff --check pass at the reviewed revision; the existing framework CI (framework-ci.yml, which runs unittest discover over framework/tests) executes framework/tests/test_decision_layer_integration.py at exact R and is green for R; the full global-config script suite is a separate local verification and is not claimed to run in CI",
+      "when": "every verification command of this contract runs"
+    },
+    {
+      "given": "this task changes plugin-owned skills and the plugin, marketplace and methodology versions must stay coordinated",
+      "id": "AC-017",
+      "then": ".claude-plugin/plugin.json version, the .claude-plugin/marketplace.json plugin version and global-config/metodologia.yaml versoes.intellix all change from 3.1.0 to 3.2.0 in this task and are equal, and no other field of those files changes; this is version metadata only and grants no merge, release, deploy or publication authority",
+      "when": "the version metadata is inspected at R"
+    },
+    {
+      "given": "the R/A lifecycle of ADR-0003 and the TASK-010 precedent",
+      "id": "AC-016",
+      "then": "only tasks/evidence/TASK-011.review.json and tasks/evidence/TASK-011.approval.json are created after R, the executor does not approve its own work, review is independent, and the approval records the technical-completion decision without merge, release, deploy, credential or production authority",
+      "when": "review and approval evidence are recorded"
+    }
+  ],
+  "dependencies": [
+    "TASK-010"
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "handoff": {
+    "open_questions": [],
+    "required_evidence": [
+      "changed-file inventory matching create and modify",
+      "clean-checkout proof: git ls-files and path resolution in a fresh worktree of R",
+      "normative/informative separation report (no vendor terms in normative files)",
+      "output of framework tests including test_decision_layer_integration.py and the doctor fixture run, and exact-R framework CI run showing that test executed",
+      "separate local output of the full global-config script suite",
+      "version equality proof: 3.2.0 in plugin.json, marketplace.json and metodologia.yaml versoes.intellix",
+      "independent architecture, security and LGPD review against ADR-0004",
+      "exact-revision CI for R",
+      "later post-R human technical-completion decision"
+    ]
+  },
+  "id": "TASK-011",
+  "notes": [
+    "Drafted by Claude on 2026-09-24 as follow-up of ADR-0004 section 10. TASK-010 and ADR-0004 are Accepted/APPROVED at A=9d17422cca8be85a9f6f627472822287827b828f with dependency eligibility true.",
+    "Status is DRAFT. It is not READY and not approved; READY requires architecture review of this contract and an explicit human decision.",
+    "Reuse: the versioned skill is derived from the operator's /Users/felipemaranhao/.claude/skills/intellix-decision-layer/SKILL.md (revision 2026-09-23, Portuguese). A copy also exists untracked under ~/.claude/plugins/marketplaces/intellix-plugin/global-config/; it is not a source of truth and must not be treated as versioned.",
+    "Derivation rule: sections 1, 3.2, 5, 7, 8 and 11 of the source become the normative reference with vendor names, numbers and hosting removed; sections 2, 2.3, 3.3, 9 and the vendor facts become the dated informative reference engines-2026-09.md (without the ordered selection table and without class S); sections 6.2 to 6.3 code, hosting and DDL are dropped (ADR-0004 section 11).",
+    "Language follows the surrounding skills (Portuguese for global-config skills and skills/architecture).",
+    "Decided at architecture review: risk class S from the source is excluded because ADR-0004 accepted only consequence-derived classes A, B, C and D; it may return only through a future accepted ADR. The source's ordered engine-selection table is not carried over; engines-2026-09.md may hold only a dated, non-prescriptive vendor comparison with no ordered or recommended selection.",
+    "Fallback and residency: the full rule lives only in references/decision-layer.md; the three phase skills reference the canonical skill and the architecture-ADR decision and must not copy, weaken or redefine it.",
+    "Version bump: this task changes owned plugin skills, so it carries a coordinated minor bump 3.1.0 -> 3.2.0 in .claude-plugin/plugin.json, .claude-plugin/marketplace.json and global-config/metodologia.yaml versoes.intellix. It is version metadata, not merge or release authority.",
+    "Test location: framework/tests/test_decision_layer_integration.py is used so the existing framework-ci.yml runs it at exact R; no framework runtime or kernel code is modified. The full global-config suite remains a separate local verification.",
+    "Executor is codex and reviewer is claude (decided at review).",
+    "skills/agent-creation/SKILL.md is the plugin orchestrator that delegates to intellix-agent-creation; it is intentionally unchanged and forbidden. ADR-0004 section 10 names the global skill as the agent-creation phase.",
+    "Fileset semantics: framework/validate.py matches scope patterns with fnmatch, where * crosses directory separators and patterns are anchored at the repository root. Blanket forbids such as skills/**, global-config/**, framework/** or .claude-plugin/** would therefore collide with created or modified files; forbidden entries are enumerated instead: framework/[!t]* plus framework/templates/** and framework/tests/fixtures/** plus each existing framework test file, global-config/scripts/**, and no .claude-plugin forbid because that directory contains only the two modified files. No path is in both create and modify.",
+    "Phase skills must not cite the reference files in the bare form references/<name>.md, which scripts/doctor.py check 9 resolves against the plugin; use the full path global-config/skills/intellix-decision-layer/references/<name>.md.",
+    "R/A lifecycle: R is the reviewed revision, the commit on which independent review and exact-revision CI are performed. A is the later revision that records approval; R to A may add only tasks/evidence/TASK-011.review.json, tasks/evidence/TASK-011.approval.json and the legal lifecycle status change of this file. Any other change after R invalidates the review and requires a new R.",
+    "Evidence files are created only after R exists, matching the TASK-010 precedent; they are the only paths in create that are not implementation.",
+    "Scope count: create 6 (3 skill files, 1 framework integration test, 2 evidence files) and modify 8 (this contract, 3 phase skills, metodologia.yaml, global-config/README.md, plugin.json, marketplace.json), 14 distinct paths.",
+    "This task inherits the ADR-0004 invariants and adds no runtime, schema, registry, credential, hosting, pilot or vendor coupling. Those remain deferred to a first adopting project under its own Task Contract."
+  ],
+  "objective": "Implement ADR-0004 section 10 atomically: version the canonical intellix-decision-layer skill under global-config with a normative decision-layer reference and a dated informative engine reference, and integrate the evaluation trigger into the PRD, architecture and agent-creation phases in the same change, without any runtime adapter, schema, registry, credential, hosting, pilot or vendor coupling.",
+  "ownership": {
+    "architect": "claude",
+    "domain_role": "architect",
+    "executor": "codex",
+    "reviewer": "claude"
+  },
+  "risk": {
+    "irreversible_actions": [],
+    "level": "high",
+    "reasons": [
+      "It changes methodology that both adapters read and that shapes every future client project's architecture and agent design",
+      "It carries LGPD and data-residency rules that constrain sending customer text to external engines and LLMs",
+      "It edits three phase skills and the normative global adapter in one atomic change, so a partial revert or omission would leave a phase referencing a missing capability"
+    ]
+  },
+  "rollback": "Revert only the TASK-011 implementation commits: this removes the three created skill files and the test, and restores the three phase skills, global-config/metodologia.yaml, global-config/README.md, .claude-plugin/plugin.json and .claude-plugin/marketplace.json (versions back to 3.1.0) to their pre-task content in one revert. No runtime, schema, credential or ~/.claude state is touched by this task; if the human has already copied the skill to ~/.claude, removing ~/.claude/skills/intellix-decision-layer and restoring the previous phase copies is a separate human action. ADR-0004, TASK-010 and its evidence stay unchanged.",
+  "scope": {
+    "create": [
+      "global-config/skills/intellix-decision-layer/SKILL.md",
+      "global-config/skills/intellix-decision-layer/references/decision-layer.md",
+      "global-config/skills/intellix-decision-layer/references/engines-2026-09.md",
+      "framework/tests/test_decision_layer_integration.py",
+      "tasks/evidence/TASK-011.review.json",
+      "tasks/evidence/TASK-011.approval.json"
+    ],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      ".github/**",
+      ".intellix/**",
+      "agents/**",
+      "commands/**",
+      "hooks/**",
+      "docs/**",
+      "framework/[!t]*",
+      "framework/templates/**",
+      "framework/tests/fixtures/**",
+      "framework/tests/test_adapters.py",
+      "framework/tests/test_ci.py",
+      "framework/tests/test_completion.py",
+      "framework/tests/test_completion_guards.py",
+      "framework/tests/test_dispatch.py",
+      "framework/tests/test_distribution.py",
+      "framework/tests/test_pilot.py",
+      "framework/tests/test_runtime.py",
+      "framework/tests/test_validate.py",
+      "framework/tests/test_worktrees.py",
+      "issues/**",
+      "references/**",
+      "infra/production/**",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "README.md",
+      "intellix.yaml",
+      "intellix.lock.json",
+      "skills/agent-creation/**",
+      "skills/code-audit/**",
+      "skills/deploy/**",
+      "skills/dev-standards/**",
+      "skills/frontend-design/**",
+      "skills/integration/**",
+      "skills/live-chat/**",
+      "skills/master-workflow/**",
+      "skills/project-handoff/**",
+      "skills/project-kickoff/**",
+      "skills/security-observability/**",
+      "skills/system-scan/**",
+      "skills/test-e2e/**",
+      "global-config/CLAUDE.md",
+      "global-config/RTK.md",
+      "global-config/settings.json",
+      "global-config/modules/**",
+      "global-config/scripts/**",
+      "global-config/skills/ai-project-brainstorm/architecture-patterns.md",
+      "global-config/skills/intellix-agent-creation/resources/**",
+      "tasks/TASK-001.yaml",
+      "tasks/TASK-002.yaml",
+      "tasks/TASK-003.yaml",
+      "tasks/TASK-004.yaml",
+      "tasks/TASK-005.yaml",
+      "tasks/TASK-006.yaml",
+      "tasks/TASK-007.yaml",
+      "tasks/TASK-008.yaml",
+      "tasks/TASK-009.yaml",
+      "tasks/TASK-010.yaml",
+      "tasks/evidence/TASK-001.review.json",
+      "tasks/evidence/TASK-001.approval.json",
+      "tasks/evidence/TASK-002.review.json",
+      "tasks/evidence/TASK-002.approval.json",
+      "tasks/evidence/TASK-003.review.json",
+      "tasks/evidence/TASK-003.approval.json",
+      "tasks/evidence/TASK-004.review.json",
+      "tasks/evidence/TASK-004.approval.json",
+      "tasks/evidence/TASK-005.review.json",
+      "tasks/evidence/TASK-005.approval.json",
+      "tasks/evidence/TASK-006.review.json",
+      "tasks/evidence/TASK-006.approval.json",
+      "tasks/evidence/TASK-007.review.json",
+      "tasks/evidence/TASK-007.approval.json",
+      "tasks/evidence/TASK-008.review.json",
+      "tasks/evidence/TASK-008.approval.json",
+      "tasks/evidence/TASK-009.review.json",
+      "tasks/evidence/TASK-009.approval.json",
+      "tasks/evidence/TASK-010.review.json",
+      "tasks/evidence/TASK-010.approval.json"
+    ],
+    "modify": [
+      "tasks/TASK-011.yaml",
+      "global-config/skills/ai-project-brainstorm/SKILL.md",
+      "skills/architecture/SKILL.md",
+      "global-config/skills/intellix-agent-creation/SKILL.md",
+      "global-config/metodologia.yaml",
+      "global-config/README.md",
+      ".claude-plugin/plugin.json",
+      ".claude-plugin/marketplace.json"
+    ]
+  },
+  "source": {
+    "adrs": [
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md",
+      "docs/adr/0004-typed-decision-layer.md"
+    ],
+    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
+    "prd": "README.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md"
+  },
+  "status": "DRAFT",
+  "title": "Version the decision-layer skill and integrate its evaluation trigger into PRD, architecture and agent creation",
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "This Task Contract, its fileset and dependency on TASK-010 validate, and repository artifacts remain valid"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "No framework behavior regressed and test_decision_layer_integration.py proves clean-checkout availability, normative/informative separation, absence of implementation artifacts, phase references, version equality and a clean doctor --strict fixture run; this is the command existing framework CI executes at exact R"
+    },
+    {
+      "command": "python3 -m unittest discover -s global-config/scripts/tests -p 'test_*.py' -v",
+      "proves": "Separate local verification: existing doctor, hook and scaffold tests still pass; not run by CI"
+    },
+    {
+      "command": "python3 framework/sync.py --source-root . --target-root . --check",
+      "proves": "The pinned distribution is unchanged by this task"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Hook wiring is unaffected"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The scoped diff has no whitespace errors"
+    },
+    {
+      "command": "git diff --name-status <phase-base>..HEAD",
+      "proves": "The changed-file inventory equals the create and modify sets and touches no forbidden path"
+    }
+  ]
+}
