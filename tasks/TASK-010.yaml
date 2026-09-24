@@ -31,9 +31,14 @@
   "scope": {
     "create": [
       "tasks/TASK-010.yaml",
+      "docs/adr/0004-typed-decision-layer.md",
+      "tasks/evidence/TASK-010.review.json",
+      "tasks/evidence/TASK-010.approval.json"
+    ],
+    "modify": [
+      "tasks/TASK-010.yaml",
       "docs/adr/0004-typed-decision-layer.md"
     ],
-    "modify": [],
     "forbidden": [
       ".env*",
       "**/.env*",
@@ -56,10 +61,27 @@
       "tasks/TASK-007.yaml",
       "tasks/TASK-008.yaml",
       "tasks/TASK-009.yaml",
-      "tasks/evidence/**"
+      "tasks/evidence/TASK-001.review.json",
+      "tasks/evidence/TASK-001.approval.json",
+      "tasks/evidence/TASK-002.review.json",
+      "tasks/evidence/TASK-002.approval.json",
+      "tasks/evidence/TASK-003.review.json",
+      "tasks/evidence/TASK-003.approval.json",
+      "tasks/evidence/TASK-004.review.json",
+      "tasks/evidence/TASK-004.approval.json",
+      "tasks/evidence/TASK-005.review.json",
+      "tasks/evidence/TASK-005.approval.json",
+      "tasks/evidence/TASK-006.review.json",
+      "tasks/evidence/TASK-006.approval.json",
+      "tasks/evidence/TASK-007.review.json",
+      "tasks/evidence/TASK-007.approval.json",
+      "tasks/evidence/TASK-008.review.json",
+      "tasks/evidence/TASK-008.approval.json",
+      "tasks/evidence/TASK-009.review.json",
+      "tasks/evidence/TASK-009.approval.json"
     ]
   },
-  "dependencies": [],
+  "dependencies": ["TASK-008", "TASK-009"],
   "acceptance_criteria": [
     {
       "id": "AC-001",
@@ -147,7 +169,9 @@
     "Revision 2 addresses Codex review INTELLIX_REVISAO_CODEX_CAMADA_DE_DECISAO_HANDOFF.md (objections O-01 to O-07, non-blocking points 1-7, invariants section 7).",
     "O-01: the branch was pushed after the review started; it is now rebased on af8241b (TASK-009 approved).",
     "Phase integration and skill versioning are TASK-011 after acceptance; schema, registry, harness, adapters, hosting and credentials are deferred to a first adopting project.",
-    "Vendor facts were read on 2026-09-23 from the Laya model cards, PyPI and TypeSafe documentation; they belong to the informative reference, not to this decision.",
+    "Revision 3 addresses Codex review INTELLIX_REVISAO_CODEX_TASK010_ADR0004_REV2.md: B-01 (scope now permits the legal lifecycle and exactly TASK-010 review/approval evidence; other tasks' evidence stays forbidden by exact paths), A-02 (dependencies TASK-008 and TASK-009), A-03 (conditional LGPD wording), A-04 (no volatile vendor facts in the normative ADR) and A-05 (invariant 15 residency-compatible).",
+    "The task stays DRAFT during proposal correction; review and approval evidence are produced only after the exact revision R is reviewed, CI passes on R and the human decides.",
+    "Vendor facts belong to the dated informative reference created later by TASK-011, not to this decision.",
     "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope."
   ],
   "handoff": {

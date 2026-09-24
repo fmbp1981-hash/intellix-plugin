@@ -1,7 +1,7 @@
 # ADR-0004: Typed decision layer as a governed, per-project IntelliX capability
 
 Status: Proposed
-Date: 2026-09-23 (revision 2, after Codex independent review of the same date)
+Date: 2026-09-24 (revision 3, after Codex independent review of revision 2)
 Related: ADR-0001, ADR-0002, ADR-0003 (Accepted); TASK-010; follow-up TASK-011
 Authority: `framework/framework.yaml` and its referenced policies remain normative
 
@@ -14,10 +14,11 @@ generative LLM and parsing its answer.
 
 A class of "System One" engines answers such decisions directly: it receives a
 text state and typed questions (`choice`, `score`, `noul`) and returns typed
-answers with per-option probabilities, without generating text. Two exist today:
-Laya (open weights, self-hosted) and Jev (hosted API). Both are weeks old at the
-time of writing, their published benchmarks are produced by their own authors,
-and neither guarantees Portuguese.
+answers with per-option probabilities, without generating text. At the date of
+this proposal, Laya and Jev motivated the evaluation of this class of solution.
+Versions, deployment modes, language support, benchmarks, prices and latencies
+are dated informative facts, subject to re-verification, and are not part of
+this normative decision.
 
 The methodology to evaluate and use them safely exists as the skill
 `intellix-decision-layer`, but only in the operator's global configuration and
@@ -27,9 +28,13 @@ can be skipped silently.
 
 The architectural concerns are: engines are documented as manipulable by
 injected instructions; a probability is not a correctness guarantee;
-an automated decision can precede an irreversible action; customer text sent to
-an external engine or LLM is an international transfer under LGPD; and engine
-facts change faster than any normative document.
+an automated decision can precede an irreversible action; sending customer text
+to an external engine or LLM may involve processing by third parties and may
+constitute an international data transfer, requiring a documented assessment of
+location, operators and sub-operators, legal basis, contractual safeguards,
+retention and residency requirements before any adoption; and engine facts
+change faster than any normative document. This ADR is a technical and
+governance decision, not legal advice.
 
 ## Decision
 
@@ -64,7 +69,8 @@ the workflow requires a new ADR and must satisfy the invariants below.
 13. Credentials are never stored in a repository or in the decision log.
 14. The decision port does not presume compatibility between vendors; each
     adapter proves its contract with real fixtures.
-15. Removing or disabling the engine preserves safe operation through L0/L2/L3.
+15. Removing or disabling the engine preserves safe operation through the
+    declared residency-compatible fallback chain (which may be L0 → L3).
 
 ### 3. Normative rule versus volatile facts
 
@@ -116,9 +122,11 @@ or "not adopted" and creates no code.
 
 ### 6. Fallback respects residency
 
-Each decision declares its fallback chain. When text may not leave the
-environment, the chain may contain only L0 rules, a local engine and humans; an
-external LLM is as forbidden as an external engine.
+Each decision declares its fallback chain. When the project's documented
+privacy, residency or transfer assessment determines that the text may not leave
+the authorized environment, the chain admits only L0 rules, a compatible local
+engine and authorized humans; an external LLM is as forbidden as an external
+engine.
 
 ### 7. Calibration invalidation and automatic return to shadow
 
