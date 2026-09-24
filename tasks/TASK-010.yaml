@@ -173,7 +173,7 @@
     "prd": "README.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md"
   },
-  "status": "IN_PROGRESS",
+  "status": "IN_REVIEW",
   "title": "Decide the typed decision layer as a governed, per-project IntelliX capability",
   "verification": [
     {
