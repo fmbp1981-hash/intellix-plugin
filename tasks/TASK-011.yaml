@@ -134,7 +134,7 @@
   "id": "TASK-011",
   "notes": [
     "Drafted by Claude on 2026-09-24 as follow-up of ADR-0004 section 10. TASK-010 and ADR-0004 are Accepted/APPROVED at A=9d17422cca8be85a9f6f627472822287827b828f with dependency eligibility true.",
-    "Status is DRAFT. It is not READY and not approved; READY requires architecture review of this contract and an explicit human decision.",
+    "The contract remained DRAFT through architecture review and is now READY after the controlling human explicitly replied 'Sim' on 2026-09-24 to the reviewed 14-path plan at revision 8efd7c017001e04667413fb8dbaa1d1ca36f8c57. This authorizes implementation only and is not the later post-R technical-completion decision.",
     "Reuse: the versioned skill is derived from the operator's /Users/felipemaranhao/.claude/skills/intellix-decision-layer/SKILL.md (revision 2026-09-23, Portuguese). A copy also exists untracked under ~/.claude/plugins/marketplaces/intellix-plugin/global-config/; it is not a source of truth and must not be treated as versioned.",
     "Derivation rule: sections 1, 3.2, 5, 7, 8 and 11 of the source become the normative reference with vendor names, numbers and hosting removed; sections 2, 2.3, 3.3, 9 and the vendor facts become the dated informative reference engines-2026-09.md (without the ordered selection table and without class S); sections 6.2 to 6.3 code, hosting and DDL are dropped (ADR-0004 section 11).",
     "Language follows the surrounding skills (Portuguese for global-config skills and skills/architecture).",
@@ -280,7 +280,7 @@
     "prd": "README.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md"
   },
-  "status": "DRAFT",
+  "status": "READY",
   "title": "Version the decision-layer skill and integrate its evaluation trigger into PRD, architecture and agent creation",
   "verification": [
     {
