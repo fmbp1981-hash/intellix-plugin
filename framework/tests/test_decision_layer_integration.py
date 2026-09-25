@@ -1,11 +1,13 @@
 import importlib.util
 import json
+import os
 import re
 import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -175,12 +177,41 @@ class DecisionLayerIntegrationTests(unittest.TestCase):
             target = fixture / "skills/intellix-decision-layer"
             shutil.copytree(SKILL_DIR, target)
             methodology_path = fixture / "metodologia.yaml"
-            methodology = methodology_path.read_text(encoding="utf-8").replace(
-                "skills_autorais_globais:\n  - beta\n",
-                "skills_autorais_globais:\n  - beta\n  - intellix-decision-layer\n",
+            methodology_path.write_text(
+                json.dumps(
+                    {
+                        "versao": 1,
+                        "stack": {"deploy": "Cloudflare (Workers/Pages)"},
+                        "fases": [{"id": "00", "nome": "Kickoff", "skill": "alpha"}],
+                        "versoes": {"intellix": "1.0.0", "devsecops": "1.0.0"},
+                        "aliases_legados": [
+                            {"antigo": "nome-antigo", "canonico": "intellix:alpha"}
+                        ],
+                        "artefatos_projeto": {
+                            "sempre": ["references/architecture.md"]
+                        },
+                        "dependencias_globais": ["modules/dep.md"],
+                        "skills_autorais_globais": [
+                            "beta",
+                            "intellix-decision-layer",
+                        ],
+                        "agentes": {"implementadores": ["writer"]},
+                    }
+                ),
+                encoding="utf-8",
             )
-            methodology_path.write_text(methodology, encoding="utf-8")
-            returncode, output = module.run_doctor(fixture, "--quiet")
+
+            # doctor.py intentionally imports PyYAML at runtime. CI does not install
+            # third-party packages, so this fixture supplies only the safe_load API
+            # it needs and keeps the integration test hermetic on both CI platforms.
+            pythonpath = fixture / "test-pythonpath"
+            pythonpath.mkdir()
+            (pythonpath / "yaml.py").write_text(
+                "import json\n\ndef safe_load(value):\n    return json.loads(value)\n",
+                encoding="utf-8",
+            )
+            with mock.patch.dict(os.environ, {"PYTHONPATH": str(pythonpath)}):
+                returncode, output = module.run_doctor(fixture, "--quiet")
             self.assertEqual(returncode, 0, output)
             self.assertNotIn("Traceback", output)
 
