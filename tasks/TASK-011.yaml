@@ -280,7 +280,7 @@
     "prd": "README.md",
     "spec": "docs/architecture/FRAMEWORK-SPEC.md"
   },
-  "status": "IN_REVIEW",
+  "status": "APPROVED",
   "title": "Version the decision-layer skill and integrate its evaluation trigger into PRD, architecture and agent creation",
   "verification": [
     {
