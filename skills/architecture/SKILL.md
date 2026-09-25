@@ -121,17 +121,18 @@ Antes de escrever o primeiro `route.ts`:
 
 ### Passo 3c — Camada de decisão semântica (condicional)
 
-**Quando avaliar:** o PRD registra `evaluate decision layer` ou o projeto toma
-decisões automatizadas e tipadas sobre texto em volume, com tempo de resposta
-crítico ou requisito de residência.
+**Quando avaliar:** o PRD registra `evaluate decision layer` ou o projeto tem ao
+menos uma decisão automatizada sobre texto. Volume, tempo de resposta e
+residência são sinais do checklist, não pré-condições para esta avaliação.
 
 Leia a skill `intellix-decision-layer`
 (`global-config/skills/intellix-decision-layer/SKILL.md`) e aplique o método
 normativo de
 `global-config/skills/intellix-decision-layer/references/decision-layer.md`.
-Registre em ADR do projeto um dos resultados: `não aplicável`, `não adotado` ou
-`adotado`, sempre com o motivo. Em `não aplicável` ou `não adotado`, registre
-somente essa conclusão e não crie porta, código, arquivo, dependência ou schema.
+Registre no ADR de arquitetura do projeto um dos resultados: `não aplicável`,
+`não adotado` ou `adotado`, sempre com o motivo. Em `não aplicável` ou `não
+adotado`, registre somente essa conclusão e não crie porta, código, arquivo,
+dependência ou schema.
 Só introduza uma porta de decisão quando o checklist permitir a adoção ou quando
 o ADR justificar estabilizar primeiro o contrato nas camadas L0/L2. Não
 selecione fornecedor por ranking e não replique aqui as regras canônicas de

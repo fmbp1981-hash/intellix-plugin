@@ -121,6 +121,24 @@ class DecisionLayerIntegrationTests(unittest.TestCase):
         self.assertIn("não cria adapter", self.read(SKILL))
         self.assertIn("nunca a esta metodologia global", self.read(NORMATIVE))
 
+    def test_scope_risk_classes_and_residency_rule_are_not_weakened(self):
+        skill = self.read(SKILL)
+        normative = self.read(NORMATIVE)
+        self.assertIn("Aplica-se somente a sistemas de clientes", skill)
+        self.assertIn("Nunca participa da aprovação", skill)
+        self.assertIn("Qualquer proposta de uso no workflow IntelliX exige outro ADR", skill)
+        self.assertNotRegex(normative, r"(?i)classe\s+S\b")
+        self.assertIn("Não existe classe adicional neste método", normative)
+
+        for phase_skill in PHASE_SKILLS:
+            phase_text = self.read(phase_skill).casefold()
+            for residency_rule_fragment in (
+                "motor local compatível",
+                "llm externo é proibido",
+                "texto não pode sair do ambiente",
+            ):
+                self.assertNotIn(residency_rule_fragment, phase_text)
+
     def test_methodology_registration_and_versions_are_consistent(self):
         methodology = self.read(ROOT / "global-config/metodologia.yaml")
         author_skills = methodology.split("skills_autorais_globais:", 1)[1].split(
