@@ -123,7 +123,12 @@ def frontmatter(md: Path) -> dict[str, str]:
 
 
 def iter_files(base: Path, exts=TEXT_EXT):
-    """Arquivos autorais sob `base`, sem .git, bytecode, histórico e o próprio doctor.
+    """Arquivos autorais de runtime sob `base`.
+
+    Exclui .git, bytecode, histórico, testes e ADRs. Testes contêm fixtures e
+    asserções negativas; ADRs registram opções, placeholders e caminhos
+    históricos. Nenhum dos dois é carregado como instrução pelo runtime, então
+    tratá-los como referência executável produz falsos positivos.
 
     `global-config/` (dentro do intellix-plugin) também é pulado: é um espelho
     versionado de arquivos que vivem em ~/.claude (metodologia.yaml, hooks,
@@ -138,7 +143,15 @@ def iter_files(base: Path, exts=TEXT_EXT):
         if not p.is_file() or p.suffix not in exts:
             continue
         s = str(p)
-        if "/.git/" in s or "__pycache__" in s or "/docs/plans/" in s or "/node_modules/" in s or "/global-config/" in s:
+        if (
+            "/.git/" in s
+            or "__pycache__" in s
+            or "/docs/plans/" in s
+            or "/docs/adr/" in s
+            or "/framework/tests/" in s
+            or "/node_modules/" in s
+            or "/global-config/" in s
+        ):
             continue
         if p.name in ("doctor.py", "test_doctor.py", "metodologia.yaml"):
             continue
