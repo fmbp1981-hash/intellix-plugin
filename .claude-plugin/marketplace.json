@@ -13,7 +13,7 @@
       "name": "intellix",
       "source": "./",
       "description": "IntelliX Multi-Agent Engineering Framework \u2014 Claude Code como architect/reviewer, Codex como executor principal e CI como \u00e1rbitro determin\u00edstico.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "author": {
         "name": "IntelliX.AI",
         "url": "https://intellixai.com.br"

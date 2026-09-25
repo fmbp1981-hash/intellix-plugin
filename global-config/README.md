@@ -23,6 +23,7 @@ globais que o CLAUDE.md do usuário importa.
 | `scripts/*.py` + `scripts/tests/` | `~/.claude/scripts/` | Os 16 hooks que rodam a cada mensagem/tool call (doctor.py, roteador de skills, monitor de contexto, gate de fase, etc.) e os testes de regressão deles |
 | `skills/ai-project-brainstorm/` | `~/.claude/skills/ai-project-brainstorm/` | Skill autoral do pré-desenvolvimento (PRD) — fica fora do pacote do plugin por convenção deste projeto |
 | `skills/intellix-agent-creation/` | `~/.claude/skills/intellix-agent-creation/` | Skill autoral da Fase 03b (blueprints de agente de IA) — mesma convenção |
+| `skills/intellix-decision-layer/` | `~/.claude/skills/intellix-decision-layer/` | Skill autoral e vendor-neutral para decidir, por projeto, se uma camada semântica dedicada deve ser adotada |
 
 **O que fica de fora de propósito:** `settings.local.json` (permissões/env
 locais da máquina), `plugins/` (cache de plugins de terceiros — não é
@@ -42,8 +43,13 @@ cp -R "$PLUGIN/global-config/modules"       ~/.claude/modules
 cp -R "$PLUGIN/global-config/scripts"       ~/.claude/scripts
 cp -R "$PLUGIN/global-config/skills/ai-project-brainstorm"    ~/.claude/skills/
 cp -R "$PLUGIN/global-config/skills/intellix-agent-creation"  ~/.claude/skills/
+cp -R "$PLUGIN/global-config/skills/intellix-decision-layer"  ~/.claude/skills/
 python3 ~/.claude/scripts/doctor.py --strict   # confirma que ficou consistente
 ```
+
+Essa restauração é uma ação humana explícita, executada somente depois da
+revisão do diff. O plugin e seus scripts nunca copiam automaticamente este
+espelho para `~/.claude`.
 
 ## Como manter atualizado
 

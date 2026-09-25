@@ -63,6 +63,13 @@ Faça perguntas adaptadas ao que o usuário descreveu — não use questionário
 7. **Mobile** — App nativo necessário ou web responsivo basta?
 8. **Multi-tenancy** — Dados isolados por cliente/empresa?
 
+Se os requisitos envolverem decisão automatizada sobre texto em volume,
+tempo de resposta crítico ou obrigação de manter dados em ambiente controlado,
+registre a decisão aberta **`evaluate decision layer`** e encaminhe sua avaliação
+para a skill `intellix-decision-layer`
+(`global-config/skills/intellix-decision-layer/SKILL.md`). Nesta fase, não
+escolha mecanismo, limiar nem fornecedor: isso pertence à arquitetura do projeto.
+
 > Para perguntas específicas por domínio (SaaS B2B, marketplace, IA, etc.), consulte `resources/references/architecture-patterns.md` seção "Perguntas estratégicas por domínio".
 
 Limite: máximo 6 perguntas por rodada. Se a ideia já é detalhada, faça menos.
@@ -117,7 +124,7 @@ Gere o documento Markdown com estas 7 seções obrigatórias. Use o template de 
 
 1. **Visão geral** — O que é, para quem, classificação (domínio + complexidade + tipo)
 2. **Funcionalidades do MVP** — Core (dia 1) + Nice-to-have (pós-MVP) + Fora de escopo (com motivo)
-3. **Arquitetura do sistema** — Componentes, responsabilidades, tecnologias, decisões com justificativa
+3. **Arquitetura do sistema** — Componentes, responsabilidades, tecnologias, decisões com justificativa e decisões abertas (incluindo `evaluate decision layer`, quando acionada)
 4. **Banco de dados** — Tabelas com campos/tipos/constraints + relacionamentos + RLS policies
 5. **Stack tecnológica** — Tabela camada/tecnologia/justificativa
 6. **Roadmap** — Fases com duração e tarefas concretas (usar estimativas de vibecoding do reference file)
