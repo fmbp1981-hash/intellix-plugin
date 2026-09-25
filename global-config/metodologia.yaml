@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# FONTE ÚNICA DE VERDADE — Metodologia IntelliX
+# ADAPTER DE COMPATIBILIDADE — Metodologia IntelliX para Claude Code
 # ═══════════════════════════════════════════════════════════════════════════
 #
 # Criado em 2026-09-07 (Fase 3.1 do PLANO-CORRECAO-2026-09-07.md).
@@ -14,8 +14,9 @@
 # skills arquivadas.
 #
 # REGRA DE OURO
-# Este arquivo é NORMATIVO. Os markdowns explicam e exemplificam; este define.
-# Divergência entre um markdown e este arquivo é bug NO MARKDOWN.
+# A fonte normativa multiagente é `framework/framework.yaml` no repositório do
+# plugin. Este arquivo traduz fases e stack para a instalação do Claude Code.
+# Divergência é bug NESTE ADAPTER.
 # `scripts/doctor.py` valida os markdowns contra este arquivo a cada sessão.
 #
 # AO MUDAR ALGO AQUI
@@ -29,6 +30,16 @@
 
 versao: 1
 atualizado_em: 2026-09-16
+framework_source: framework/framework.yaml
+framework_version: 1.0.0
+sync_direction: repository_to_installation
+multiagent:
+  architect_default: claude
+  executor_default: codex
+  reviewer_default: claude
+  arbiter: github-actions
+  task_contracts: tasks/TASK-*.yaml
+  compatibility_issues: issues/*.md
 
 # ── Stack padrão ────────────────────────────────────────────────────────────
 # Mudou em 2026-09-07: deploy passou de Vercel para Cloudflare Workers/Pages.
@@ -247,6 +258,8 @@ fronteira:
     - PRODUCT.md
     - SPEC.md
     - issues/
+    - tasks/
+    - intellix.yaml
     - docs/adr/
     - docs/deploys.jsonl
   fica_global:
@@ -271,7 +284,7 @@ plugins_proprios:
 # Versão esperada de cada plugin próprio. plugin.json, marketplace.json, README e
 # o registro de instalação precisam concordar com este valor (doctor, check 11).
 versoes:
-  intellix: "3.0.6"
+  intellix: "3.2.0"
   devsecops: "1.2.1"
 
 # ── Identificadores (remediação 2026-09-16, D1–D5) ──────────────────────────
@@ -316,6 +329,8 @@ artefatos_projeto:
     - .claude/settings.json
     - .github/workflows/security.yml
     - issues/
+    - tasks/
+    - intellix.yaml
     - references/architecture.md
     - references/security.md
     - references/stack.md
@@ -351,6 +366,7 @@ dependencias_globais:
 skills_autorais_globais:
   - intellix-agent-creation
   - ai-project-brainstorm
+  - intellix-decision-layer
 
 # ── Métricas de entrega (DORA) — Fase 3.5 ──────────────────────────────────
 # Coletadas de docs/deploys.jsonl no repositório de cada cliente, escrito pela

@@ -122,7 +122,10 @@ projeto/
 │   ├── integration/
 │   └── e2e/                    # Playwright
 ├── references/                 # architecture.md, security.md, stack.md, workflow.md (dos templates)
-├── issues/                     # criado vazio; /break preenche
+├── tasks/                      # Task Contracts; /break preenche
+├── issues/                     # legado; manter apenas ao migrar projeto existente
+├── intellix.yaml               # vínculo projeto → framework, docs, CI e deploy
+├── intellix.lock.json          # snapshot gerado: versão, manifesto e SHA-256
 ├── DESIGN.md                   # semente do design (se houver UI) — o impeccable:impeccable mantém
 ├── .intellix-phase             # Fase atual: init|arch|dev|test|deploy|done
 ├── AGENTS.md                   # Contexto operacional para QUALQUER agente (Cursor, Codex, Copilot...)
@@ -132,7 +135,9 @@ projeto/
 └── README.md
 ```
 
-> **`AGENTS.md` vs `CLAUDE.md`:** `AGENTS.md` contém fatos operacionais neutros (comandos, testes, PR format) legíveis por qualquer agente de coding. `CLAUDE.md` contém regras Claude-específicas (IntelliX workflow, plugin hooks). Claude Code lê ambos; Cursor/Codex/Aider/Copilot só leem `AGENTS.md`.
+> **`AGENTS.md` vs `CLAUDE.md`:** `AGENTS.md` é o adapter neutro e aponta para
+> `framework/framework.yaml`, `intellix.yaml` e Task Contracts. `CLAUDE.md` só
+> contém regras Claude-específicas. Nenhum dos dois replica a fonte normativa.
 
 > **`CLAUDE.md` vs `CLAUDE.local.md`:** o primeiro é versionado e vale para o time inteiro (stack, fase, convenções). O segundo é gitignored e vale só para a sua máquina (paths absolutos, branch em que você está, string de conexão do banco local). Nunca coloque segredo em nenhum dos dois.
 
@@ -170,103 +175,22 @@ Crie os seguintes arquivos:
 `${CLAUDE_PLUGIN_ROOT}/skills/project-kickoff/references/bootstrap-projeto-novo.md` —
 `references/`, `DESIGN.md`, DevSecOps scaffold, `.env.*` e `package.json`.
 
-**`AGENTS.md`** (template — adaptar nome e integrações do projeto):
-```markdown
-# [Nome do Projeto]
+**Kernel e adapters gerados:** após configurar `intellix.yaml`, rode a partir da
+fonte versionada do framework (substitua os paths pelos paths reais):
 
-> Contexto operacional para agentes de coding (Claude Code, Cursor, Copilot, Codex, Aider, etc.)
-> Para regras Claude-específicas e workflow IntelliX, ver CLAUDE.md
-
-## O que é este projeto
-[1-2 linhas: o que o sistema faz e para quem]
-
-## Setup
-\`\`\`bash
-npm install          # instalar dependências
-npm run dev          # servidor de desenvolvimento (localhost:3000)
-npm run build        # build de produção
-npm run lint         # ESLint + TypeScript check
-\`\`\`
-
-## Testes
-\`\`\`bash
-npm run test         # Vitest (unit + integration)
-npm run test:e2e     # Playwright E2E
-npm run test:watch   # Vitest em watch mode
-\`\`\`
-Rodar testes antes de qualquer commit. PRs bloqueados se testes falharem.
-
-## Stack
-- **Framework:** Next.js 16 App Router + TypeScript strict
-- **Estilo:** Tailwind CSS + Shadcn/UI
-- **Banco:** Supabase (PostgreSQL + Auth + RLS)
-- **Deploy:** Cloudflare Workers/Pages (`wrangler` + `@opennextjs/cloudflare`)
-- [adicionar: Evolution API / n8n / etc. se aplicável]
-
-## Estrutura de pastas
-\`\`\`
-src/app/             → rotas Next.js (App Router)
-src/components/ui/   → componentes Shadcn/UI (primitivos)
-src/components/[f]/  → componentes por feature
-src/lib/             → utilities, validações Zod, clients Supabase
-src/hooks/           → custom hooks React
-src/types/           → tipos TypeScript centralizados
-supabase/migrations/ → migrations de banco
-tests/               → unit/ | integration/ | e2e/
-\`\`\`
-
-## Convenções de código
-- TypeScript strict: **zero `any`**, zero `@ts-ignore`
-- Componentes: `PascalCase` | Hooks: `camelCase` com prefixo `use` | Arquivos: `kebab-case`
-- Sem `console.log` em produção — usar logger estruturado
-- Todo input de usuário validado com Zod
-- Toda tabela Supabase com Row Level Security (RLS)
-
-## Commits
-Conventional Commits obrigatório:
-\`\`\`
-feat(auth): adiciona login com Google
-fix(dashboard): corrige carregamento de métricas
-chore(deps): atualiza next.js para 15.x
-\`\`\`
-
-## Pull Requests
-- Branch a partir de `main`, nome: `feat/nome-da-feature` ou `fix/descricao`
-- PR title: `[feat|fix|chore]: descrição curta`
-- Rodar `npm run lint && npm run test` antes de abrir PR
-- Descrever o que mudou e por quê no body do PR
-
-## Variáveis de ambiente
-Ver `.env.example` para todas as variáveis necessárias.
-Nunca commitar `.env.local` ou `.env`.
+```bash
+python3 /path/to/intellix-plugin/framework/sync.py \
+  --source-root /path/to/intellix-plugin --target-root .
+python3 /path/to/intellix-plugin/framework/generate_adapters.py \
+  --source-root /path/to/intellix-plugin --target-root .
+python3 framework/validate.py --root . --all
 ```
 
-**`CLAUDE.md`** (template — **aponta** para a metodologia global, não a reescreve):
-```markdown
-# [Nome do Projeto]
-
-## Contexto
-[Descrição em 2-3 linhas do que o sistema faz e para quem]
-
-## Stack
-Next.js 16 | TypeScript strict | Tailwind | Shadcn/UI | Supabase | Cloudflare (Workers/Pages)
-
-## Fase atual
-[FASE] — ver .intellix-phase
-
-## Metodologia
-Este projeto segue o workflow IntelliX (Fases 00-09) definido no plugin `intellix`,
-instalado na camada global. **Não replique as fases aqui** — elas evoluem no plugin e
-esta cópia ficaria desatualizada. Ver `intellix:master-workflow` para o fluxo vigente.
-
-Segurança e LGPD: `devsecops:security-baseline` / `security-gate` / `lgpd-compliance`.
-
-## Convenções deste projeto
-Ver `.claude/rules/` — convenções específicas daqui (as globais já valem por padrão).
-
-## Integrações ativas
-[listar: n8n / Evolution API / WhatsApp / etc]
-```
+Isso gera `intellix.lock.json`, o snapshot local e os entry points curtos
+`AGENTS.md`/`CLAUDE.md`. Não adapte esses dois arquivos manualmente nem copie as
+policies para eles. Contexto específico do cliente continua em `.claude/rules/`,
+documentos do projeto e Task Contracts. O sync é sempre repositório → instalação;
+nunca importe automaticamente alterações da instalação para a fonte.
 
 **`CLAUDE.local.md`** (template — adicionar ao `.gitignore`):
 ```markdown
@@ -356,12 +280,12 @@ CLAUDE.local.md
 
 **Invoke:** `Skill("context-engineering")`
 
-Após criar `CLAUDE.md` e `AGENTS.md`, valide a qualidade do contexto entregue aos agentes:
+Após gerar `CLAUDE.md` e `AGENTS.md`, valide a qualidade do contexto entregue aos agentes:
 
-- Verificar se `CLAUDE.md` tem as 5 camadas de informação: stack, fase atual, convenções, integrações, anti-patterns
-- Confirmar que `AGENTS.md` tem comandos operacionais verificáveis (não documentação genérica)
-- Garantir ausência de "context flooding" (informação demais) e "context starvation" (informação de menos)
-- Estruturar regras em ordem de prioridade — agentes lêem o início com mais atenção
+- Confirmar que os adapters continuam curtos e apontam para `intellix.yaml`, kernel e Task Contracts
+- Manter stack, fase, convenções, integrações e anti-patterns nos documentos canônicos do projeto ou `.claude/rules/`
+- Confirmar que o comando local de validação é executável
+- Garantir ausência de "context flooding" nos adapters e "context starvation" nas fontes referenciadas
 
 **Gatilho:** obrigatório em projetos novos. Opcional em projetos existentes (só se CLAUDE.md estiver desatualizado).
 
@@ -372,6 +296,7 @@ Após criar `CLAUDE.md` e `AGENTS.md`, valide a qualidade do contexto entregue a
 Rode a verificação mecânica (B7 do bootstrap) e só prossiga com exit 0:
 
 ```bash
+python3 framework/validate.py --root . --all
 python3 ~/.claude/scripts/scaffold-check.py . --fase kickoff
 ```
 

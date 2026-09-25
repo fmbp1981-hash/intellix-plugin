@@ -1,0 +1,192 @@
+{
+  "acceptance_criteria": [
+    {
+      "given": "the methodology exists only in the operator's configuration and documentation folder",
+      "id": "AC-001",
+      "then": "it names one skill identifier versioned under global-config with normative and informative references, forbids a competing plugin-namespaced copy, and keeps copying to ~/.claude a human action",
+      "when": "the ADR defines its canonical location"
+    },
+    {
+      "given": "phase skills would invoke the methodology",
+      "id": "AC-002",
+      "then": "phase changes happen only after acceptance and in the same Task Contract that versions the skill, so a clean checkout never references a missing capability",
+      "when": "the ADR orders the work"
+    },
+    {
+      "given": "vendor benchmarks, prices and latencies change between versions",
+      "id": "AC-003",
+      "then": "the normative reference contains no vendor number, dated engine facts live in an informative reference marked as claims, and numeric thresholds are configurable starting defaults",
+      "when": "the ADR splits the method"
+    },
+    {
+      "given": "two engines declare the same HTTP shape",
+      "id": "AC-004",
+      "then": "the port is vendor-neutral, adapters normalize and validate responses, and switching engines requires contract tests with real fixtures",
+      "when": "the ADR defines the decision port"
+    },
+    {
+      "given": "a small project with a semantic decision but no adoption signal",
+      "id": "AC-005",
+      "then": "no port or code is created and the outcome is recorded as not applicable or not adopted",
+      "when": "the architecture phase applies the ADR"
+    },
+    {
+      "given": "a decision whose text must stay in the environment",
+      "id": "AC-006",
+      "then": "only L0 rules, a local engine and humans are allowed; an external LLM is forbidden like an external engine",
+      "when": "its fallback chain is defined"
+    },
+    {
+      "given": "a calibrated decision",
+      "id": "AC-007",
+      "then": "the decision returns to shadow mode until a new calibration is approved",
+      "when": "the model, weights, questions, options, temperature, preprocessing or policy change, or monitored drift exceeds bounds"
+    },
+    {
+      "given": "the IntelliX development workflow",
+      "id": "AC-008",
+      "then": "it records non-adoption with rationale and requires a new ADR under the stated invariants for any future proposal",
+      "when": "the ADR decides engine use there"
+    },
+    {
+      "given": "this architectural decision",
+      "id": "AC-009",
+      "then": "the ADR stayed Proposed as a historical gate until the explicit human decision and is now Accepted, and it still changes no phase, kernel, schema, policy, credential, runtime, merge or production state",
+      "when": "its status and diff are reviewed"
+    }
+  ],
+  "dependencies": [
+    "TASK-008",
+    "TASK-009"
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "handoff": {
+    "open_questions": [
+      "Policy-level gate versus project registry rule for a future decision_pilot gate"
+    ],
+    "required_evidence": [
+      "two-file inventory",
+      "independent architecture, security and LGPD review by Codex",
+      "exact-revision CI",
+      "human acceptance of ADR-0004 (already recorded; no further evidence required for it)",
+      "later post-R human technical-completion decision (still required)"
+    ]
+  },
+  "id": "TASK-010",
+  "notes": [
+    "Drafted by Claude on 2026-09-23 at the human's request; Claude is executor, Codex is the independent reviewer and Claude must not approve it.",
+    "Revision 2 addresses Codex review INTELLIX_REVISAO_CODEX_CAMADA_DE_DECISAO_HANDOFF.md (objections O-01 to O-07, non-blocking points 1-7, invariants section 7).",
+    "O-01: the branch was pushed after the review started; it is now rebased on af8241b (TASK-009 approved).",
+    "Phase integration and skill versioning are TASK-011 after acceptance; schema, registry, harness, adapters, hosting and credentials are deferred to a first adopting project.",
+    "Revision 3 addresses Codex review INTELLIX_REVISAO_CODEX_TASK010_ADR0004_REV2.md: B-01 (scope now permits the legal lifecycle and exactly TASK-010 review/approval evidence; other tasks' evidence stays forbidden by exact paths), A-02 (dependencies TASK-008 and TASK-009), A-03 (conditional LGPD wording), A-04 (no volatile vendor facts in the normative ADR) and A-05 (invariant 15 residency-compatible).",
+    "The task remained DRAFT during proposal correction and is now READY; review and approval evidence remain deferred until R review, exact-R CI and the later human technical decision.",
+    "Vendor facts belong to the dated informative reference created later by TASK-011, not to this decision.",
+    "Implementation, runtime provisioning, credentials, merge, release and deploy are out of scope.",
+    "Plan acceptance on 2026-09-24: the human replied 'Sim' after Codex APPROVED review and green CI for revision 8763e556a12ca4ca3974deac1858b8d26f5ffc2f; this binds READY to that revision and ADR-0004 Accepted. It authorizes lifecycle execution only and is not the later post-R technical-completion decision.",
+    "The first dispatch attempt failed closed before worktree creation because task and ADR paths appeared in both create and modify. They already exist at this completion phase base, so the corrected fileset keeps both only in modify and reserves create for the two later evidence records."
+  ],
+  "objective": "Record ADR-0004 (proposed for review, now Accepted) that decides scope, invariants, normative-versus-informative split, proportional decision port, residency-aware fallback, calibration invalidation, canonical skill location and the follow-up phase integration for the typed decision layer, without changing phases, kernel, schema or runtime.",
+  "ownership": {
+    "architect": "claude",
+    "domain_role": "architect",
+    "executor": "claude",
+    "reviewer": "codex"
+  },
+  "risk": {
+    "irreversible_actions": [],
+    "level": "high",
+    "reasons": [
+      "The decision fixes invariants that future client projects must satisfy before any automated semantic decision precedes an action",
+      "It sets the canonical location of a methodology read by both adapters",
+      "It constrains transfer of customer text to external engines and LLMs under LGPD"
+    ]
+  },
+  "rollback": "Revert only the TASK-010 proposal commits on proposal/decision-layer-adr; ADR-0001 to ADR-0003 and all other contracts stay unchanged.",
+  "scope": {
+    "create": [
+      "tasks/evidence/TASK-010.review.json",
+      "tasks/evidence/TASK-010.approval.json"
+    ],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      "issues/**",
+      ".github/**",
+      "framework/**",
+      "global-config/**",
+      "skills/**",
+      "references/**",
+      "infra/production/**",
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md",
+      "tasks/TASK-001.yaml",
+      "tasks/TASK-002.yaml",
+      "tasks/TASK-003.yaml",
+      "tasks/TASK-004.yaml",
+      "tasks/TASK-005.yaml",
+      "tasks/TASK-006.yaml",
+      "tasks/TASK-007.yaml",
+      "tasks/TASK-008.yaml",
+      "tasks/TASK-009.yaml",
+      "tasks/evidence/TASK-001.review.json",
+      "tasks/evidence/TASK-001.approval.json",
+      "tasks/evidence/TASK-002.review.json",
+      "tasks/evidence/TASK-002.approval.json",
+      "tasks/evidence/TASK-003.review.json",
+      "tasks/evidence/TASK-003.approval.json",
+      "tasks/evidence/TASK-004.review.json",
+      "tasks/evidence/TASK-004.approval.json",
+      "tasks/evidence/TASK-005.review.json",
+      "tasks/evidence/TASK-005.approval.json",
+      "tasks/evidence/TASK-006.review.json",
+      "tasks/evidence/TASK-006.approval.json",
+      "tasks/evidence/TASK-007.review.json",
+      "tasks/evidence/TASK-007.approval.json",
+      "tasks/evidence/TASK-008.review.json",
+      "tasks/evidence/TASK-008.approval.json",
+      "tasks/evidence/TASK-009.review.json",
+      "tasks/evidence/TASK-009.approval.json"
+    ],
+    "modify": [
+      "tasks/TASK-010.yaml",
+      "docs/adr/0004-typed-decision-layer.md"
+    ]
+  },
+  "source": {
+    "adrs": [
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md"
+    ],
+    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
+    "prd": "README.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md"
+  },
+  "status": "APPROVED",
+  "title": "Decide the typed decision layer as a governed, per-project IntelliX capability",
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "The new Task Contract and repository artifacts validate"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "No framework behavior regressed"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The scoped documentation diff has no whitespace errors"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "access": "read-only",
+  "branch": "proposal/decision-layer-adr",
+  "control_plane_digest": "sha256:7b912261cb6356c76bed9272a1ac30dbb642601a102b7249d106024386b951ee",
+  "decision": "approved",
+  "diff_ref": "93524c0941a288bd1eccd4122d011949d8770968..8f6678df91eda3154792dde6a3e6f77a56466ea5",
+  "evidence": [
+    "Claude independently reviewed the complete phase-base-to-R diff, ADR-0004 and every TASK-011 acceptance criterion; the prior architecture-trigger finding and PyYAML-free CI portability defect were resolved.",
+    "Executor local evidence: 99 framework tests, pinned distribution, compileall, hook validation and diff-check passed; the separate global-config suite passed 86 tests with 7 expected skips.",
+    "GitHub Actions run 36138404479 passed for exact R on Ubuntu and macOS; live CI is re-queried by the guarded completion path."
+  ],
+  "executor_identity": "codex",
+  "fileset_digest": "sha256:485167a2935658d3baaaddd10f24356c57c1b946d393a2451358abf313ac0fb5",
+  "kernel_digest": "sha256:82d538fc4be868fbe64e2669a8ffceaceb00c9fcc523716c6430998ffc0dc8a5",
+  "limitations": [
+    "Local reviewer identity is forgeable process evidence, not authenticated identity.",
+    "Vendor facts remain dated informative claims and are not production evidence.",
+    "Review grants technical-completion eligibility only; no merge, release, deploy, credential, permission or production authority."
+  ],
+  "phase_base": "93524c0941a288bd1eccd4122d011949d8770968",
+  "project_digest": "sha256:31eaf68436c8291fd2652730b1a7e0c2c866d751ed71629418a3fcf0a919cbc1",
+  "reviewed_at": "2026-09-25T14:37:27.118566+00:00",
+  "reviewed_files": [
+    ".claude-plugin/marketplace.json",
+    ".claude-plugin/plugin.json",
+    "framework/tests/test_decision_layer_integration.py",
+    "global-config/README.md",
+    "global-config/metodologia.yaml",
+    "global-config/skills/ai-project-brainstorm/SKILL.md",
+    "global-config/skills/intellix-agent-creation/SKILL.md",
+    "global-config/skills/intellix-decision-layer/SKILL.md",
+    "global-config/skills/intellix-decision-layer/references/decision-layer.md",
+    "global-config/skills/intellix-decision-layer/references/engines-2026-09.md",
+    "skills/architecture/SKILL.md",
+    "tasks/TASK-011.yaml"
+  ],
+  "reviewed_revision": "8f6678df91eda3154792dde6a3e6f77a56466ea5",
+  "reviewer_assignment": "claude",
+  "reviewer_identity": "claude-independent-task011-r-8f6678d",
+  "schema_version": "1.0.0",
+  "source_digest": "sha256:e6f2210faa78b1acb8a5a0ee73725f9483558f680b97e43ded4842cf908259f9",
+  "task": "TASK-011",
+  "task_digest": "sha256:ae4e7d9942d2b560d54869723a52e9fb5d3355c6d5ef13200c0136500b8e1328"
+}

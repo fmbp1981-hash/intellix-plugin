@@ -1,0 +1,1 @@
+{"id":"WAIVER-001","task":"TASK-001","rule":"rule identifier","reason":"Document why compliance is temporarily impossible.","owner":"engineering-owner","expires_at":"2026-12-31","compensating_controls":["Explicit temporary control"]}

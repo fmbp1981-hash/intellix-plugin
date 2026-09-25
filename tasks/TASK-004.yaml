@@ -1,0 +1,88 @@
+{
+  "id": "TASK-004",
+  "title": "Enforce worktree ownership and independent adapter handoffs",
+  "status": "APPROVED",
+  "objective": "Isolate medium-or-higher risk work and exchange bounded implementation and review evidence between adapters.",
+  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-WORKFLOW.md", "spec": "docs/implementation/INTELLIX-CODEX-MASTER-IMPLEMENTATION-MANUAL.md", "adrs": ["docs/adr/0002-operational-orchestrator.md"]},
+  "risk": {"level": "high", "reasons": ["Manages Git isolation and cross-adapter evidence"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
+  "scope": {
+    "create": [
+      "framework/worktrees.py",
+      "framework/adapters.py",
+      "framework/tests/test_worktrees.py",
+      "framework/tests/test_adapters.py",
+      "framework/schemas/reservation.schema.json",
+      "framework/schemas/checkpoint.schema.json",
+      "intellix-templates/root-template/.gitignore",
+      "framework/tests/fixtures/projects/valid/.gitignore"
+    ],
+    "modify": [
+      "framework/dispatch.py",
+      "framework/runtime.py",
+      "framework/framework.yaml",
+      "framework/policies/git.yaml",
+      "framework/schemas/handoff.schema.json",
+      "framework/templates/HANDOFF.yaml",
+      "framework/tests/test_dispatch.py",
+      "framework/tests/test_distribution.py",
+      "commands/execute.md",
+      "intellix.lock.json",
+      ".gitignore",
+      "tasks/TASK-004.yaml"
+    ],
+    "forbidden": [".env*", "**/.env*", ".github/**", "issues/**", "infra/production/**"]
+  },
+  "dependencies": ["TASK-003"],
+  "acceptance_criteria": [
+    {"id": "AC-001", "given": "a medium, high or critical task", "when": "execution starts", "then": "a dedicated worktree and exclusive writable-fileset reservation are required"},
+    {"id": "AC-002", "given": "dirty state or intersecting globs", "when": "setup or parallel start is requested", "then": "no data is discarded and conflicting execution is blocked"},
+    {"id": "AC-003", "given": "bounded implementation evidence", "when": "independent review starts", "then": "the reviewer receives contract, exact diff and evidence without write ownership"},
+    {"id": "AC-004", "given": "the same identity implemented a change", "when": "approval is evaluated", "then": "its own review cannot satisfy independence"}
+  ],
+  "verification": [
+    {"command": "python3 framework/validate.py --root . --all", "proves": "Handoff and task contracts remain valid"},
+    {"command": "python3 framework/sync.py --source-root . --target-root . --check", "proves": "Worktree and adapter control-plane files are pinned without drift"},
+    {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Dirty state, collisions, handoff and independence are covered"},
+    {"command": "python3 -m compileall -q framework", "proves": "Worktree and adapter modules compile"},
+    {"command": "git diff --check", "proves": "The scoped patch has no whitespace errors"}
+  ],
+  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "rollback": "Revert the scoped commit without deleting dirty worktrees; preserve evidence and return ownership manually.",
+  "notes": [
+    "Low-risk worktree exceptions remain project policy; fileset ownership never becomes optional.",
+    "No adapter may merge, deploy or mutate permissions.",
+    "Human architecture decision: ADR-0002 remains Proposed, while its same-branch worktree procedure is specifically authorized for this task.",
+    "Human architecture decision: reservations use reserving, reserved and released states under runtime.records_path/reservations; reserving and reserved are active ownership and stale or inconsistent records block fail-closed.",
+    "Human architecture decision: worktree automation never uses force, reset, clean or removal of dirty worktrees; partial setup is preserved for manual reconciliation.",
+    "Human architecture decision: reviewers receive contract, digest, commit, exact diff and evidence without a writable worktree or fileset ownership.",
+    "Human architecture decision: executor/reviewer independence is checked at dispatch and handoff recording but remains local advisory identity, not authentication.",
+    "Human architecture decision: checkpoints are structured durable artifacts under runtime.records_path/checkpoints and must include state, last command/result, stop point, risks, active plan, ordered next actions, branch, worktree, commit, recovery command and timestamp.",
+    "Scope cohesion: the 17 files form one atomic ownership and handoff control; splitting reservation, worktree and transfer would create an unsafe partial boundary.",
+    "TASK-005 exclusively owns portable CI, exact-revision external verification, profiles, pilot and authenticated external approval integration.",
+    "Checkpoint active plan: implement schemas/policy first, then reservation/worktree safety, bounded adapters/handoffs, dispatcher integration, tests, independent review and CI.",
+    "Checkpoint state: TASK-004 is IN_PROGRESS in the dedicated same-branch worktree intellix-plugin-TASK-004 at planning base d24e134; the original checkout is detached and no implementation files have been edited.",
+    "Checkpoint last execution: git worktree add created intellix-plugin-TASK-004 on feat/intellix-multiagent-framework and git worktree list confirmed all older task worktrees detached.",
+    "Checkpoint exact stop: stopped immediately after safe worktree creation and before the first schema or policy implementation edit.",
+    "Checkpoint recovery command: cd /Users/felipemaranhao/Documents/Codex/2026-09-16/referenced-chatgpt-conversation-this-is-an/work/intellix-plugin-TASK-004 && git status --short && python3 framework/validate.py --root . --all.",
+    "Checkpoint ordered next actions: create reservation and checkpoint schemas; register schemas and control-plane files; update git policy and handoff schema/template; implement worktree reservations; implement adapter handoff/checkpoint; integrate dispatch/runtime; add tests; refresh lock; run all gates; obtain independent review; commit, push and verify CI.",
+    "Checkpoint open risks: partial Git setup must remain fail-closed without cleanup; local identity is advisory; no CI or authenticated approval behavior may leak from TASK-005."
+    ,"Checkpoint progress at schema block: reservation/checkpoint schemas, kernel registration, control-plane pinning, Git policy, handoff schema/template and base adapters/worktrees modules are implemented; no dispatcher integration or Git worktree mutation code has been added yet."
+    ,"Checkpoint last validated execution: compileall, sync install/check, validate --all, 52 regression tests and git diff --check passed after refreshing intellix.lock.json."
+    ,"Checkpoint next implementation action: add focused test_worktrees.py and test_adapters.py first, then complete reserving-to-reserved worktree setup and release behavior under those tests before integrating dispatch."
+    ,"Checkpoint blocker discovered before Git tests: runtime.records_path is .intellix/runtime but runtime artifacts are not ignored, so reservations/checkpoints make the repository dirty and may be committed accidentally; safe implementation requires fileset expansion for repository, project-template and fixture gitignore rules."
+    ,"Checkpoint exact stop after blocker: worktree/adapters foundation remains validated at 48cc043; no operational Git setup, release or dispatcher integration was added after discovering the ignore gap."
+    ,"Checkpoint proposed recovery action: obtain human approval to add .gitignore, intellix-templates/root-template/.gitignore and framework/tests/fixtures/projects/valid/.gitignore, then write tests proving runtime artifacts do not dirty either the repository or a fresh consumer."
+    ,"Human scope decision: the gitignore expansion was explicitly approved; generated runtime artifacts must not appear as Git changes in the repository, root template or consumer fixture."
+    ,"Implementation evidence: validate --all, sync install/check, compileall, hook validation, git diff --check and 60 unit/integration tests passed."
+    ,"Negative evidence: dirty source/reviewer writes/self-review/arbitrary destinations/destructive Git/fileset collisions are rejected; dirty worktree release preserves the worktree and reservation."
+    ,"Checkpoint exact stop for review: implementation is complete locally and awaits the focused commit, independent Claude review, push and exact-revision CI; TASK-005 has not started."
+    ,"Residual risk: reservation collision detection is local advisory coordination rather than a distributed lock; interrupted post-add confirmation leaves a reserving record and worktree for manual reconciliation by design."
+    ,"Independent review: Claude APPROVE with no blocking/high findings; the medium re-entry guidance and low short-force-alias findings were both corrected and regression-tested before push."
+    ,"Human gate: TASK-004 explicitly approved after independent review and exact-revision CI passed for implementation commit db3ecf9."
+    ,"Checkpoint final state: TASK-004 is complete; 60 tests, all local gates, framework-validation and GitGuardian passed; worktree is clean and only the approval-state publication/checkout restoration remains."
+    ,"Checkpoint recovery action: verify the approval commit CI, detach intellix-plugin-TASK-004, restore the original checkout to feat/intellix-multiagent-framework and confirm validate --all plus sync --check."
+    ,"Checkpoint roadmap: TASK-005 is next but not started; audit its Definition of Ready/fileset, keep portable CI and exact-SHA verification distinct from local model evidence, implement profile fixtures and the end-to-end pilot, then obtain independent review and human approval."
+  ],
+  "handoff": {"required_evidence": ["dirty-worktree safety tests", "glob collision tests", "read-only reviewer handoff", "independent review"], "open_questions": []}
+}

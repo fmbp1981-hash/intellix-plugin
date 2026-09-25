@@ -1,0 +1,183 @@
+{
+  "acceptance_criteria": [
+    {
+      "given": "a final implementation and review candidate in the authorized TASK-008 worktree",
+      "id": "AC-001",
+      "then": "it requires a clean worktree on the authorized branch, derives R from HEAD, verifies R equals the live remote branch tip, and never accepts a caller-selected revision as authority",
+      "when": "the guarded completion path derives reviewed revision R"
+    },
+    {
+      "given": "review, approval and project inputs for R",
+      "id": "AC-002",
+      "then": "versioned schema-valid evidence binds the task ID, phase base and reviewed revisions, pre-completion contract and fileset digests, project binding, normative kernel and policy digests, independent reviewer assignment, review result, explicit controlling-session human-decision reference and a fresh live exact-R GitHub CI result",
+      "when": "technical completion is evaluated"
+    },
+    {
+      "given": "the generic dispatcher or generic runtime transition API",
+      "id": "AC-003",
+      "then": "the existing early rejection remains effective with no adapter, worktree, dependency, task or runtime-record mutation",
+      "when": "an executor requests APPROVED or any other kernel-guarded state"
+    },
+    {
+      "given": "all R gates and the later explicit human technical decision are valid",
+      "id": "AC-004",
+      "then": "only IN_REVIEW to APPROVED is permitted, no generic dispatcher CLI or actor-string shortcut reaches it, and the API writes only the declared task status plus versioned review and approval evidence needed for status revision A",
+      "when": "the dedicated internal completion API runs"
+    },
+    {
+      "given": "status revision A has been committed after the guarded completion edit",
+      "id": "AC-005",
+      "then": "the checker derives A from Git history, verifies R is its ancestor, restricts the R-to-A diff to permitted completion metadata, validates current pre/post contract and evidence bindings, and queries configured GitHub checks live for both R and A",
+      "when": "a dependent task evaluates TASK-008"
+    },
+    {
+      "given": "an APPROVED task with missing, stale, changed, malformed, failed or indeterminate evidence",
+      "id": "AC-006",
+      "then": "the historical approval remains recorded but downstream work is blocked with an explicit reason and no automatic status revocation or silent evidence rewrite",
+      "when": "dependency eligibility is checked"
+    },
+    {
+      "given": "a caller attempts stale R, a wrong branch or worktree, dirty state, self-review, changed fileset, task, project, kernel or CI configuration, a hand-edited APPROVED label, a non-ancestor A, forbidden completion diff, absent credential, or failed CI",
+      "id": "AC-007",
+      "then": "the operation fails closed and comprehensive negative tests prove that no dependent task is released",
+      "when": "completion or dependency eligibility executes"
+    },
+    {
+      "given": "local review and controlling-session human-decision records",
+      "id": "AC-008",
+      "then": "they are explicitly identified as forgeable process evidence rather than authenticated identity, and no merge, release, deploy, credential, permission or production authority is granted",
+      "when": "reports or documentation describe their assurance"
+    }
+  ],
+  "dependencies": [
+    "TASK-006"
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "handoff": {
+    "open_questions": [],
+    "required_evidence": [
+      "validated phase-base-to-R fileset inventory and regenerated lock",
+      "versioned schema-valid independent review record bound to R",
+      "fresh live exact-revision GitHub CI for R",
+      "explicit post-review controlling-session human technical decision reference",
+      "guarded R-to-A completion metadata diff and derived A",
+      "fresh live exact-revision GitHub CI for A before dependency release",
+      "negative-test matrix covering every ADR-0003 fail-closed case",
+      "residual-risk statement that local identity evidence is forgeable and grants no merge or production authority"
+    ]
+  },
+  "id": "TASK-008",
+  "notes": [
+    "Phase 1 completed at 7bef528 on 2026-09-22: canonical guarded-state registries, early generic dispatcher/runtime rejection and non-vacuous CI primitives passed 84 local tests, independent read-only Claude review and exact-revision GitHub checks. That evidence remains process/history context and does not authorize phase 2.",
+    "The human owner explicitly approved this revised phase-2 exact fileset and acceptance criteria on 2026-09-23, authorizing implementation but not the later technical-completion decision, merge, release, deploy or production action.",
+    "ADR-0003 is the accepted source of truth. The earlier one-time waiver and manual APPROVED-edit alternatives remain rejected because they bypass the guard being implemented.",
+    "After plan approval, use the existing legal IN_REVIEW to IN_PROGRESS transition in this same dedicated worktree, commit that transition before implementation and bind the resulting phase base revision into the later review evidence.",
+    "The completion API will be a control-plane library surface in framework/completion.py, not a target exposed by the generic dispatcher CLI. It may grant only APPROVED and only from IN_REVIEW after every gate passes; MERGED, VERIFIED and RELEASED remain outside this path.",
+    "Versioned completion evidence is stored under tasks/evidence/ so a fresh checkout can validate it without adding a second configurable path. The review and approval records are created only after R is clean, pushed, independently reviewed and green; they are permitted completion metadata for A, not part of the executable implementation reviewed at R.",
+    "R is derived from clean HEAD in the authorized worktree and must equal the live remote branch tip. A is never self-declared in its own content; downstream evaluation derives A from Git history after the guarded metadata commit and checks its exact live CI.",
+    "The phase base to R diff must equal the reviewed implementation inventory and remain within this contract's create/modify files, excluding only the later task status and two versioned evidence records permitted in R-to-A.",
+    "Current dependency eligibility revalidates schema, task pre/post digests, fileset digest, project binding, normative kernel/policy digest, Git ancestry and live configured CI for both R and A. Changed or unevaluable inputs block explicitly while preserving historical approval.",
+    "Local Claude review and the controlling-session human decision remain forgeable process evidence. The control plane validates structure, ordering and assignment separation but must not claim cryptographic identity or authenticated GitHub approval from local records.",
+    "Fourteen files are in the phase-2 fileset. The size is accepted for planning as a single cross-cutting security change because schema, kernel registration, validator, guarded runtime entry, dependency enforcement, portable distribution, focused tests, documentation, versioned evidence and generated lock must land atomically; implementation approval may still require splitting if review finds an independently safe boundary.",
+    "framework/schemas/project.schema.json, runtime/handoff schemas, project manifests, templates, adapters and CI transport remain unchanged deliberately: evidence paths derive from documents.tasks, the existing runtime event shape is sufficient, completion reuses the existing live CI evaluator, and no new configuration source is introduced.",
+    "Regenerate intellix.lock.json from the validated framework; never hand-edit its digest. No merge, release, deploy, credential provisioning, permissions, secrets, production action or additional branch is in scope."
+  ],
+  "objective": "Complete the guarded technical-approval protocol by binding review, human-decision and live exact-revision CI evidence to reviewed revision R and status revision A before APPROVED can release dependencies.",
+  "ownership": {
+    "architect": "claude",
+    "domain_role": "platform-engineer",
+    "executor": "codex",
+    "reviewer": "claude-independent"
+  },
+  "risk": {
+    "irreversible_actions": [],
+    "level": "high",
+    "reasons": [
+      "Introduces the only internal path permitted to write the dependency-releasing APPROVED state",
+      "Incorrect revision, digest or evidence binding could release downstream work from stale or forged local metadata",
+      "Dependency eligibility now requires live GitHub evidence for two exact revisions and must fail closed under every indeterminate condition"
+    ]
+  },
+  "rollback": "Before A, revert only the focused phase-2 implementation commits and regenerate the lock from the restored kernel. After A, preserve all review and approval evidence and use a separately approved guarded supersession or reopening contract; never rewrite history, silently revoke approval, or alter external permissions.",
+  "scope": {
+    "create": [
+      "framework/completion.py",
+      "framework/schemas/review-evidence.schema.json",
+      "framework/tests/test_completion.py",
+      "tasks/evidence/TASK-008.review.json",
+      "tasks/evidence/TASK-008.approval.json"
+    ],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      "issues/**",
+      ".github/**",
+      "global-config/**",
+      "infra/production/**",
+      "docs/adr/**",
+      "framework/schemas/project.schema.json",
+      "framework/schemas/handoff.schema.json",
+      "framework/schemas/runtime.schema.json",
+      "intellix.yaml",
+      "intellix-templates/**"
+    ],
+    "modify": [
+      "tasks/TASK-008.yaml",
+      "framework/framework.yaml",
+      "framework/schemas/approval.schema.json",
+      "framework/validate.py",
+      "framework/runtime.py",
+      "framework/dispatch.py",
+      "framework/README.md",
+      "framework/tests/test_distribution.py",
+      "intellix.lock.json"
+    ]
+  },
+  "source": {
+    "adrs": [
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/adr/0003-technical-completion-trust-and-revisions.md"
+    ],
+    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
+    "prd": "README.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md"
+  },
+  "status": "APPROVED",
+  "title": "Implement guarded technical completion and dependency evidence",
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "Kernel registries, project bindings and all Task Contracts remain valid"
+    },
+    {
+      "command": "python3 -m unittest framework.tests.test_completion -v",
+      "proves": "Guarded completion, revision binding, invalidation and dependency release have focused positive and negative coverage"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "All control-plane and distribution regressions pass"
+    },
+    {
+      "command": "python3 -m compileall -q framework",
+      "proves": "The Python control plane compiles"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Claude adapter hooks remain valid"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The scoped diff has no whitespace defects"
+    }
+  ]
+}

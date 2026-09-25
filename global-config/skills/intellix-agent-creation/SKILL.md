@@ -1204,6 +1204,16 @@ Fallback: "Pode mandar so o audio?"
 
 ## Modulo 7: Lead Management Schema
 
+Antes de implementar classificações como intenção, estágio, sentimento, score,
+escalonamento ou ação de pipeline, leia o ADR de arquitetura do projeto sobre
+camada de decisão. Quando o resultado for `adotado`, implemente o contrato e a
+porta já definidos pela
+arquitetura, seguindo a skill `intellix-decision-layer`
+(`global-config/skills/intellix-decision-layer/SKILL.md`).
+Esta fase não escolhe mecanismo, fornecedor ou limiares e não recalibra a
+decisão. Se o ADR estiver ausente, `não aplicável` ou `não adotado`, preserve o
+structured output do LLM descrito abaixo.
+
 ### 7.1 Function Calling Schema
 
 Todo LLM response DEVE incluir structured output:

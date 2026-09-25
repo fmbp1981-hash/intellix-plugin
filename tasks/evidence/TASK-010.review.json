@@ -1,0 +1,31 @@
+{
+  "access": "read-only",
+  "branch": "proposal/decision-layer-adr",
+  "control_plane_digest": "sha256:7b912261cb6356c76bed9272a1ac30dbb642601a102b7249d106024386b951ee",
+  "decision": "approved",
+  "diff_ref": "b0367574454c2dc1a9812df1e263fb6b153e3e6e..ad9824e3eed8e0a1db074d7520ff217831e4d3c5",
+  "evidence": [
+    "Codex independently reviewed the accepted ADR-0004 cumulative two-file change through exact R and approved the lifecycle-only phase-base-to-R diff.",
+    "Local validator, 92 unit tests, compileall, hook validation and diff-check passed; exact-R GitHub CI run 36044864415 passed on Ubuntu and macOS."
+  ],
+  "executor_identity": "claude",
+  "fileset_digest": "sha256:9f286cf6073c3ff2f33dc9b2069194dc7a512387f1465e499b2cb84ef4b196fb",
+  "kernel_digest": "sha256:82d538fc4be868fbe64e2669a8ffceaceb00c9fcc523716c6430998ffc0dc8a5",
+  "limitations": [
+    "Local reviewer identity is forgeable process evidence, not authenticated identity.",
+    "Review grants technical-completion eligibility only after later exact-R CI evidence and explicit human decision; no merge, release, deploy, credential, permission or production authority."
+  ],
+  "phase_base": "b0367574454c2dc1a9812df1e263fb6b153e3e6e",
+  "project_digest": "sha256:31eaf68436c8291fd2652730b1a7e0c2c866d751ed71629418a3fcf0a919cbc1",
+  "reviewed_at": "2026-09-24T18:59:04.708792+00:00",
+  "reviewed_files": [
+    "tasks/TASK-010.yaml"
+  ],
+  "reviewed_revision": "ad9824e3eed8e0a1db074d7520ff217831e4d3c5",
+  "reviewer_assignment": "codex",
+  "reviewer_identity": "codex-independent-controlling-session-task010-r",
+  "schema_version": "1.0.0",
+  "source_digest": "sha256:6bb0284fd025eefa8799b28c901593f82986048a43f9387d424cc3821f9e8cce",
+  "task": "TASK-010",
+  "task_digest": "sha256:f8253401b7afae69b6661578b88d74cf13b8d33b58283e3110958f907b22be97"
+}

@@ -257,7 +257,12 @@ A skill unificada pergunta a plataforma e executa o módulo correto:
 
 ---
 
-### FASE 04 — Implementação com Epic Workflow + Review em Dois Estágios
+### FASE 04 — Implementação com Task Contracts e revisão independente
+
+> Framework 3.1: `framework/framework.yaml` é normativo. O fluxo histórico por
+> issue/agente abaixo serve a projetos ainda não migrados. Novo trabalho usa
+> `tasks/TASK-NNN.yaml`, Codex como executor padrão, Claude como architect/reviewer
+> e CI como árbitro. Papéis especializados são ativados por task, não por arquivo.
 
 **Antes do `/spec` — spec de produto (opcional, features complexas):**
 

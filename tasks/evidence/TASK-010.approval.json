@@ -1,0 +1,79 @@
+{
+  "actor": "controlling-session-human-process-evidence",
+  "branch": "proposal/decision-layer-adr",
+  "completion_ci": {
+    "decision": "eligible",
+    "observed_checks": [
+      {
+        "completed_at": "2026-09-24T18:58:40Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36044864415/job/107786106268",
+        "head_sha": "ad9824e3eed8e0a1db074d7520ff217831e4d3c5",
+        "name": "framework-validation",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-24T18:58:06Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36044864415/job/107785801669",
+        "head_sha": "ad9824e3eed8e0a1db074d7520ff217831e4d3c5",
+        "name": "framework-tests (ubuntu-latest)",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-24T18:58:35Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36044864415/job/107785801392",
+        "head_sha": "ad9824e3eed8e0a1db074d7520ff217831e4d3c5",
+        "name": "framework-tests (macos-latest)",
+        "status": "completed"
+      }
+    ],
+    "provider": "github",
+    "queried_at": "2026-09-24T19:36:20.532262+00:00",
+    "reasons": [],
+    "repository": "fmbp1981-hash/intellix-plugin",
+    "required_checks": [
+      "framework-validation"
+    ],
+    "revision": "ad9824e3eed8e0a1db074d7520ff217831e4d3c5",
+    "schema_version": "1.0.0",
+    "source": "github-api"
+  },
+  "control_plane_digest": "sha256:7b912261cb6356c76bed9272a1ac30dbb642601a102b7249d106024386b951ee",
+  "decision": "approved",
+  "evidence": [
+    "tasks/evidence/TASK-010.review.json",
+    "live-github-ci-for-reviewed-revision"
+  ],
+  "fileset_digest": "sha256:9f286cf6073c3ff2f33dc9b2069194dc7a512387f1465e499b2cb84ef4b196fb",
+  "gate": "technical_completion",
+  "human_decision": {
+    "decided_at": "2026-09-24T19:36:18.308033+00:00",
+    "limitations": "Technical completion of TASK-010 only; no merge, release, deploy, credential, permission or production authority.",
+    "origin": "controlling-session",
+    "reference": "User message: Aprovo, received after Codex independent APPROVED review and exact-R CI eligibility for ad9824e3eed8e0a1db074d7520ff217831e4d3c5."
+  },
+  "kernel_digest": "sha256:82d538fc4be868fbe64e2669a8ffceaceb00c9fcc523716c6430998ffc0dc8a5",
+  "phase_base": "b0367574454c2dc1a9812df1e263fb6b153e3e6e",
+  "post_contract_digest": "sha256:b4b222ae1aa8c471d8d5870ea326836b3e271f9782557842bd6511bea0aec870",
+  "pre_contract_digest": "sha256:f8253401b7afae69b6661578b88d74cf13b8d33b58283e3110958f907b22be97",
+  "project_digest": "sha256:31eaf68436c8291fd2652730b1a7e0c2c866d751ed71629418a3fcf0a919cbc1",
+  "review_ci": {
+    "decision": "eligible",
+    "provider": "github",
+    "queried_at": "2026-09-24T18:59:12.481765+00:00",
+    "repository": "fmbp1981-hash/intellix-plugin",
+    "required_checks": [
+      "framework-validation"
+    ],
+    "revision": "ad9824e3eed8e0a1db074d7520ff217831e4d3c5"
+  },
+  "review_digest": "sha256:8d3d2724c4983fd9e739bf678a379375fb559f304a2d9317211380c4fc7bf4ba",
+  "review_ref": "tasks/evidence/TASK-010.review.json",
+  "reviewed_revision": "ad9824e3eed8e0a1db074d7520ff217831e4d3c5",
+  "schema_version": "1.0.0",
+  "source_digest": "sha256:6bb0284fd025eefa8799b28c901593f82986048a43f9387d424cc3821f9e8cce",
+  "task": "TASK-010",
+  "timestamp": "2026-09-24T19:36:18.308033+00:00"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "TASK-001",
+  "title": "Implement an explicitly bounded behavior",
+  "status": "DRAFT",
+  "objective": "Deliver one independently verifiable behavior from the approved specification.",
+  "source": {"prd": "docs/product/PRD.md", "architecture": "docs/architecture/ARCHITECTURE.md", "spec": "SPEC.md", "adrs": []},
+  "risk": {"level": "low", "reasons": ["No privileged or irreversible operation"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude", "domain_role": "backend-engineer"},
+  "scope": {"create": ["src/example.ts"], "modify": [], "forbidden": [".env*", "infra/production/**"]},
+  "dependencies": [],
+  "acceptance_criteria": [{"id": "AC-001", "given": "an approved input", "when": "the behavior executes", "then": "the specified result is returned"}],
+  "verification": [{"command": "npm test", "proves": "The new behavior and regressions are covered"}],
+  "gates": ["schema", "lint", "tests", "independent_review"],
+  "rollback": null,
+  "notes": [],
+  "handoff": {"required_evidence": ["test output", "changed-file inventory"], "open_questions": []}
+}

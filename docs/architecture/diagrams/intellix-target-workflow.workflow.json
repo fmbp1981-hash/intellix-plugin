@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Workflow Alvo IntelliX Multiagente",
+    "quality_profile": "showcase",
+    "views": [
+      {"id": "definicao", "label": "Definição e contrato", "focus": ["intent", "architecture", "contract"], "note": "Produto e arquitetura viram um contrato verificável antes da execução."},
+      {"id": "execucao", "label": "Execução e evidência", "focus": ["contract", "dispatch_execute", "verify_review"], "note": "O dispatcher resolve o adapter; CI e revisão produzem evidências distintas."},
+      {"id": "governanca", "label": "Governança e release", "focus": ["verify_review", "human_release"], "note": "A identidade humana autoriza merge e produção quando exigido."}
+    ]
+  },
+  "lanes": [
+    {"id": "human", "label": "Humano / Product Owner"},
+    {"id": "claude", "label": "Claude adapter"},
+    {"id": "framework", "label": "Framework determinístico"},
+    {"id": "executor", "label": "Executor adapter"},
+    {"id": "ci", "label": "CI + revisão"},
+    {"id": "exception", "label": "Bloqueio / Correção", "variant": "exception"}
+  ],
+  "phases": [
+    {"id": "define", "label": "Definir", "fromCol": 0, "toCol": 1},
+    {"id": "execute", "label": "Contratar e executar", "fromCol": 2, "toCol": 3, "variant": "emphasis"},
+    {"id": "govern", "label": "Verificar e governar", "fromCol": 4, "toCol": 5, "variant": "security"}
+  ],
+  "mainPath": ["intent", "architecture", "contract", "dispatch_execute", "verify_review", "human_release"],
+  "semanticChecks": {
+    "allowedRoots": ["intent"],
+    "allowedTerminals": ["human_release", "blocked"],
+    "requiredPaths": [
+      {"from": "intent", "to": "contract"},
+      {"from": "contract", "to": "verify_review"},
+      {"from": "verify_review", "to": "human_release"}
+    ]
+  },
+  "nodes": [
+    {"id": "intent", "lane": "human", "col": 0, "type": "external", "label": "Ideia + objetivo", "sublabel": "aprovação de produto", "width": 140},
+    {"id": "architecture", "lane": "claude", "col": 1, "type": "backend", "label": "PRD + arquitetura", "sublabel": "SPEC e ADRs", "width": 140},
+    {"id": "contract", "lane": "framework", "col": 2, "type": "security", "label": "Task Contract READY", "sublabel": "risco, roles, fileset e gates", "tag": "bloqueante", "width": 156},
+    {"id": "dispatch_execute", "lane": "executor", "col": 3, "type": "messagebus", "label": "Despacho + execução", "sublabel": "Codex ou Claude em worktree", "width": 160},
+    {"id": "verify_review", "lane": "ci", "col": 4, "type": "security", "label": "CI + revisão independente", "sublabel": "SHA exato e evidências", "tag": "máx. 3 ciclos", "width": 176},
+    {"id": "human_release", "lane": "human", "col": 5, "type": "cloud", "label": "Human Gate + release", "sublabel": "merge, deploy e handoff", "width": 160},
+    {"id": "blocked", "lane": "exception", "col": 4, "type": "security", "label": "Bloqueado", "sublabel": "retorna ao owner", "width": 124}
+  ],
+  "edges": [
+    {"from": "intent", "to": "architecture", "label": "elaborar"},
+    {"from": "architecture", "to": "contract", "label": "aprovar e planejar"},
+    {"from": "contract", "to": "dispatch_execute", "label": "resolver role + adapter", "variant": "emphasis"},
+    {"from": "dispatch_execute", "to": "verify_review", "label": "PR + evidência"},
+    {"from": "verify_review", "to": "human_release", "label": "verde e aprovado", "variant": "security"},
+    {"from": "verify_review", "to": "blocked", "label": "falha / findings", "variant": "security", "role": "error"},
+    {"from": "blocked", "to": "dispatch_execute", "label": "corrigir", "variant": "dashed", "role": "return", "route": "return-left", "fromSide": "left", "toSide": "left"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Autoridade", "items": ["Kernel define contratos, roles e gates", "Adapters traduzem sem redefinir", "Projeto fixa versão e defaults"]},
+    {"dot": "emerald", "title": "Separação de funções", "items": ["Executor não aprova o próprio trabalho", "CI decide fatos determinísticos", "Humano autoriza merge e produção"]},
+    {"dot": "amber", "title": "MVP", "items": ["Validador com --root", "Dispatcher fino com fallback Claude", "Piloto ponta a ponta antes do merge"]}
+  ]
+}

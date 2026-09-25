@@ -1,0 +1,87 @@
+{
+  "actor": "controlling-session-human-process-evidence",
+  "branch": "feat/intellix-multiagent-framework",
+  "completion_ci": {
+    "decision": "eligible",
+    "observed_checks": [
+      {
+        "completed_at": "2026-09-23T17:39:04Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/35896918776/job/107303460738",
+        "head_sha": "d4fd41187c2dc2596ccf2e290fbc147168a4e3cb",
+        "name": "framework-validation",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-23T17:37:53Z",
+        "conclusion": "success",
+        "details_url": "https://dashboard.gitguardian.com",
+        "head_sha": "d4fd41187c2dc2596ccf2e290fbc147168a4e3cb",
+        "name": "GitGuardian Security Checks",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-23T17:38:58Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/35896918776/job/107303041206",
+        "head_sha": "d4fd41187c2dc2596ccf2e290fbc147168a4e3cb",
+        "name": "framework-tests (macos-latest)",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-23T17:38:14Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/35896918776/job/107303040805",
+        "head_sha": "d4fd41187c2dc2596ccf2e290fbc147168a4e3cb",
+        "name": "framework-tests (ubuntu-latest)",
+        "status": "completed"
+      }
+    ],
+    "provider": "github",
+    "queried_at": "2026-09-23T17:41:59.973101+00:00",
+    "reasons": [],
+    "repository": "fmbp1981-hash/intellix-plugin",
+    "required_checks": [
+      "framework-validation"
+    ],
+    "revision": "d4fd41187c2dc2596ccf2e290fbc147168a4e3cb",
+    "schema_version": "1.0.0",
+    "source": "github-api"
+  },
+  "control_plane_digest": "sha256:7b912261cb6356c76bed9272a1ac30dbb642601a102b7249d106024386b951ee",
+  "decision": "approved",
+  "evidence": [
+    "tasks/evidence/TASK-007.review.json",
+    "live-github-ci-for-reviewed-revision"
+  ],
+  "fileset_digest": "sha256:732a9359adbbf4d5dacba8b0b4d45b56c9c582ffc1d7e3164e3f88d99e1c187d",
+  "gate": "technical_completion",
+  "human_decision": {
+    "decided_at": "2026-09-23T17:41:57.720783+00:00",
+    "limitations": "Technical completion only; no merge, deploy, release, credential, permission or production authority.",
+    "origin": "controlling-session",
+    "reference": "User message: Aprovo a conclus\u00e3o t\u00e9cnica da TASK-007 ap\u00f3s o CI."
+  },
+  "kernel_digest": "sha256:82d538fc4be868fbe64e2669a8ffceaceb00c9fcc523716c6430998ffc0dc8a5",
+  "phase_base": "efb01c090b08121b15308048b5fdb58e888feebd",
+  "post_contract_digest": "sha256:6a0ff9a8466a4beba01956d99a4cd063a8d5b48d9290acf9372c3fc9c248d232",
+  "pre_contract_digest": "sha256:49d9c1c1e08b736ddd8b3f76acf3eaf9c3f9151e623e0c494445a6561e73ac77",
+  "project_digest": "sha256:31eaf68436c8291fd2652730b1a7e0c2c866d751ed71629418a3fcf0a919cbc1",
+  "review_ci": {
+    "decision": "eligible",
+    "provider": "github",
+    "queried_at": "2026-09-23T17:39:31.952306+00:00",
+    "repository": "fmbp1981-hash/intellix-plugin",
+    "required_checks": [
+      "framework-validation"
+    ],
+    "revision": "d4fd41187c2dc2596ccf2e290fbc147168a4e3cb"
+  },
+  "review_digest": "sha256:1e054195841e5bc297faa451003b5c47a6b6163ee2d9fd2923bdcf41309adbb6",
+  "review_ref": "tasks/evidence/TASK-007.review.json",
+  "reviewed_revision": "d4fd41187c2dc2596ccf2e290fbc147168a4e3cb",
+  "schema_version": "1.0.0",
+  "source_digest": "sha256:acdf1dc23bd74e45091b5ab37ba556432c5f2fa3a2a98f3e6075cc8d8410127c",
+  "task": "TASK-007",
+  "timestamp": "2026-09-23T17:41:57.720783+00:00"
+}

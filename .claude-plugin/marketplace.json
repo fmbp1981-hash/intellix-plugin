@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "intellix-plugin",
   "metadata": {
-    "description": "M\u00e9todo oficial IntelliX.AI para criar, auditar, refatorar e fazer deploy de sistemas \u2014 skills, comandos e hooks das fases definidas em ~/.claude/metodologia.yaml."
+    "description": "M\u00e9todo oficial IntelliX.AI para engenharia multiagente com n\u00facleo vendor-neutral, contratos execut\u00e1veis e gates determin\u00edsticos."
   },
   "owner": {
     "name": "IntelliX.AI",
@@ -12,8 +12,8 @@
     {
       "name": "intellix",
       "source": "./",
-      "description": "IntelliX Engineering Plugin \u2014 Senior Developer de 15+ anos em SaaS. Cria sistemas do zero com Clean Architecture e audita/refatora sistemas existentes, seguindo as fases definidas em ~/.claude/metodologia.yaml (kickoff, architecture, frontend-design, dev-standards, agent-creation, implementa\u00e7\u00e3o, integration, security, testing, deploy Cloudflare, handoff).",
-      "version": "3.0.6",
+      "description": "IntelliX Multi-Agent Engineering Framework \u2014 Claude Code como architect/reviewer, Codex como executor principal e CI como \u00e1rbitro determin\u00edstico.",
+      "version": "3.2.0",
       "author": {
         "name": "IntelliX.AI",
         "url": "https://intellixai.com.br"

@@ -1,0 +1,30 @@
+{
+  "id": "TASK-001",
+  "title": "Consolidate framework authority and project-root validation",
+  "status": "APPROVED",
+  "objective": "Establish one authority map and make validation fail closed against an explicit client project root.",
+  "source": {"prd": "README.md", "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md", "spec": "docs/architecture/TASK-CONTRACT-V1.md", "adrs": ["docs/adr/0001-vendor-neutral-multiagent-kernel.md", "docs/adr/0002-operational-orchestrator.md"]},
+  "risk": {"level": "high", "reasons": ["Changes the normative boundary and validator used by all consumers"], "irreversible_actions": []},
+  "ownership": {"architect": "claude", "executor": "codex", "reviewer": "claude-independent", "domain_role": "platform-engineer"},
+  "scope": {
+    "create": ["framework/tests/fixtures/projects/**"],
+    "modify": ["framework/framework.yaml", "framework/schemas/role.schema.json", "framework/schemas/task.schema.json", "framework/roles/*.yaml", "framework/validate.py", "framework/tests/test_validate.py", "global-config/metodologia.yaml", "tasks/TASK-001.yaml"],
+    "forbidden": [".env*", "**/.env*", ".github/**", "commands/**", "hooks/**", "infra/production/**"]
+  },
+  "dependencies": [],
+  "acceptance_criteria": [
+    {"id": "AC-001", "given": "a project outside the plugin without required sources or a pinned kernel", "when": "validation runs with --root", "then": "it fails and names every missing or escaping path"},
+    {"id": "AC-002", "given": "kernel roles and policies", "when": "normative validation runs", "then": "plugin versions and preferred adapters are not kernel facts"},
+    {"id": "AC-003", "given": "a Task Contract with traversal, absolute paths, unknown roles or mismatched filename identity", "when": "validation runs", "then": "every violation blocks progression"},
+    {"id": "AC-004", "given": "repository and installed Claude configuration", "when": "the authority check runs", "then": "the one-way source-to-install direction and any drift are explicit"}
+  ],
+  "verification": [
+    {"command": "python3 framework/validate.py --root . --all", "proves": "Repository contracts validate from an explicit root"},
+    {"command": "python3 -m unittest discover -s framework/tests -v", "proves": "Project-root, traversal, role and authority rules fail closed"},
+    {"command": "python3 -m compileall -q framework", "proves": "Validator code compiles"}
+  ],
+  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "rollback": "Revert the scoped implementation commit and rerun the baseline validator; no runtime or external data migration is involved.",
+  "notes": ["Human approval for the five target architecture artifacts and the expanded role fileset was recorded in the controlling session on 2026-09-17.", "TASK-001 validates an explicit project root, a local framework source and matching framework version. Snapshot lock filename, digest and distribution remain exclusively in TASK-002.", "This task replaces the earlier validator-only TASK-001 because authority and root semantics must be fixed together.", "Implementation completed in the dedicated same-branch worktree intellix-plugin-TASK-001; no later task was started.", "Independent Claude review returned APPROVE with no high or medium findings; its Windows absolute-path hardening suggestion was implemented and regression-tested.", "The controlling human explicitly approved the TASK-001 handoff on 2026-09-17 after CI and independent review passed.", "Reopened with explicit human approval on 2026-09-17 to correct fileset ownership semantics: completed APPROVED tasks release writable scope before subsequent sequential work becomes active.", "The governance correction passed 23 tests and an independent Claude review with no high or medium findings; APPROVED was restored."],
+  "handoff": {"required_evidence": ["external-consumer fixture plus fail-closed negative cases", "23 passing validator tests including approved-task fileset release", "explicit-root, task and tasks-directory validation output", "compileall, hook validation and diff-check output", "changed-file inventory restricted to the approved fileset", "independent Claude review decision: APPROVE"], "open_questions": []}
+}

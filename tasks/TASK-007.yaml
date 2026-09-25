@@ -1,0 +1,135 @@
+{
+  "acceptance_criteria": [
+    {
+      "given": "ADR-0001 has no explicit human acceptance",
+      "id": "AC-001",
+      "then": "it remains Proposed while clearly identifying ADR-0002 as the accepted operational decision",
+      "when": "its status and relation to ADR-0002 are read"
+    },
+    {
+      "given": "the accepted local MVP trust boundary in ADR-0002",
+      "id": "AC-002",
+      "then": "local human action is limited to technical Task Contract completion and cannot claim authenticated merge or production approval",
+      "when": "the authority model describes task completion, merge and production gates"
+    },
+    {
+      "given": "the canonical kernel and accepted ADR-0002",
+      "id": "AC-003",
+      "then": "no new transition, approval mechanism, credential authority or normative rule is introduced",
+      "when": "the documentation diff is reviewed"
+    },
+    {
+      "given": "the approved fileset",
+      "id": "AC-004",
+      "then": "implementation remains limited to this contract and the two named documents, while the completion commit contains only this contract and its two evidence records",
+      "when": "the changed-file inventory is inspected"
+    }
+  ],
+  "dependencies": [
+    "TASK-006"
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "handoff": {
+    "open_questions": [
+      "Will the legacy-closure revision pass exact-revision CI and independent review?"
+    ],
+    "required_evidence": [
+      "two-document semantic diff",
+      "validated changed-file inventory",
+      "independent fidelity review",
+      "exact-revision CI result",
+      "versioned guarded-completion evidence"
+    ]
+  },
+  "id": "TASK-007",
+  "notes": [
+    "The controlling human approved this specific plan and fileset on 2026-09-19; this is not ADR-0001 acceptance or authenticated merge approval.",
+    "This task clarifies cross-document references only; it does not accept ADR-0001 or the proposed target architecture set.",
+    "Do not edit README, other target architecture artifacts, kernel, code, permissions or external environments under this contract.",
+    "Use the accepted ADR-0002 same-branch dedicated-worktree procedure after planning approval.",
+    "Any material architectural conflict or status change requires a separate human decision.",
+    "Implementation diff is limited to this contract and its two named documentation files; local framework validation, 76 unit tests, hooks, compileall and diff check passed in the dedicated TASK-007 worktree.",
+    "The first read-only Claude review attempt failed because the CLI was not logged in. After the human completed authentication, independent Claude review of e114a77 returned APPROVE with two low-severity wording suggestions; both were addressed within this fileset. The review is not a merge or production approval.",
+    "Exact-revision GitHub checks for e114a77 passed: framework-validation, Ubuntu/macOS tests and GitGuardian. Any subsequent documentation commit requires a new exact-revision CI check and independent review before technical completion.",
+    "The controlling human approved a legacy-closure phase on 2026-09-23 so the already-reviewed documentation can use the guarded completion protocol introduced by TASK-008.",
+    "The closure phase may modify only this contract and create its two evidence records; it must bind the current authority-model and ADR sources without rewriting their content.",
+    "Next actions: record the closure review candidate; obtain exact-revision CI and independent review; request explicit human technical-completion approval before marking APPROVED. Merge and production remain separately blocked."
+  ],
+  "objective": "Align the ADR-0001 and authority-model prose with accepted ADR-0002 without changing their approval status or the executable framework.",
+  "ownership": {
+    "architect": "claude",
+    "domain_role": "architect",
+    "executor": "codex",
+    "reviewer": "claude-independent"
+  },
+  "risk": {
+    "irreversible_actions": [],
+    "level": "medium",
+    "reasons": [
+      "Authority and approval wording can be misread as granting or denying a gate",
+      "Documentation must not silently change the status of an unaccepted decision"
+    ]
+  },
+  "rollback": "Revert only the focused TASK-007 documentation commit; retain ADR-0002 acceptance and all external approval boundaries.",
+  "scope": {
+    "create": [
+      "tasks/TASK-007.yaml",
+      "tasks/evidence/TASK-007.review.json",
+      "tasks/evidence/TASK-007.approval.json"
+    ],
+    "forbidden": [
+      ".env*",
+      "**/.env*",
+      "issues/**",
+      ".github/**",
+      "framework/**",
+      "global-config/**",
+      "infra/production/**"
+    ],
+    "modify": [
+      "tasks/TASK-007.yaml",
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/architecture/AUTHORITY-AND-TRUST-MODEL.md"
+    ]
+  },
+  "source": {
+    "adrs": [
+      "docs/adr/0001-vendor-neutral-multiagent-kernel.md",
+      "docs/adr/0002-operational-orchestrator.md",
+      "docs/architecture/AUTHORITY-AND-TRUST-MODEL.md"
+    ],
+    "architecture": "docs/architecture/INTELLIX-TARGET-ARCHITECTURE.md",
+    "prd": "README.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md"
+  },
+  "status": "APPROVED",
+  "title": "Reconcile architecture decision and trust-model documentation",
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "All normative artifacts and Task Contracts remain valid"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "No framework regression accompanies the documentation update"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Claude adapter hooks remain valid"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The documentation diff has no whitespace errors"
+    }
+  ]
+}
