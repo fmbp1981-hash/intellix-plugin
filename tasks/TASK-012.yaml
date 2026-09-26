@@ -2,7 +2,7 @@
   "id": "TASK-012",
   "title": "Prevent doctor runtime scans from linting repository-only tests and ADRs",
   "objective": "Fix the post-install doctor false positives exposed by IntelliX 3.2.0, add regression coverage, and coordinate the patch version 3.2.1 without changing decision-layer behavior or user-owned skills.",
-  "status": "IN_PROGRESS",
+  "status": "IN_REVIEW",
   "source": {
     "prd": "README.md",
     "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md",
