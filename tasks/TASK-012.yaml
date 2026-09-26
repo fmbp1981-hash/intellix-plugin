@@ -27,11 +27,11 @@
   "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
   "scope": {
     "create": [
-      "tasks/TASK-012.yaml",
       "tasks/evidence/TASK-012.review.json",
       "tasks/evidence/TASK-012.approval.json"
     ],
     "modify": [
+      "tasks/TASK-012.yaml",
       "global-config/scripts/doctor.py",
       "global-config/scripts/tests/test_doctor.py",
       "framework/tests/test_decision_layer_integration.py",
@@ -173,6 +173,7 @@
     "The operator repeatedly authorized continuation, publication and configuration sync; this READY contract authorizes only the reversible patch implementation. Release still follows exact-revision CI and independent review.",
     "The pre-existing loose impeccable skill is outside this task and must not be deleted or edited.",
     "The unregistered 3.0.6 cache is installation residue and is handled separately from source changes.",
-    "The framework integration test was added to modify scope after the initial verification exposed its exact-3.2.0 assertion; changing it is necessary for AC-004 and retains the original coordinated-version guarantee."
+    "The framework integration test was added to modify scope after the initial verification exposed its exact-3.2.0 assertion; changing it is necessary for AC-004 and retains the original coordinated-version guarantee.",
+    "After establishing the committed IN_PROGRESS phase base, tasks/TASK-012.yaml is classified as modify (rather than create) so the guarded completion transition can update it to APPROVED; the contract already exists at the phase base."
   ]
 }
