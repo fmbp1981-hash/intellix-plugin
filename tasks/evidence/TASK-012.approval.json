@@ -1,0 +1,111 @@
+{
+  "actor": "controlling-session-human-process-evidence",
+  "branch": "fix/doctor-runtime-scan",
+  "completion_ci": {
+    "decision": "eligible",
+    "observed_checks": [
+      {
+        "completed_at": "2026-09-26T16:25:41Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36255343058/job/108441137171",
+        "head_sha": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+        "name": "framework-validation",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-26T16:25:32Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36255345553/job/108441107921",
+        "head_sha": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+        "name": "framework-validation",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-26T16:24:37Z",
+        "conclusion": "success",
+        "details_url": "https://dashboard.gitguardian.com",
+        "head_sha": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+        "name": "GitGuardian Security Checks",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-26T16:24:52Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36255345553/job/108440950565",
+        "head_sha": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+        "name": "framework-tests (ubuntu-latest)",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-26T16:25:27Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36255345553/job/108440950506",
+        "head_sha": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+        "name": "framework-tests (macos-latest)",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-26T16:25:37Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36255343058/job/108440944090",
+        "head_sha": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+        "name": "framework-tests (macos-latest)",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-09-26T16:24:51Z",
+        "conclusion": "success",
+        "details_url": "https://github.com/fmbp1981-hash/intellix-plugin/actions/runs/36255343058/job/108440943548",
+        "head_sha": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+        "name": "framework-tests (ubuntu-latest)",
+        "status": "completed"
+      }
+    ],
+    "provider": "github",
+    "queried_at": "2026-09-26T16:26:32.987195+00:00",
+    "reasons": [],
+    "repository": "fmbp1981-hash/intellix-plugin",
+    "required_checks": [
+      "framework-validation"
+    ],
+    "revision": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+    "schema_version": "1.0.0",
+    "source": "github-api"
+  },
+  "control_plane_digest": "sha256:7b912261cb6356c76bed9272a1ac30dbb642601a102b7249d106024386b951ee",
+  "decision": "approved",
+  "evidence": [
+    "tasks/evidence/TASK-012.review.json",
+    "live-github-ci-for-reviewed-revision"
+  ],
+  "fileset_digest": "sha256:a7e33636176a0c45d478cf3cf405fc469d4f98c783799b0e7cf38d3b3097169e",
+  "gate": "technical_completion",
+  "human_decision": {
+    "decided_at": "2026-09-26T16:26:30.309546+00:00",
+    "limitations": "Technical completion of TASK-012; merge and 3.2.1 publication remain governed by the already explicit distribution authorization.",
+    "origin": "controlling-session",
+    "reference": "User message: sim, approving final technical completion of TASK-012 at R=dcd5475 after independent APPROVED review and exact-R CI success."
+  },
+  "kernel_digest": "sha256:82d538fc4be868fbe64e2669a8ffceaceb00c9fcc523716c6430998ffc0dc8a5",
+  "phase_base": "505427308b5e3ed3ba132d95d31418493e36d867",
+  "post_contract_digest": "sha256:9822e68bbb7a0e548a01351a1ef938be9e45a6a3b2ae579a99b22cd2a43386d9",
+  "pre_contract_digest": "sha256:90c99c973ba313d0daf9e47c3b5d95eb41e1baa88afd698b73b7fc0041cf35e9",
+  "project_digest": "sha256:31eaf68436c8291fd2652730b1a7e0c2c866d751ed71629418a3fcf0a919cbc1",
+  "review_ci": {
+    "decision": "eligible",
+    "provider": "github",
+    "queried_at": "2026-09-26T16:26:29.628128+00:00",
+    "repository": "fmbp1981-hash/intellix-plugin",
+    "required_checks": [
+      "framework-validation"
+    ],
+    "revision": "dcd5475743b5f48d156752a1f459c2c0e2530bd6"
+  },
+  "review_digest": "sha256:04781ed7593de354d1bd573c77797e07ae19f04e39f5e8991aff3b93f5eff4b0",
+  "review_ref": "tasks/evidence/TASK-012.review.json",
+  "reviewed_revision": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+  "schema_version": "1.0.0",
+  "source_digest": "sha256:516850e0d2bd006cd9d15e17542c42df1d7dced375f9f45639548fda63ba936e",
+  "task": "TASK-012",
+  "timestamp": "2026-09-26T16:26:30.309546+00:00"
+}
