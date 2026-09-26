@@ -201,6 +201,21 @@ class TestReferencias(Base):
         rc, out = run_doctor(self.root)
         self.assertEqual(rc, 0, out)
 
+    def test_docs_adr_aninhado_em_skill_continua_policiado(self):
+        self.write(
+            "skills/alpha/docs/adr/executavel.md",
+            "Use intellix:fantasma.\n",
+            self.ix,
+        )
+        self.assertAchado("`intellix:fantasma` não existe")
+
+    def test_framework_tests_aninhado_em_modulo_continua_policiado(self):
+        self.write(
+            "modules/framework/tests/executavel.md",
+            'Use Skill("fantasma-xyz").\n',
+        )
+        self.assertAchado("fantasma-xyz")
+
     def test_plugin_desabilitado_nao_conta(self):
         """Causa do falso verde de 2026-09-16: skill de plugin não habilitado
         passava como existente."""

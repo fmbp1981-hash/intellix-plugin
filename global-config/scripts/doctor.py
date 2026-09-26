@@ -125,10 +125,11 @@ def frontmatter(md: Path) -> dict[str, str]:
 def iter_files(base: Path, exts=TEXT_EXT):
     """Arquivos autorais de runtime sob `base`.
 
-    Exclui .git, bytecode, histórico, testes e ADRs. Testes contêm fixtures e
-    asserções negativas; ADRs registram opções, placeholders e caminhos
-    históricos. Nenhum dos dois é carregado como instrução pelo runtime, então
-    tratá-los como referência executável produz falsos positivos.
+    Exclui .git, bytecode e histórico. Nas raízes dos plugins próprios, exclui
+    também somente as árvores de topo `framework/tests/` e `docs/adr/`: testes
+    contêm fixtures e asserções negativas; ADRs registram opções, placeholders
+    e caminhos históricos. Nenhum dos dois é carregado como instrução pelo
+    runtime, então tratá-los como referência executável produz falsos positivos.
 
     `global-config/` (dentro do intellix-plugin) também é pulado: é um espelho
     versionado de arquivos que vivem em ~/.claude (metodologia.yaml, hooks,
@@ -139,16 +140,18 @@ def iter_files(base: Path, exts=TEXT_EXT):
     """
     if not base.is_dir():
         return
+    plugin_root = any(base.resolve() == owned_dir(o).resolve() for o in OWNED)
     for p in sorted(base.rglob("*")):
         if not p.is_file() or p.suffix not in exts:
             continue
         s = str(p)
+        parts = p.relative_to(base).parts
+        repository_only = plugin_root and parts[:2] in (("docs", "adr"), ("framework", "tests"))
         if (
             "/.git/" in s
             or "__pycache__" in s
             or "/docs/plans/" in s
-            or "/docs/adr/" in s
-            or "/framework/tests/" in s
+            or repository_only
             or "/node_modules/" in s
             or "/global-config/" in s
         ):
