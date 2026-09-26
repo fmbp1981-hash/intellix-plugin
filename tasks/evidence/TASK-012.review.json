@@ -1,0 +1,38 @@
+{
+  "access": "read-only",
+  "branch": "fix/doctor-runtime-scan",
+  "control_plane_digest": "sha256:7b912261cb6356c76bed9272a1ac30dbb642601a102b7249d106024386b951ee",
+  "decision": "approved",
+  "diff_ref": "505427308b5e3ed3ba132d95d31418493e36d867..dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+  "evidence": [
+    "Claude independent read-only review APPROVED exact R=dcd5475",
+    "90 global-config tests and 99 framework tests passed",
+    "GitHub exact-R checks passed on Ubuntu and macOS"
+  ],
+  "executor_identity": "codex",
+  "fileset_digest": "sha256:a7e33636176a0c45d478cf3cf405fc469d4f98c783799b0e7cf38d3b3097169e",
+  "kernel_digest": "sha256:82d538fc4be868fbe64e2669a8ffceaceb00c9fcc523716c6430998ffc0dc8a5",
+  "limitations": [
+    "Local reviewer identity is forgeable process evidence, not authenticated identity.",
+    "Review grants technical-completion eligibility only; merge and release use the separately authorized distribution workflow."
+  ],
+  "phase_base": "505427308b5e3ed3ba132d95d31418493e36d867",
+  "project_digest": "sha256:31eaf68436c8291fd2652730b1a7e0c2c866d751ed71629418a3fcf0a919cbc1",
+  "reviewed_at": "2026-09-26T16:23:28.220935+00:00",
+  "reviewed_files": [
+    ".claude-plugin/marketplace.json",
+    ".claude-plugin/plugin.json",
+    "framework/tests/test_decision_layer_integration.py",
+    "global-config/metodologia.yaml",
+    "global-config/scripts/doctor.py",
+    "global-config/scripts/tests/test_doctor.py",
+    "tasks/TASK-012.yaml"
+  ],
+  "reviewed_revision": "dcd5475743b5f48d156752a1f459c2c0e2530bd6",
+  "reviewer_assignment": "claude",
+  "reviewer_identity": "claude-independent-task012-r-dcd5475",
+  "schema_version": "1.0.0",
+  "source_digest": "sha256:516850e0d2bd006cd9d15e17542c42df1d7dced375f9f45639548fda63ba936e",
+  "task": "TASK-012",
+  "task_digest": "sha256:90c99c973ba313d0daf9e47c3b5d95eb41e1baa88afd698b73b7fc0041cf35e9"
+}

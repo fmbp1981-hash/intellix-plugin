@@ -1,15 +1,77 @@
 {
-  "id": "TASK-012",
-  "title": "Prevent doctor runtime scans from linting repository-only tests and ADRs",
-  "objective": "Fix the post-install doctor false positives exposed by IntelliX 3.2.0, add regression coverage, and coordinate the patch version 3.2.1 without changing decision-layer behavior or user-owned skills.",
-  "status": "IN_REVIEW",
-  "source": {
-    "prd": "README.md",
-    "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md",
-    "spec": "docs/architecture/FRAMEWORK-SPEC.md",
-    "adrs": ["docs/adr/0003-technical-completion-trust-and-revisions.md", "docs/adr/0004-typed-decision-layer.md"]
+  "acceptance_criteria": [
+    {
+      "given": "an owned plugin checkout contains repository-only files under framework/tests and docs/adr",
+      "id": "AC-001",
+      "then": "those repository-only trees are excluded from textual runtime-reference checks while actual skills, commands, agents, hooks and references remain checked",
+      "when": "doctor scans authored runtime content"
+    },
+    {
+      "given": "a test fixture contains invalid intellix namespace references and missing references paths under framework/tests or docs/adr",
+      "id": "AC-002",
+      "then": "it exits cleanly and regression tests prove both exclusions",
+      "when": "doctor --strict runs"
+    },
+    {
+      "given": "the same invalid references appear in a runtime-loaded skill or plugin reference",
+      "id": "AC-003",
+      "then": "existing tests still prove the defects are reported",
+      "when": "doctor --strict runs"
+    },
+    {
+      "given": "this is a released plugin correction",
+      "id": "AC-004",
+      "then": "plugin.json, marketplace.json and metodologia.yaml all declare 3.2.1 and no other metadata field changes",
+      "when": "version metadata is inspected"
+    },
+    {
+      "given": "the installed live environment after sync",
+      "id": "AC-005",
+      "then": "the four 3.2.0 false positives are absent; unrelated user-owned duplicate skills may remain reported and are not modified by this task",
+      "when": "doctor --strict runs"
+    },
+    {
+      "given": "TASK-011 introduced a coordinated-version integration test at 3.2.0",
+      "id": "AC-006",
+      "then": "the test requires equality and a semantic version at least 3.2.0 instead of freezing the repository forever at exactly 3.2.0",
+      "when": "a later compatible patch release changes all three coordinated fields"
+    }
+  ],
+  "dependencies": [
+    "TASK-011"
+  ],
+  "gates": [
+    "schema",
+    "fileset",
+    "lint",
+    "tests",
+    "security_review",
+    "independent_review",
+    "rollback_plan",
+    "human_approval",
+    "worktree"
+  ],
+  "handoff": {
+    "open_questions": [],
+    "required_evidence": [
+      "changed-file inventory",
+      "new doctor regression results",
+      "full framework and global-config test results",
+      "exact-revision CI",
+      "independent review",
+      "human technical-completion approval"
+    ]
   },
-  "dependencies": ["TASK-011"],
+  "id": "TASK-012",
+  "notes": [
+    "Created as a corrective patch after post-install verification of 3.2.0 exposed four false positives from repository-only ADR and framework test content.",
+    "The operator repeatedly authorized continuation, publication and configuration sync; this READY contract authorizes only the reversible patch implementation. Release still follows exact-revision CI and independent review.",
+    "The pre-existing loose impeccable skill is outside this task and must not be deleted or edited.",
+    "The unregistered 3.0.6 cache is installation residue and is handled separately from source changes.",
+    "The framework integration test was added to modify scope after the initial verification exposed its exact-3.2.0 assertion; changing it is necessary for AC-004 and retains the original coordinated-version guarantee.",
+    "After establishing the committed IN_PROGRESS phase base, tasks/TASK-012.yaml is classified as modify (rather than create) so the guarded completion transition can update it to APPROVED; the contract already exists at the phase base."
+  ],
+  "objective": "Fix the post-install doctor false positives exposed by IntelliX 3.2.0, add regression coverage, and coordinate the patch version 3.2.1 without changing decision-layer behavior or user-owned skills.",
   "ownership": {
     "architect": "claude",
     "domain_role": "platform-engineer",
@@ -17,27 +79,18 @@
     "reviewer": "claude"
   },
   "risk": {
+    "irreversible_actions": [],
     "level": "medium",
     "reasons": [
       "The doctor runs at session start and its strict mode is a configuration quality gate",
       "An over-broad exclusion could hide real runtime references"
-    ],
-    "irreversible_actions": []
+    ]
   },
-  "gates": ["schema", "fileset", "lint", "tests", "security_review", "independent_review", "rollback_plan", "human_approval", "worktree"],
+  "rollback": "Revert the TASK-012 commits, restore the three version fields to 3.2.0, reinstall intellix@intellix-plugin 3.2.0, and restore the pre-sync global-config backup. No user-owned skill is changed.",
   "scope": {
     "create": [
       "tasks/evidence/TASK-012.review.json",
       "tasks/evidence/TASK-012.approval.json"
-    ],
-    "modify": [
-      "tasks/TASK-012.yaml",
-      "global-config/scripts/doctor.py",
-      "global-config/scripts/tests/test_doctor.py",
-      "framework/tests/test_decision_layer_integration.py",
-      ".claude-plugin/plugin.json",
-      ".claude-plugin/marketplace.json",
-      "global-config/metodologia.yaml"
     ],
     "forbidden": [
       ".env*",
@@ -107,73 +160,56 @@
       "tasks/evidence/TASK-009.*",
       "tasks/evidence/TASK-010.*",
       "tasks/evidence/TASK-011.*"
+    ],
+    "modify": [
+      "tasks/TASK-012.yaml",
+      "global-config/scripts/doctor.py",
+      "global-config/scripts/tests/test_doctor.py",
+      "framework/tests/test_decision_layer_integration.py",
+      ".claude-plugin/plugin.json",
+      ".claude-plugin/marketplace.json",
+      "global-config/metodologia.yaml"
     ]
   },
-  "acceptance_criteria": [
-    {
-      "id": "AC-001",
-      "given": "an owned plugin checkout contains repository-only files under framework/tests and docs/adr",
-      "when": "doctor scans authored runtime content",
-      "then": "those repository-only trees are excluded from textual runtime-reference checks while actual skills, commands, agents, hooks and references remain checked"
-    },
-    {
-      "id": "AC-002",
-      "given": "a test fixture contains invalid intellix namespace references and missing references paths under framework/tests or docs/adr",
-      "when": "doctor --strict runs",
-      "then": "it exits cleanly and regression tests prove both exclusions"
-    },
-    {
-      "id": "AC-003",
-      "given": "the same invalid references appear in a runtime-loaded skill or plugin reference",
-      "when": "doctor --strict runs",
-      "then": "existing tests still prove the defects are reported"
-    },
-    {
-      "id": "AC-004",
-      "given": "this is a released plugin correction",
-      "when": "version metadata is inspected",
-      "then": "plugin.json, marketplace.json and metodologia.yaml all declare 3.2.1 and no other metadata field changes"
-    },
-    {
-      "id": "AC-005",
-      "given": "the installed live environment after sync",
-      "when": "doctor --strict runs",
-      "then": "the four 3.2.0 false positives are absent; unrelated user-owned duplicate skills may remain reported and are not modified by this task"
-    },
-    {
-      "id": "AC-006",
-      "given": "TASK-011 introduced a coordinated-version integration test at 3.2.0",
-      "when": "a later compatible patch release changes all three coordinated fields",
-      "then": "the test requires equality and a semantic version at least 3.2.0 instead of freezing the repository forever at exactly 3.2.0"
-    }
-  ],
-  "verification": [
-    {"command": "python3 framework/validate.py --root . --task tasks/TASK-012.yaml", "proves": "Task contract and fileset validate"},
-    {"command": "python3 -m unittest discover -s global-config/scripts/tests -p 'test_*.py' -v", "proves": "Doctor and global configuration behavior pass, including new regressions"},
-    {"command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v", "proves": "Framework and decision-layer integration do not regress"},
-    {"command": "python3 framework/validate.py --root . --all", "proves": "All repository contracts validate"},
-    {"command": "python3 framework/sync.py --source-root . --target-root . --check", "proves": "Pinned distribution remains synchronized"},
-    {"command": "bash hooks/scripts/validate-hooks.sh .", "proves": "Hook wiring remains valid"},
-    {"command": "git diff --check", "proves": "The patch has no whitespace errors"}
-  ],
-  "rollback": "Revert the TASK-012 commits, restore the three version fields to 3.2.0, reinstall intellix@intellix-plugin 3.2.0, and restore the pre-sync global-config backup. No user-owned skill is changed.",
-  "handoff": {
-    "required_evidence": [
-      "changed-file inventory",
-      "new doctor regression results",
-      "full framework and global-config test results",
-      "exact-revision CI",
-      "independent review",
-      "human technical-completion approval"
+  "source": {
+    "adrs": [
+      "docs/adr/0003-technical-completion-trust-and-revisions.md",
+      "docs/adr/0004-typed-decision-layer.md"
     ],
-    "open_questions": []
+    "architecture": "docs/architecture/MULTIAGENT-FRAMEWORK.md",
+    "prd": "README.md",
+    "spec": "docs/architecture/FRAMEWORK-SPEC.md"
   },
-  "notes": [
-    "Created as a corrective patch after post-install verification of 3.2.0 exposed four false positives from repository-only ADR and framework test content.",
-    "The operator repeatedly authorized continuation, publication and configuration sync; this READY contract authorizes only the reversible patch implementation. Release still follows exact-revision CI and independent review.",
-    "The pre-existing loose impeccable skill is outside this task and must not be deleted or edited.",
-    "The unregistered 3.0.6 cache is installation residue and is handled separately from source changes.",
-    "The framework integration test was added to modify scope after the initial verification exposed its exact-3.2.0 assertion; changing it is necessary for AC-004 and retains the original coordinated-version guarantee.",
-    "After establishing the committed IN_PROGRESS phase base, tasks/TASK-012.yaml is classified as modify (rather than create) so the guarded completion transition can update it to APPROVED; the contract already exists at the phase base."
+  "status": "APPROVED",
+  "title": "Prevent doctor runtime scans from linting repository-only tests and ADRs",
+  "verification": [
+    {
+      "command": "python3 framework/validate.py --root . --task tasks/TASK-012.yaml",
+      "proves": "Task contract and fileset validate"
+    },
+    {
+      "command": "python3 -m unittest discover -s global-config/scripts/tests -p 'test_*.py' -v",
+      "proves": "Doctor and global configuration behavior pass, including new regressions"
+    },
+    {
+      "command": "python3 -m unittest discover -s framework/tests -p 'test_*.py' -v",
+      "proves": "Framework and decision-layer integration do not regress"
+    },
+    {
+      "command": "python3 framework/validate.py --root . --all",
+      "proves": "All repository contracts validate"
+    },
+    {
+      "command": "python3 framework/sync.py --source-root . --target-root . --check",
+      "proves": "Pinned distribution remains synchronized"
+    },
+    {
+      "command": "bash hooks/scripts/validate-hooks.sh .",
+      "proves": "Hook wiring remains valid"
+    },
+    {
+      "command": "git diff --check",
+      "proves": "The patch has no whitespace errors"
+    }
   ]
 }
