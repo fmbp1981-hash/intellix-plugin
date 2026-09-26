@@ -284,7 +284,7 @@ plugins_proprios:
 # Versão esperada de cada plugin próprio. plugin.json, marketplace.json, README e
 # o registro de instalação precisam concordar com este valor (doctor, check 11).
 versoes:
-  intellix: "3.2.1"
+  intellix: "3.2.0"
   devsecops: "1.2.1"
 
 # ── Identificadores (remediação 2026-09-16, D1–D5) ──────────────────────────

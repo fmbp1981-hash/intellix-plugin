@@ -161,11 +161,9 @@ class DecisionLayerIntegrationTests(unittest.TestCase):
         methodology_version = re.search(
             r'(?m)^\s+intellix:\s+"([^"]+)"$', methodology
         ).group(1)
-        self.assertEqual(plugin_version, marketplace_version)
-        self.assertEqual(plugin_version, methodology_version)
-        self.assertGreaterEqual(
-            tuple(int(part) for part in plugin_version.split(".")),
-            (3, 2, 0),
+        self.assertEqual(
+            (plugin_version, marketplace_version, methodology_version),
+            ("3.2.0", "3.2.0", "3.2.0"),
         )
 
     def test_doctor_accepts_fixture_with_real_skill_directory(self):

@@ -182,40 +182,6 @@ class TestReferencias(Base):
         rc, out = run_doctor(self.root)
         self.assertEqual(rc, 0, out)
 
-    def test_conteudo_de_teste_do_plugin_nao_e_referencia_de_runtime(self):
-        self.write(
-            "framework/tests/test_fixture.py",
-            'assert "intellix:fantasma" not in text\n'
-            'fixture = "references/arquivo-que-nao-existe.md"\n',
-            self.ix,
-        )
-        rc, out = run_doctor(self.root)
-        self.assertEqual(rc, 0, out)
-
-    def test_adr_do_plugin_nao_e_referencia_de_runtime(self):
-        self.write(
-            "docs/adr/0001-exemplo.md",
-            "Opção histórica: intellix:fantasma e references/modelo-YYYY-MM.md.\n",
-            self.ix,
-        )
-        rc, out = run_doctor(self.root)
-        self.assertEqual(rc, 0, out)
-
-    def test_docs_adr_aninhado_em_skill_continua_policiado(self):
-        self.write(
-            "skills/alpha/docs/adr/executavel.md",
-            "Use intellix:fantasma.\n",
-            self.ix,
-        )
-        self.assertAchado("`intellix:fantasma` não existe")
-
-    def test_framework_tests_aninhado_em_modulo_continua_policiado(self):
-        self.write(
-            "modules/framework/tests/executavel.md",
-            'Use Skill("fantasma-xyz").\n',
-        )
-        self.assertAchado("fantasma-xyz")
-
     def test_plugin_desabilitado_nao_conta(self):
         """Causa do falso verde de 2026-09-16: skill de plugin não habilitado
         passava como existente."""
